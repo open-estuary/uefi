@@ -131,6 +131,12 @@ typedef EFI_STATUS (EFIAPI *MMC_WRITEBLOCKDATA) (
   IN  UINT32                    *Buffer
   );
 
+typedef EFI_STATUS (EFIAPI *MMC_SETIOS) (
+  IN  EFI_MMC_HOST_PROTOCOL     *This,
+  IN  UINT32                    BusClockRate,
+  IN  UINT32                    BusWidth
+  );
+
 
 struct _EFI_MMC_HOST_PROTOCOL {
 
@@ -146,6 +152,8 @@ struct _EFI_MMC_HOST_PROTOCOL {
 
   MMC_READBLOCKDATA       ReadBlockData;
   MMC_WRITEBLOCKDATA      WriteBlockData;
+
+  MMC_SETIOS              SetIos;
 
 };
 
