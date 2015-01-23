@@ -25,7 +25,105 @@ typedef union {
 #define EMMC_CARD_SIZE          512
 #define EMMC_ECSD_SIZE_OFFSET   53
 
+#define EXTCSD_BUS_WIDTH        183
+#define EXTCSD_HS_TIMING        185
+
+#define EMMC_TIMING_BACKWARD    0
+#define EMMC_TIMING_HS          1
+#define EMMC_TIMING_HS200       2
+#define EMMC_TIMING_HS400       3
+
+#define EMMC_BUS_WIDTH_1BIT     0
+#define EMMC_BUS_WIDTH_4BIT     1
+#define EMMC_BUS_WIDTH_8BIT     2
+#define EMMC_BUS_WIDTH_DDR_4BIT 5
+#define EMMC_BUS_WIDTH_DDR_8BIT 6
+
+#define EMMC_SWITCH_ERROR       (1 << 7)
+
+#define DEVICE_STATE(x)         (((x) >> 9) & 0xf)
+typedef enum _EMMC_DEVICE_STATE {
+  EMMC_IDLE_STATE = 0,
+  EMMC_READY_STATE,
+  EMMC_IDENT_STATE,
+  EMMC_STBY_STATE,
+  EMMC_TRAN_STATE,
+  EMMC_DATA_STATE,
+  EMMC_RCV_STATE,
+  EMMC_PRG_STATE,
+  EMMC_DIS_STATE,
+  EMMC_BTST_STATE,
+  EMMC_SLP_STATE
+} EMMC_DEVICE_STATE;
+
 UINT32 mEmmcRcaCount = 0;
+
+STATIC
+EFI_STATUS
+EFIAPI
+EmmcGetDeviceState (
+  IN  MMC_HOST_INSTANCE    *MmcHostInstance,
+  OUT EMMC_DEVICE_STATE    *State
+  )
+{
+  EFI_MMC_HOST_PROTOCOL *Host;
+  EFI_STATUS Status;
+  UINT32     Data, RCA;
+
+  if (State == NULL)
+    return EFI_INVALID_PARAMETER;
+
+  Host  = MmcHostInstance->MmcHost;
+  RCA = MmcHostInstance->CardInfo.RCA << RCA_SHIFT_OFFSET;
+  Status = Host->SendCommand (Host, MMC_CMD13, RCA);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get card status, Status=%r.\n", Status));
+    return Status;
+  }
+  Status = Host->ReceiveResponse (Host, MMC_RESPONSE_TYPE_R1, &Data);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get response of CMD13, Status=%r.\n", Status));
+    return Status;
+  }
+  if (Data & EMMC_SWITCH_ERROR) {
+    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to switch expected mode, Status=%r.\n", Status));
+    return EFI_DEVICE_ERROR;
+  }
+  *State = DEVICE_STATE(Data);
+  return EFI_SUCCESS;
+}
+
+STATIC
+EFI_STATUS
+EFIAPI
+EmmcSetEXTCSD (
+  IN MMC_HOST_INSTANCE     *MmcHostInstance,
+  UINT32                   ExtCmdIndex,
+  UINT32                   Value
+  )
+{
+  EFI_MMC_HOST_PROTOCOL *Host;
+  EMMC_DEVICE_STATE     State;
+  EFI_STATUS Status;
+  UINT32     Argument;
+
+  Host  = MmcHostInstance->MmcHost;
+  Argument = (3 << 24) | ((ExtCmdIndex & 0xff) << 16) | ((Value & 0xff) << 8) | 1;
+  Status = Host->SendCommand (Host, MMC_CMD6, Argument);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "EmmcSetEXTCSD(): Failed to send CMD6, Status=%r.\n", Status));
+    return Status;
+  }
+  // Make sure device exiting prog mode
+  do {
+    Status = EmmcGetDeviceState (MmcHostInstance, &State);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "EmmcSetEXTCSD(): Failed to get device state, Status=%r.\n", Status));
+      return Status;
+    }
+  } while (State == EMMC_PRG_STATE);
+  return EFI_SUCCESS;
+}
 
 STATIC
 EFI_STATUS
@@ -37,6 +135,7 @@ EmmcIdentificationMode (
 {
   EFI_MMC_HOST_PROTOCOL *Host;
   EFI_BLOCK_IO_MEDIA    *Media;
+  EMMC_DEVICE_STATE     State;
   EFI_STATUS Status;
   UINT32     RCA;
 
@@ -84,31 +183,113 @@ EmmcIdentificationMode (
     DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Card selection error, Status=%r.\n", Status));
   }
 
-  // Fetch ECSD
-  Status = Host->SendCommand (Host, MMC_CMD8, RCA);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD fetch error, Status=%r.\n", Status));
-  }
+  // MMC v4 specific
+  if (MmcHostInstance->CardInfo.CSDData.SPEC_VERS == 4) {
+    if (Host->SetIos) {
+      // Set 1-bit bus width
+      Status = Host->SetIos (Host, 0, 1, EMMCBACKWARD);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Set 1-bit bus width error, Status=%r.\n", Status));
+        return Status;
+      }
 
-  Status = Host->ReadBlockData (Host, 0, 512, (UINT32 *)&(MmcHostInstance->CardInfo.ECSDData));
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD read error, Status=%r.\n", Status));
-    return Status;
-  }
+      // Set 1-bit bus width for EXTCSD
+      Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, EMMC_BUS_WIDTH_1BIT);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Set extcsd bus width error, Status=%r.\n", Status));
+        return Status;
+      }
+    }
 
+    // Fetch ECSD
+    Status = Host->SendCommand (Host, MMC_CMD8, RCA);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD fetch error, Status=%r.\n", Status));
+    }
+    Status = Host->ReadBlockData (Host, 0, 512, (UINT32 *)&(MmcHostInstance->CardInfo.ECSDData));
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD read error, Status=%r.\n", Status));
+      return Status;
+    }
+
+    // Make sure device exiting data mode
+    do {
+      Status = EmmcGetDeviceState (MmcHostInstance, &State);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Failed to get device state, Status=%r.\n", Status));
+        return Status;
+      }
+    } while (State == EMMC_DATA_STATE);
+
+    // Compute last block using bits [215:212] of the ECSD
+    Media->LastBlock = MmcHostInstance->CardInfo.ECSDData.SEC_COUNT - 1; // eMMC isn't supposed to report this for
+    // Cards <2GB in size, but the model does.
+
+    // Setup card type
+    MmcHostInstance->CardInfo.CardType = EMMC_CARD;
+  }
   // Set up media
   Media->BlockSize = EMMC_CARD_SIZE; // 512-byte support is mandatory for eMMC cards
   Media->MediaId = MmcHostInstance->CardInfo.CIDData.PSN;
   Media->ReadOnly = MmcHostInstance->CardInfo.CSDData.PERM_WRITE_PROTECT;
   Media->LogicalBlocksPerPhysicalBlock = 1;
   Media->IoAlign = 4;
-  // Compute last block using bits [215:212] of the ECSD
-  Media->LastBlock = MmcHostInstance->CardInfo.ECSDData.SEC_COUNT - 1; // eMMC isn't supposed to report this for
-  // Cards <2GB in size, but the model does.
-
-  // Setup card type
-  MmcHostInstance->CardInfo.CardType = EMMC_CARD;
   return EFI_SUCCESS;
+}
+
+STATIC
+EFI_STATUS
+InitializeEmmcDevice (
+  IN  MMC_HOST_INSTANCE   *MmcHostInstance
+  )
+{
+  EFI_MMC_HOST_PROTOCOL *Host;
+  EFI_STATUS Status = EFI_SUCCESS;
+  ECSD       *ECSDData;
+  BOOLEAN    Found = FALSE;
+  UINT32     BusClockFreq, Idx;
+  UINT32     TimingMode[4] = {EMMCHS52DDR1V2, EMMCHS52DDR1V8, EMMCHS52, EMMCHS26};
+
+  Host  = MmcHostInstance->MmcHost;
+  if (MmcHostInstance->CardInfo.CSDData.SPEC_VERS < 4)
+    return EFI_SUCCESS;
+  ECSDData = &MmcHostInstance->CardInfo.ECSDData;
+  if (ECSDData->DEVICE_TYPE == EMMCBACKWARD)
+    return EFI_SUCCESS;
+
+  if (Host->SetIos) {
+    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_HS_TIMING, EMMC_TIMING_HS);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "InitializeEmmcDevice(): Failed to switch high speed mode, Status:%r.\n", Status));
+      return Status;
+    }
+
+    for (Idx = 0; Idx < 4; Idx++) {
+      switch (TimingMode[Idx]) {
+      case EMMCHS52DDR1V2:
+      case EMMCHS52DDR1V8:
+      case EMMCHS52:
+        BusClockFreq = 52000000;
+        break;
+      case EMMCHS26:
+        BusClockFreq = 26000000;
+        break;
+      default:
+        return EFI_UNSUPPORTED;
+      }
+      Status = Host->SetIos (Host, BusClockFreq, 8, TimingMode[Idx]);
+      if (!EFI_ERROR (Status)) {
+        Found = TRUE;
+        break;
+      }
+    }
+    if (Found) {
+      Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, EMMC_BUS_WIDTH_DDR_8BIT);
+      if (EFI_ERROR (Status))
+        DEBUG ((DEBUG_ERROR, "InitializeEmmcDevice(): Failed to set EXTCSD bus width, Status:%r\n", Status));
+    }
+  }
+  return Status;
 }
 
 STATIC
@@ -429,11 +610,15 @@ InitializeMmcDevice (
     return Status;
   }
 
-  if (MmcHostInstance->CardInfo.CardType != EMMC_CARD) {
-    Status = InitializeSdMmcDevice (MmcHostInstance);
-    if (EFI_ERROR (Status)) {
-      return Status;
+  if (MmcHostInstance->CardInfo.CardType == EMMC_CARD) {
+    if (MmcHost->SetIos) {
+      Status = InitializeEmmcDevice (MmcHostInstance);
     }
+  } else {
+    Status = InitializeSdMmcDevice (MmcHostInstance);
+  }
+  if (EFI_ERROR (Status)) {
+    return Status;
   }
 
   // Set Block Length

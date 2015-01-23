@@ -49,6 +49,7 @@ typedef UINT32 MMC_CMD;
 #define MMC_CMD2              (MMC_INDX(2) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_LONG_RESPONSE)
 #define MMC_CMD3              (MMC_INDX(3) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD5              (MMC_INDX(5) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_NO_CRC_RESPONSE)
+#define MMC_CMD6              (MMC_INDX(6) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD7              (MMC_INDX(7) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD8              (MMC_INDX(8) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD9              (MMC_INDX(9) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_LONG_RESPONSE)
@@ -81,6 +82,16 @@ typedef enum _MMC_STATE {
     MmcProgrammingState,
     MmcDisconnectState,
 } MMC_STATE;
+
+#define EMMCBACKWARD         (0)
+#define EMMCHS26             (1 << 0)      // High-Speed @26MHz at rated device voltages
+#define EMMCHS52             (1 << 1)      // High-Speed @52MHz at rated device voltages
+#define EMMCHS52DDR1V8       (1 << 2)      // High-Speed Dual Data Rate @52MHz 1.8V or 3V I/O
+#define EMMCHS52DDR1V2       (1 << 3)      // High-Speed Dual Data Rate @52MHz 1.2V I/O
+#define EMMCHS200SDR1V8      (1 << 4)      // HS200 Single Data Rate @200MHz 1.8V I/O
+#define EMMCHS200SDR1V2      (1 << 5)      // HS200 Single Data Rate @200MHz 1.2V I/O
+#define EMMCHS400DDR1V8      (1 << 6)      // HS400 Dual Data Rate @400MHz 1.8V I/O
+#define EMMCHS400DDR1V2      (1 << 7)      // HS400 Dual Data Rate @400MHz 1.2V I/O
 
 ///
 /// Forward declaration for EFI_MMC_HOST_PROTOCOL
@@ -133,8 +144,9 @@ typedef EFI_STATUS (EFIAPI *MMC_WRITEBLOCKDATA) (
 
 typedef EFI_STATUS (EFIAPI *MMC_SETIOS) (
   IN  EFI_MMC_HOST_PROTOCOL     *This,
-  IN  UINT32                    BusClockRate,
-  IN  UINT32                    BusWidth
+  IN  UINT32                    BusClockFreq,
+  IN  UINT32                    BusWidth,
+  IN  UINT32                    TimingMode
   );
 
 
