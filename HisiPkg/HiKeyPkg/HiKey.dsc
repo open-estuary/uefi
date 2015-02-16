@@ -36,12 +36,17 @@
   ArmSmcLib|ArmPkg/Library/ArmSmcLib/ArmSmcLib.inf
 
   ArmPlatformSysConfigLib|ArmPlatformPkg/ArmVExpressPkg/Library/ArmVExpressSysConfigLib/ArmVExpressSysConfigLib.inf
+
+  CacheMaintenanceLib|ArmPkg/Library/ArmCacheMaintenanceLib/ArmCacheMaintenanceLib.inf
   EfiResetSystemLib|ArmPkg/Library/ArmPsciResetSystemLib/ArmPsciResetSystemLib.inf
 
+  HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
   TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
 
   # USB Requirements
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
+
+  UncachedMemoryAllocationLib|ArmPkg/Library/UncachedMemoryAllocationLib/UncachedMemoryAllocationLib.inf
 
 [LibraryClasses.AARCH64]
   ArmLib|ArmPkg/Library/ArmLib/AArch64/AArch64Lib.inf
@@ -56,6 +61,12 @@
   PerformanceLib|MdeModulePkg/Library/PeiPerformanceLib/PeiPerformanceLib.inf
   PlatformPeiLib|ArmPlatformPkg/PlatformPei/PlatformPeiLib.inf
   MemoryInitPeiLib|ArmPlatformPkg/MemoryInitPei/MemoryInitPeiLib.inf
+
+[LibraryClasses.common.DXE_CORE]
+  HobLib|MdePkg/Library/DxeCoreHobLib/DxeCoreHobLib.inf
+
+[LibraryClasses.common.DXE_RUNTIME_DRIVER]
+  HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
 
 [BuildOptions]
   GCC:*_*_*_PLATFORM_FLAGS == -I$(WORKSPACE)/ArmPlatformPkg/ArmVExpressPkg/Include -I$(WORKSPACE)/HisiPkg/HiKeyPkg/Include -I$(WORKSPACE)/HisiPkg/Include/Platform
@@ -128,6 +139,12 @@
   gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|1200000
   gEmbeddedTokenSpaceGuid.PcdMetronomeTickPeriod|1000
 
+  #
+  # DW MMC/SD card controller
+  #
+  gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0xF723D000
+  gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|100000000
+
 
 ################################################################################
 #
@@ -184,6 +201,12 @@
   # Semi-hosting filesystem
   #
   ArmPkg/Filesystem/SemihostFs/SemihostFs.inf
+
+  #
+  # MMC/SD
+  #
+  EmbeddedPkg/Universal/MmcDxe/MmcDxe.inf
+  EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning
