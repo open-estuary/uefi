@@ -69,7 +69,7 @@
   HobLib|MdePkg/Library/DxeHobLib/DxeHobLib.inf
 
 [BuildOptions]
-  GCC:*_*_*_PLATFORM_FLAGS == -I$(WORKSPACE)/ArmPlatformPkg/ArmVExpressPkg/Include -I$(WORKSPACE)/HisiPkg/HiKeyPkg/Include -I$(WORKSPACE)/HisiPkg/Include/Platform
+  GCC:*_*_*_PLATFORM_FLAGS == -I$(WORKSPACE)/ArmPlatformPkg/ArmVExpressPkg/Include -I$(WORKSPACE)/MdeModulePkg/Include -I$(WORKSPACE)/HisiPkg/HiKeyPkg/Include -I$(WORKSPACE)/HisiPkg/Include/Platform
 
 ################################################################################
 #
@@ -82,7 +82,7 @@
 
   ## If TRUE, Graphics Output Protocol will be installed on virtual handle created by ConsplitterDxe.
   #  It could be set FALSE to save size.
-  gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|FALSE
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdTurnOffUsbLegacySupport|TRUE
 
@@ -90,6 +90,20 @@
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor|"Linaro HiKey"
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"PreAlpha"
   gEmbeddedTokenSpaceGuid.PcdEmbeddedPrompt|"HiKey"
+
+  #
+  # NV Storage PCDs.
+  #
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockCount|0x00001000
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockSize|0x00000200
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockLba|0x00006000
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockDevicePath|L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(5,GPT,00354BCD-BBCB-4CB3-B5AE-CDEFCB5DAC43)"
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase|0x30000000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0x30010000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0x30020000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 
   # System Memory (1GB)
   gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00000000
@@ -184,11 +198,11 @@
 
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
-  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
   EmbeddedPkg/SerialDxe/SerialDxe.inf
 
-  MdeModulePkg/Universal/Variable/EmuRuntimeDxe/EmuVariableRuntimeDxe.inf
+  HisiPkg/HiKeyPkg/Drivers/BlockVariableDxe/BlockVariableDxe.inf
+  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
   MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
 
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
@@ -197,11 +211,6 @@
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
 
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
-
-  #
-  # Semi-hosting filesystem
-  #
-  ArmPkg/Filesystem/SemihostFs/SemihostFs.inf
 
   #
   # MMC/SD

@@ -72,6 +72,10 @@
   gHwTokenSpaceGuid.PcdEmbeddedBiosVersion|"ARM Platform"|VOID*|0x00000088
 
   gHwTokenSpaceGuid.PcdGicPrimaryCoreId|0|UINT32|0x00000043
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockCount|0|UINT32|0x0100010
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockSize|0|UINT32|0x0100011
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockLba|0|UINT32|0x01000012
+  gHwTokenSpaceGuid.PcdNvStorageVariableBlockDevicePath|L""|VOID*|0x01000013
 
 
 [PcdsFeatureFlag]
