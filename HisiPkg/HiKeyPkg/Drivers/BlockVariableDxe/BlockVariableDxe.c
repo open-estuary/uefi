@@ -111,19 +111,29 @@ FvbRead (
   EFI_BLOCK_IO_PROTOCOL         *BlockIo;
   EFI_STATUS                    Status;
   UINTN                         Bytes;
+  VOID                          *DataPtr;
 
   Instance = CR (This, BLOCK_VARIABLE_INSTANCE, FvbProtocol, BLOCK_VARIABLE_SIGNATURE);
   BlockIo = Instance->BlockIoProtocol;
   Bytes = (Offset + *NumBytes + Instance->Media.BlockSize - 1) / Instance->Media.BlockSize * Instance->Media.BlockSize;
+  DataPtr = AllocateZeroPool (Bytes);
+  if (DataPtr == NULL) {
+    DEBUG ((EFI_D_ERROR, "FvbWrite: failed to allocate buffer.\n"));
+    return EFI_BUFFER_TOO_SMALL;
+  }
+  WriteBackDataCacheRange (DataPtr, Bytes);
+  InvalidateDataCacheRange (Buffer, *NumBytes);
   Status = BlockIo->ReadBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
-		                Bytes, Instance->ShadowBuffer);
+		                Bytes, DataPtr);
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "FvbRead StartLba:%x, Lba:%x, Offset:%x, Status:%x\n",
 	    Instance->StartLba, Lba, Offset, Status));
-    return Status;
+    goto exit;
   }
-  CopyMem (Buffer, Instance->ShadowBuffer + Offset, *NumBytes);
+  CopyMem (Buffer, DataPtr + Offset, *NumBytes);
   WriteBackDataCacheRange (Buffer, *NumBytes);
+exit:
+  FreePool (DataPtr);
   return Status;
 }
 
@@ -141,29 +151,33 @@ FvbWrite (
   EFI_BLOCK_IO_PROTOCOL         *BlockIo;
   EFI_STATUS                    Status;
   UINTN                         Bytes;
+  VOID                          *DataPtr;
 
   Instance = CR (This, BLOCK_VARIABLE_INSTANCE, FvbProtocol, BLOCK_VARIABLE_SIGNATURE);
   BlockIo = Instance->BlockIoProtocol;
   Bytes = (Offset + *NumBytes + Instance->Media.BlockSize - 1) / Instance->Media.BlockSize * Instance->Media.BlockSize;
-  if (*NumBytes < Bytes) {
-    Status = BlockIo->ReadBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
-                                  Bytes, Instance->ShadowBuffer);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_ERROR, "FvbWrite: failed on reading blocks.\n"));
-      return Status;
-    }
-    CopyMem (Instance->ShadowBuffer + Offset, Buffer, *NumBytes);
-    WriteBackDataCacheRange (Instance->ShadowBuffer, Bytes);
-    Status = BlockIo->WriteBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
-                                   Bytes, Instance->ShadowBuffer);
-  } else {
-    Status = BlockIo->WriteBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
-                                   Bytes, Buffer);
+  DataPtr = AllocateZeroPool (Bytes);
+  if (DataPtr == NULL) {
+    DEBUG ((EFI_D_ERROR, "FvbWrite: failed to allocate buffer.\n"));
+    return EFI_BUFFER_TOO_SMALL;
   }
+  WriteBackDataCacheRange (DataPtr, Bytes);
+  Status = BlockIo->ReadBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
+                                Bytes, DataPtr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "FvbWrite: failed on reading blocks.\n"));
+    goto exit;
+  }
+  CopyMem (DataPtr + Offset, Buffer, *NumBytes);
+  WriteBackDataCacheRange (DataPtr, Bytes);
+  Status = BlockIo->WriteBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
+                                 Bytes, DataPtr);
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "FvbWrite StartLba:%x, Lba:%x, Offset:%x, Status:%x\n",
             Instance->StartLba, Lba, Offset, Status));
   }
+exit:
+  FreePool (DataPtr);
   return Status;
 }
 
@@ -231,7 +245,6 @@ InitNonVolatileVariableStore (
   NvStorageData = (UINT8 *) (UINTN) PcdGet32(PcdFlashNvStorageVariableBase);
   mMapNvStorageVariableBase = PcdGet32(PcdFlashNvStorageVariableBase);
   NvBlockDevicePath = &Instance->DevicePath;
-  Instance->ShadowBuffer = (VOID *)(NvStorageData + 0x800000);
   NvBlockDevicePath = ConvertTextToDevicePath ((CHAR16*)FixedPcdGetPtr (PcdNvStorageVariableBlockDevicePath));
   Status = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &NvBlockDevicePath,
                                   &Instance->Handle);
