@@ -176,6 +176,14 @@ FvbWrite (
     DEBUG ((EFI_D_ERROR, "FvbWrite StartLba:%x, Lba:%x, Offset:%x, Status:%x\n",
             Instance->StartLba, Lba, Offset, Status));
   }
+  // Sometimes the variable isn't flushed into block device if it's the last flush operation.
+  // So flush it again.
+  Status = BlockIo->WriteBlocks (BlockIo, BlockIo->Media->MediaId, Instance->StartLba + Lba,
+                                 Bytes, DataPtr);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "FvbWrite StartLba:%x, Lba:%x, Offset:%x, Status:%x\n",
+            Instance->StartLba, Lba, Offset, Status));
+  }
 exit:
   FreePool (DataPtr);
   return Status;
