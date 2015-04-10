@@ -109,7 +109,7 @@
 
   # System Memory (1GB)
   gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00000000
-  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3F000000
+  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3E000000
 
   # HiKey Dual-Cluster profile
   gArmPlatformTokenSpaceGuid.PcdCoreCount|8
