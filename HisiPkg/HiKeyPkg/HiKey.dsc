@@ -90,8 +90,8 @@
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor|"Linaro HiKey"
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"PreAlpha"
   gEmbeddedTokenSpaceGuid.PcdEmbeddedPrompt|"HiKey"
-  # Flash limit 512M/time, for memory concern
-  gArmPlatformTokenSpaceGuid.PcdArmFastbootFlashLimit|"0x20000000"
+  # Flash limit 500M/time, for memory concern
+  gArmPlatformTokenSpaceGuid.PcdArmFastbootFlashLimit|"524288000"
 
   #
   # NV Storage PCDs.
