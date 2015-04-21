@@ -161,6 +161,8 @@
   #
   gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0xF723D000
   gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|100000000
+  gHwTokenSpaceGuid.PcdDwSdBaseAddress|0xF723E000
+  gHwTokenSpaceGuid.PcdDwSdClockFrequencyInHz|24000000
 
   #
   # usb controller
@@ -230,6 +232,7 @@
   #
   EmbeddedPkg/Universal/MmcDxe/MmcDxe.inf
   EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
+  HisiPkg/HiKeyPkg/Drivers/DwSdDxe/DwSdDxe.inf
 
   #
   # USB

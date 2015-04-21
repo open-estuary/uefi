@@ -118,6 +118,7 @@ READ_LOCK_STATUS   = TRUE
   #
   INF EmbeddedPkg/Universal/MmcDxe/MmcDxe.inf
   INF EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
+  INF HisiPkg/HiKeyPkg/Drivers/DwSdDxe/DwSdDxe.inf
 
   #
   # USB
