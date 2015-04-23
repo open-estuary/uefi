@@ -142,4 +142,30 @@ typedef struct _FASTBOOT_PLATFORM_PROTOCOL {
   FASTBOOT_PLATFORM_OEM_COMMAND   DoOemCommand;
 } FASTBOOT_PLATFORM_PROTOCOL;
 
+/* See sparse_format.h in AOSP  */
+#define SPARSE_HEADER_MAGIC 0xed26ff3a
+#define CHUNK_TYPE_RAW      0xCAC1
+#define CHUNK_TYPE_FILL     0xCAC2
+#define CHUNK_TYPE_DONT_CARE    0xCAC3
+#define CHUNK_TYPE_CRC32    0xCAC4
+
+typedef struct _SPARSE_HEADER {
+  UINT32    Magic;
+  UINT16    MajorVersion;
+  UINT16    MinorVersion;
+  UINT16    FileHeaderSize;
+  UINT16    ChunkHeaderSize;
+  UINT32    BlockSize;
+  UINT32    TotalBlocks;
+  UINT32    TotalChunks;
+  UINT32    ImageChecksum;
+} SPARSE_HEADER;
+
+typedef struct _CHUNK_HEADER {
+  UINT16    ChunkType;
+  UINT16    Reserved1;
+  UINT32    ChunkSize;
+  UINT32    TotalSize;
+} CHUNK_HEADER;
+
 #endif
