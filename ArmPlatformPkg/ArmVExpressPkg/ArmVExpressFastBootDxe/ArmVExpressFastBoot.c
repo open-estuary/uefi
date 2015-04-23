@@ -319,6 +319,11 @@ ArmFastbootPlatformFlashPartition (
   FASTBOOT_PARTITION_LIST *Entry;
   CHAR16                   PartitionNameUnicode[60];
   BOOLEAN                  PartitionFound;
+  SPARSE_HEADER           *SparseHeader;
+  CHUNK_HEADER            *ChunkHeader;
+  UINTN                    Offset = 0;
+  UINT32                   Chunk;
+
 
   AsciiStrToUnicodeStr (PartitionName, PartitionNameUnicode);
 
@@ -350,6 +355,22 @@ ArmFastbootPlatformFlashPartition (
     return EFI_NOT_FOUND;
   }
 
+  SparseHeader=(SPARSE_HEADER *)Image;
+
+  if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
+    DEBUG ((EFI_D_INFO, "Sparse Magic: 0x%x Major: %d Minor: %d fhs: %d chs: %d bs: %d tbs: %d tcs: %d checksum: %d \n",
+                SparseHeader->Magic, SparseHeader->MajorVersion, SparseHeader->MinorVersion,  SparseHeader->FileHeaderSize,
+                SparseHeader->ChunkHeaderSize, SparseHeader->BlockSize, SparseHeader->TotalBlocks,
+                SparseHeader->TotalChunks, SparseHeader->ImageChecksum));
+    if (SparseHeader->MajorVersion != 1) {
+        DEBUG ((EFI_D_ERROR, "Sparse image version %d.%d not supported.\n",
+                    SparseHeader->MajorVersion, SparseHeader->MinorVersion));
+        return EFI_INVALID_PARAMETER;
+    }
+
+    Size = SparseHeader->BlockSize * SparseHeader->TotalBlocks;
+  }
+
   // Check image will fit on device
   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
   if (PartitionSize < Size) {
@@ -371,9 +392,40 @@ ArmFastbootPlatformFlashPartition (
                   );
   ASSERT_EFI_ERROR (Status);
 
-  Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
-  if (EFI_ERROR (Status)) {
-    return Status;
+  if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
+    Image += SparseHeader->FileHeaderSize;
+    for (Chunk = 0; Chunk < SparseHeader->TotalChunks; Chunk++) {
+      UINTN WriteSize;
+      ChunkHeader = (CHUNK_HEADER *)Image;
+      DEBUG ((EFI_D_INFO, "Chunk #%d - Type: 0x%x Size: %d TotalSize: %d Offset %d\n",
+                  (Chunk+1), ChunkHeader->ChunkType, ChunkHeader->ChunkSize,
+                  ChunkHeader->TotalSize, Offset));
+      Image += sizeof(CHUNK_HEADER);
+      WriteSize=(SparseHeader->BlockSize) * ChunkHeader->ChunkSize;
+      switch (ChunkHeader->ChunkType) {
+        case CHUNK_TYPE_RAW:
+          DEBUG ((EFI_D_INFO, "Writing %d at Offset %d\n", WriteSize, Offset));
+          Status = DiskIo->WriteDisk (DiskIo, MediaId, Offset, WriteSize, Image);
+          if (EFI_ERROR (Status)) {
+            return Status;
+          }
+          Image+=WriteSize;
+          break;
+        case CHUNK_TYPE_DONT_CARE:
+          break;
+        case CHUNK_TYPE_CRC32:
+          break;
+        default:
+          DEBUG ((EFI_D_ERROR, "Unknown Chunk Type: 0x%x"));
+          return EFI_PROTOCOL_ERROR;
+      }
+      Offset += WriteSize;
+    }
+  } else {
+    Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
   }
 
   BlockIo->FlushBlocks(BlockIo);
