@@ -57,6 +57,7 @@ typedef enum _EMMC_DEVICE_STATE {
 } EMMC_DEVICE_STATE;
 
 UINT32 mEmmcRcaCount = 0;
+UINT32 CurrentMediaId = 0;
 
 STATIC
 EFI_STATUS
@@ -231,6 +232,10 @@ EmmcIdentificationMode (
   // Set up media
   Media->BlockSize = EMMC_CARD_SIZE; // 512-byte support is mandatory for eMMC cards
   Media->MediaId = MmcHostInstance->CardInfo.CIDData.PSN;
+  if (CurrentMediaId > Media->MediaId)
+    Media->MediaId = ++CurrentMediaId;
+  else
+    CurrentMediaId = Media->MediaId;
   Media->ReadOnly = MmcHostInstance->CardInfo.CSDData.PERM_WRITE_PROTECT;
   Media->LogicalBlocksPerPhysicalBlock = 1;
   Media->IoAlign = 4;
@@ -344,7 +349,7 @@ InitializeSdMmcDevice (
   MmcHostInstance->BlockIo.Media->BlockSize    = BlockSize;
   MmcHostInstance->BlockIo.Media->ReadOnly     = MmcHost->IsReadOnly (MmcHost);
   MmcHostInstance->BlockIo.Media->MediaPresent = TRUE;
-  MmcHostInstance->BlockIo.Media->MediaId++;
+  MmcHostInstance->BlockIo.Media->MediaId      = ++CurrentMediaId;
 
   CmdArg = MmcHostInstance->CardInfo.RCA << 16;
   Status = MmcHost->SendCommand (MmcHost, MMC_CMD7, CmdArg);
