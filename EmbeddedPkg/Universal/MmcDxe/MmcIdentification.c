@@ -12,6 +12,9 @@
 *
 **/
 
+#include <Library/BaseMemoryLib.h>
+#include <Library/TimerLib.h>
+
 #include "Mmc.h"
 
 typedef union {
@@ -41,6 +44,11 @@ typedef union {
 
 #define EMMC_SWITCH_ERROR       (1 << 7)
 
+#define SD_BUS_WIDTH_1BIT       (1 << 0)
+#define SD_BUS_WIDTH_4BIT       (1 << 2)
+
+#define SD_CCC_SWITCH           (1 << 10)
+
 #define DEVICE_STATE(x)         (((x) >> 9) & 0xf)
 typedef enum _EMMC_DEVICE_STATE {
   EMMC_IDLE_STATE = 0,
@@ -69,28 +77,30 @@ EmmcGetDeviceState (
 {
   EFI_MMC_HOST_PROTOCOL *Host;
   EFI_STATUS Status;
-  UINT32     Data, RCA;
+  UINT32     Rsp[4], RCA;
 
   if (State == NULL)
     return EFI_INVALID_PARAMETER;
 
   Host  = MmcHostInstance->MmcHost;
   RCA = MmcHostInstance->CardInfo.RCA << RCA_SHIFT_OFFSET;
-  Status = Host->SendCommand (Host, MMC_CMD13, RCA);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get card status, Status=%r.\n", Status));
-    return Status;
-  }
-  Status = Host->ReceiveResponse (Host, MMC_RESPONSE_TYPE_R1, &Data);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get response of CMD13, Status=%r.\n", Status));
-    return Status;
-  }
-  if (Data & EMMC_SWITCH_ERROR) {
-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to switch expected mode, Status=%r.\n", Status));
-    return EFI_DEVICE_ERROR;
-  }
-  *State = DEVICE_STATE(Data);
+  do {
+    Status = Host->SendCommand (Host, MMC_CMD13, RCA);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get card status, Status=%r.\n", Status));
+      return Status;
+    }
+    Status = Host->ReceiveResponse (Host, MMC_RESPONSE_TYPE_R1, Rsp);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get response of CMD13, Status=%r.\n", Status));
+      return Status;
+    }
+    if (Rsp[0] & EMMC_SWITCH_ERROR) {
+      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to switch expected mode, Status=%r.\n", Status));
+      return EFI_DEVICE_ERROR;
+    }
+  } while (!(Rsp[0] & MMC_R0_READY_FOR_DATA));
+  *State = MMC_R0_CURRENTSTATE(Rsp);
   return EFI_SUCCESS;
 }
 
@@ -305,9 +315,12 @@ InitializeSdMmcDevice (
 {
   UINT32        CmdArg;
   UINT32        Response[4];
+  UINT32        Buffer[128];
   UINTN         BlockSize;
   UINTN         CardSize;
   UINTN         NumBlocks;
+  BOOLEAN       CccSwitch;
+  SCR           Scr;
   EFI_STATUS    Status;
   EFI_MMC_HOST_PROTOCOL     *MmcHost;
 
@@ -328,6 +341,10 @@ InitializeSdMmcDevice (
     return Status;
   }
   PrintCSD (Response);
+  if (MMC_CSD_GET_CCC(Response) & SD_CCC_SWITCH)
+    CccSwitch = TRUE;
+  else
+    CccSwitch = FALSE;
 
   if (MmcHostInstance->CardInfo.CardType == SD_CARD_2_HIGH) {
     CardSize = HC_MMC_CSD_GET_DEVICESIZE (Response);
@@ -358,6 +375,87 @@ InitializeSdMmcDevice (
     return Status;
   }
 
+  Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD55): Error and Status = %r\n", Status));
+    return Status;
+  }
+  /* SCR */
+  Status = MmcHost->SendCommand (MmcHost, MMC_CMD51, 0);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): Error and Status = %r\n", Status));
+    return Status;
+  } else {
+    Status = MmcHost->ReadBlockData (MmcHost, 0, 8, Buffer);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): ReadBlockData Error and Status = %r\n", Status));
+      return Status;
+    }
+    CopyMem (&Scr, Buffer, 8);
+    if (Scr.SD_SPEC == 2) {
+      if (Scr.SD_SPEC3 == 1) {
+	if (Scr.SD_SPEC4 == 1) {
+          DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 4.xx\n"));
+	} else {
+          DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 3.0x\n"));
+	}
+      } else {
+	if (Scr.SD_SPEC4 == 0) {
+          DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 2.0\n"));
+	} else {
+	  DEBUG ((EFI_D_ERROR, "Found invalid SD Card\n"));
+	}
+      }
+    } else {
+      if ((Scr.SD_SPEC3 == 0) && (Scr.SD_SPEC4 == 0)) {
+        if (Scr.SD_SPEC == 1) {
+	  DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 1.10\n"));
+	} else {
+	  DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 1.0\n"));
+	}
+      } else {
+        DEBUG ((EFI_D_ERROR, "Found invalid SD Card\n"));
+      }
+    }
+  }
+  if (CccSwitch) {
+    /* SD Switch, Mode:1, Group:0, Value:1 */
+    CmdArg = 1 << 31 | 0x00FFFFFF;
+    CmdArg &= ~(0xF << (0 * 4));
+    CmdArg |= 1 << (0 * 4);
+    Status = MmcHost->SendCommand (MmcHost, MMC_CMD6, CmdArg);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): Error and Status = %r\n", Status));
+       return Status;
+    } else {
+      Status = MmcHost->ReadBlockData (MmcHost, 0, 64, Buffer);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): ReadBlockData Error and Status = %r\n", Status));
+        return Status;
+      }
+    }
+  }
+  if (Scr.SD_BUS_WIDTHS & SD_BUS_WIDTH_4BIT) {
+    CmdArg = MmcHostInstance->CardInfo.RCA << 16;
+    Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD55): Error and Status = %r\n", Status));
+      return Status;
+    }
+    /* Width: 4 */
+    Status = MmcHost->SendCommand (MmcHost, MMC_CMD6, 2);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): Error and Status = %r\n", Status));
+      return Status;
+    }
+  }
+  if (MmcHost->SetIos) {
+    Status = MmcHost->SetIos (MmcHost, 24 * 1000 * 1000, 4, EMMCBACKWARD);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a(SetIos): Error and Status = %r\n", Status));
+      return Status;
+    }
+  }
   return EFI_SUCCESS;
 }
 
