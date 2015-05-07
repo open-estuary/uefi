@@ -38,8 +38,12 @@
 #define BOOT_DEVICE_ADDRESS_MAX       (sizeof(L"0x0000000000000000"))
 
 //address of Linux in DDR
-#define TEXT_SRAM_BASE                  0xe00f0000
-#define MONITOR_SRAM_BASE               0xe00f8000
+#define TEXT_DDR_BASE                   0x10c00000
+#define MONITOR_DDR_BASE                0x10c08000
+//address of TEXT_SRAM_BASE should be 0xe00f0000,just to align with mainline kernel
+#define TEXT_SRAM_BASE                  0x10c00000
+//address of MONITOR_SRAM_BASE should be 0xe00f8000,just to align with mainline kernel
+#define MONITOR_SRAM_BASE               0x10c08000
 #define KERNEL_DDR_BASE                 0x10008000
 #define FILESYSTEM_DDR_BASE             0x10d00000
 
