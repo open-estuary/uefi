@@ -36,7 +36,7 @@
 #define DWSD_BLOCK_SIZE	        512
 #define DWSD_DMA_BUF_SIZE	(512 * 8)
 
-#define FIFO
+//#define FIFO
 //#define DUMP_BUF
 
 typedef struct {
@@ -322,9 +322,12 @@ DwSdSendCommand (
   IN UINT32                     Argument
   )
 {
-  UINT32       Cmd = 0, Data;
+  UINT32       Cmd = 0;
   EFI_STATUS   Status = EFI_SUCCESS;
   BOOLEAN      Pending = FALSE;
+#ifdef FIFO
+  UINT32       Data;
+#endif
 
   switch (MMC_GET_INDX(MmcCmd)) {
   case MMC_INDX(0):
@@ -358,7 +361,8 @@ DwSdSendCommand (
     while (MmioRead32 (DWSD_CTRL) & DWSD_CTRL_FIFO_RESET) {
     };
 #else
-    Pending = TRUE;
+    if (!ACmd)
+      Pending = TRUE;
 #endif
     break;
   case MMC_INDX(7):
@@ -583,7 +587,7 @@ DwSdReadBlockData (
   Status = SendCommand (mDwSdCommand, mDwSdArgument);
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "Failed to read data, mDwSdCommand:%x, mDwSdArgument:%x, Status:%r\n", mDwSdCommand, mDwSdArgument, Status));
-    return Status;
+    goto out;
   }
 #ifdef DUMP_BUF
   for (Idx = 0; Idx < Length; Idx += 8) {
