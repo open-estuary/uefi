@@ -114,7 +114,7 @@ DwSdIsDmaSupported (
 #ifdef FIFO
   return FALSE;
 #else
-  return TRUE;
+  return FALSE;
 #endif
 }
 
