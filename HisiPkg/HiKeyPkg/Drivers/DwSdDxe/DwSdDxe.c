@@ -116,7 +116,7 @@ DwSdIsDmaSupported (
 #ifdef FIFO
   return FALSE;
 #else
-  return FALSE;
+  return TRUE;
 #endif
 }
 
@@ -302,7 +302,7 @@ SendCommand (
     Data = MmioRead32 (DWSD_RINTSTS);
 
     if (Data & ErrMask) {
-      DEBUG ((EFI_D_ERROR, "Data:%x, ErrMask:%x, TBBCNT:%x, TCBCNT:%x\n", Data, ErrMask, MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
+      DEBUG ((EFI_D_ERROR, "Data:%x, ErrMask:%x, TBBCNT:%x, TCBCNT:%x, BYTCNT:%x, BLKSIZ:%x\n", Data, ErrMask, MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT), MmioRead32 (DWSD_BYTCNT), MmioRead32 (DWSD_BLKSIZ)));
       return EFI_DEVICE_ERROR;
     }
     if (Data & DWSD_INT_DTO)	// Transfer Done
@@ -599,7 +599,7 @@ ReadFifo (
 	    *((UINT8 *)Buffer + Idx + 6), *((UINT8 *)Buffer + Idx + 7));
     SerialPortWrite ((UINT8 *) CBuffer, CharCount);
   }
-  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
+  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x, BYTCNT:%x, BLKSIZ:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT), MmioRead32 (DWSD_BYTCNT), MmioRead32 (DWSD_BLKSIZ)));
 #else
   /* FIXME */
   MicroSecondDelay (1000);
@@ -669,6 +669,11 @@ DwSdReadBlockData (
       DEBUG ((EFI_D_ERROR, "Failed to read data, mDwSdCommand:%x, mDwSdArgument:%x, Status:%r\n", mDwSdCommand, mDwSdArgument, Status));
       goto out;
     }
+
+    /* Wait until data transfer finished */
+    while (MmioRead32 (DWSD_TCBCNT) < MmioRead32 (DWSD_BYTCNT)) {
+    }
+
   }
 done:
 #ifdef DUMP_BUF
@@ -679,7 +684,7 @@ done:
 	    *((UINT8 *)Buffer + Idx + 6), *((UINT8 *)Buffer + Idx + 7));
     SerialPortWrite ((UINT8 *) CBuffer, CharCount);
   }
-  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
+  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x, BYTCNT:%x, BLKSIZ:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT), MmioRead32 (DWSD_BYTCNT), MmioRead32 (DWSD_BLKSIZ)));
 #endif
 out:
   UncachedFreePages (IdmacDesc, DescPages);
