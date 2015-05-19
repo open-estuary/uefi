@@ -39,6 +39,8 @@
 #define DWSD_RINTSTS		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x044)
 #define DWSD_STATUS		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x048)
 #define DWSD_FIFOTH		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x04c)
+#define DWSD_TCBCNT		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x05c)
+#define DWSD_TBBCNT		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x060)
 #define DWSD_DEBNCE		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x064)
 #define DWSD_UHSREG		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x074)
 #define DWSD_BMOD		((UINT32)PcdGet32 (PcdDwSdBaseAddress) + 0x080)

@@ -36,6 +36,8 @@
 #define DWSD_BLOCK_SIZE	        512
 #define DWSD_DMA_BUF_SIZE	(512 * 8)
 
+#define DWSD_DMA_THRESHOLD	16
+
 //#define FIFO
 //#define DUMP_BUF
 
@@ -282,13 +284,14 @@ SendCommand (
 {
   UINT32      Data, ErrMask;
 
+  MmioWrite32 (DWSD_RINTSTS, ~0);
+  MmioWrite32 (DWSD_CMDARG, Argument);
+  MicroSecondDelay(500);
   // Wait until MMC is idle
   do {
     Data = MmioRead32 (DWSD_STATUS);
   } while (Data & DWSD_STS_DATA_BUSY);
 
-  MmioWrite32 (DWSD_RINTSTS, ~0);
-  MmioWrite32 (DWSD_CMDARG, Argument);
   MmioWrite32 (DWSD_CMD, MmcCmd);
 
   ErrMask = DWSD_INT_EBE | DWSD_INT_HLE | DWSD_INT_RTO |
@@ -299,6 +302,7 @@ SendCommand (
     Data = MmioRead32 (DWSD_RINTSTS);
 
     if (Data & ErrMask) {
+      DEBUG ((EFI_D_ERROR, "Data:%x, ErrMask:%x, TBBCNT:%x, TCBCNT:%x\n", Data, ErrMask, MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
       return EFI_DEVICE_ERROR;
     }
     if (Data & DWSD_INT_DTO)	// Transfer Done
@@ -325,9 +329,7 @@ DwSdSendCommand (
   UINT32       Cmd = 0;
   EFI_STATUS   Status = EFI_SUCCESS;
   BOOLEAN      Pending = FALSE;
-#ifdef FIFO
   UINT32       Data;
-#endif
 
   switch (MMC_GET_INDX(MmcCmd)) {
   case MMC_INDX(0):
@@ -403,6 +405,11 @@ DwSdSendCommand (
     };
 #else
     Pending = TRUE;
+    Data = MmioRead32 (DWSD_CTRL);
+    Data |= DWSD_CTRL_FIFO_RESET;
+    MmioWrite32 (DWSD_CTRL, Data);
+    while (MmioRead32 (DWSD_CTRL) & DWSD_CTRL_FIFO_RESET) {
+    };
 #endif
     break;
   case MMC_INDX(24):
@@ -427,6 +434,21 @@ DwSdSendCommand (
     break;
   case MMC_INDX(41):
     Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_WAIT_PRVDATA_COMPLETE;
+    break;
+  case MMC_INDX(51):
+    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
+           BIT_CMD_DATA_EXPECTED | BIT_CMD_READ |
+           BIT_CMD_WAIT_PRVDATA_COMPLETE;
+#ifdef FIFO
+    Pending = FALSE;
+    Data = MmioRead32 (DWSD_CTRL);
+    Data |= DWSD_CTRL_FIFO_RESET;
+    MmioWrite32 (DWSD_CTRL, Data);
+    while (MmioRead32 (DWSD_CTRL) & DWSD_CTRL_FIFO_RESET) {
+    };
+#else
+    Pending = TRUE;
+#endif
     break;
   case MMC_INDX(55):
     Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC;
@@ -487,12 +509,22 @@ PrepareDmaData (
   IN UINT32*                    Buffer
   )
 {
-  UINTN  Cnt, Blks, Idx, LastIdx;
+  UINTN  Cnt, Idx, LastIdx, BlockSize;
   UINT32 Data;
 
+  if (Length % 4) {
+    DEBUG ((EFI_D_ERROR, "Length isn't aligned with 4\n"));
+    return EFI_BAD_BUFFER_SIZE;
+  }
+  if (Length < DWSD_DMA_THRESHOLD) {
+    return EFI_BUFFER_TOO_SMALL;
+  }
   Cnt = (Length + DWSD_DMA_BUF_SIZE - 1) / DWSD_DMA_BUF_SIZE;
-  Blks = (Length + DWSD_BLOCK_SIZE - 1) / DWSD_BLOCK_SIZE;
-  Length = DWSD_BLOCK_SIZE * Blks;
+  if (Length > DWSD_BLOCK_SIZE)
+    BlockSize = DWSD_BLOCK_SIZE;
+  else {
+    BlockSize = Length;
+  }
 
   for (Idx = 0; Idx < Cnt; Idx++) {
     (IdmacDesc + Idx)->Des0 = DWSD_IDMAC_DES0_OWN | DWSD_IDMAC_DES0_CH |
@@ -523,12 +555,57 @@ PrepareDmaData (
   Data |= DWSD_IDMAC_ENABLE | DWSD_IDMAC_FB;
   MmioWrite32 (DWSD_BMOD, Data);
 
-  MmioWrite32 (DWSD_BLKSIZ, DWSD_BLOCK_SIZE);
+  MmioWrite32 (DWSD_BLKSIZ, BlockSize);
   MmioWrite32 (DWSD_BYTCNT, Length);
 
   return EFI_SUCCESS;
 }
 #endif
+
+STATIC
+EFI_STATUS
+ReadFifo (
+  IN UINTN                      Length,
+  IN UINT32*                    Buffer
+  )
+{
+  UINT32      Data, Received, Count;
+#ifdef DUMP_BUF
+  CHAR8       CBuffer[100];
+  UINTN       CharCount, Idx;
+#endif
+
+  Received = 0;
+  Count = (Length + 3) / 4;
+  while (Received < Count) {
+    Data = MmioRead32 (DWSD_RINTSTS);
+    if (Data & DWSD_INT_CMD_DONE) {
+      *(Buffer + Received) = MmioRead32 (DWSD_FIFO_START);
+      Received++;
+    } else {
+      DEBUG ((EFI_D_ERROR, "Received:%d, RINTSTS:%x\n", Received, Data));
+    }
+  }
+  while (1) {
+    Data = MmioRead32 (DWSD_RINTSTS);
+    if (Data & DWSD_INT_DTO)
+      break;
+  }
+#ifdef DUMP_BUF
+  for (Idx = 0; Idx < Length; Idx += 8) {
+    CharCount = AsciiSPrint (CBuffer,sizeof (CBuffer),"#%4x: %x %x %x %x %x %x %x %x\n", Idx,
+	    *((UINT8 *)Buffer + Idx), *((UINT8 *)Buffer + Idx + 1), *((UINT8 *)Buffer + Idx + 2),
+	    *((UINT8 *)Buffer + Idx + 3), *((UINT8 *)Buffer + Idx + 4), *((UINT8 *)Buffer + Idx + 5),
+	    *((UINT8 *)Buffer + Idx + 6), *((UINT8 *)Buffer + Idx + 7));
+    SerialPortWrite ((UINT8 *) CBuffer, CharCount);
+  }
+  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
+#else
+  /* FIXME */
+  MicroSecondDelay (1000);
+#endif
+  return EFI_SUCCESS;
+}
 
 #ifdef FIFO
 EFI_STATUS
@@ -539,19 +616,7 @@ DwSdReadBlockData (
   IN UINT32*                    Buffer
   )
 {
-  UINT32      Data, Received;
-
-  Received = 0;
-  while (Received < Length / 4) {
-    Data = MmioRead32 (DWSD_RINTSTS);
-    if (Data & DWSD_INT_CMD_DONE) {
-      *(Buffer + Received) = MmioRead32 (DWSD_FIFO_START);
-      Received++;
-    } else {
-      DEBUG ((EFI_D_ERROR, "Received:%d, RINTSTS:%x\n", Received, Data));
-    }
-  }
-  return EFI_SUCCESS;
+  return ReadFifo (Length, Buffer);
 }
 #else
 EFI_STATUS
@@ -564,7 +629,7 @@ DwSdReadBlockData (
 {
   DWSD_IDMAC_DESCRIPTOR*  IdmacDesc;
   EFI_STATUS  Status;
-  UINT32      DescPages, CountPerPage, Count;
+  UINT32      DescPages, CountPerPage, Count, Data;
 #ifdef DUMP_BUF
   CHAR8       CBuffer[100];
   UINTN       CharCount, Idx;
@@ -581,14 +646,31 @@ DwSdReadBlockData (
   InvalidateDataCacheRange (Buffer, Length);
 
   Status = PrepareDmaData (IdmacDesc, Length, Buffer);
-  if (EFI_ERROR (Status))
-    goto out;
-
-  Status = SendCommand (mDwSdCommand, mDwSdArgument);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Failed to read data, mDwSdCommand:%x, mDwSdArgument:%x, Status:%r\n", mDwSdCommand, mDwSdArgument, Status));
-    goto out;
+    if (Status == EFI_BUFFER_TOO_SMALL) {
+      Data = MmioRead32 (DWSD_CTRL);
+      Data |= DWSD_CTRL_FIFO_RESET;
+      MmioWrite32 (DWSD_CTRL, Data);
+      while (MmioRead32 (DWSD_CTRL) & DWSD_CTRL_FIFO_RESET) {
+      };
+
+      Status = SendCommand (mDwSdCommand, mDwSdArgument);
+      if (EFI_ERROR (Status)) {
+	DEBUG ((EFI_D_ERROR, "Failed to read data from FIFO, mDwSdCommand:%x, mDwSdArgument:%x, Status:%r\n", mDwSdCommand, mDwSdArgument, Status));
+	goto out;
+      }
+      Status = ReadFifo (Length, Buffer);
+    }
+    goto done;
+  } else {
+
+    Status = SendCommand (mDwSdCommand, mDwSdArgument);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "Failed to read data, mDwSdCommand:%x, mDwSdArgument:%x, Status:%r\n", mDwSdCommand, mDwSdArgument, Status));
+      goto out;
+    }
   }
+done:
 #ifdef DUMP_BUF
   for (Idx = 0; Idx < Length; Idx += 8) {
     CharCount = AsciiSPrint (CBuffer,sizeof (CBuffer),"#%4x: %x %x %x %x %x %x %x %x\n", Idx,
@@ -597,6 +679,7 @@ DwSdReadBlockData (
 	    *((UINT8 *)Buffer + Idx + 6), *((UINT8 *)Buffer + Idx + 7));
     SerialPortWrite ((UINT8 *) CBuffer, CharCount);
   }
+  DEBUG ((EFI_D_ERROR, "TBB:%x, TCB:%x\n", MmioRead32 (DWSD_TBBCNT), MmioRead32 (DWSD_TCBCNT)));
 #endif
 out:
   UncachedFreePages (IdmacDesc, DescPages);
