@@ -78,7 +78,10 @@
   gHwTokenSpaceGuid.PcdNvStorageVariableBlockDevicePath|L""|VOID*|0x01000013
 
   gHwTokenSpaceGuid.PcdDwSdBaseAddress|0|UINT32|0x00300011
-  gHwTokenSpaceGuid.PcdDwSdClockFrequencyInHz|0|UINT32|0X00300012
+  gHwTokenSpaceGuid.PcdDwSdClockFrequencyInHz|0|UINT32|0x00300012
+
+  gHwTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|""|VOID*|0x00300013
+  gHwTokenSpaceGuid.PcdArmFastbootFlashLimit|L""|VOID*|0x00300014
 
 
 [PcdsFeatureFlag]

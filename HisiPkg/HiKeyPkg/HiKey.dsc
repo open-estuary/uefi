@@ -246,8 +246,6 @@
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor|"Linaro HiKey"
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"PreAlpha"
   gEmbeddedTokenSpaceGuid.PcdEmbeddedPrompt|"HiKey"
-  # Flash limit 500M/time, for memory concern
-  gArmPlatformTokenSpaceGuid.PcdArmFastbootFlashLimit|"524288000"
 
   #
   # NV Storage PCDs.
@@ -342,7 +340,9 @@
   gEmbeddedTokenSpaceGuid.PcdAndroidFastbootUsbProductId|0xd00d
 
   # Device path of block device on which Android Fastboot should flash partitions
-  gArmVExpressTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|L"VenHw(b549f005-4bd4-4020-a0cb-06f42bda68c3)"
+  gHwTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|L"VenHw(b549f005-4bd4-4020-a0cb-06f42bda68c3)"
+  # Flash limit 500M/time, for memory concern
+  gHwTokenSpaceGuid.PcdArmFastbootFlashLimit|"524288000"
 
 ################################################################################
 #
@@ -409,10 +409,10 @@
   EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsbDxe.inf
 
   #
-  # TEST
+  # Fastboot
   #
   EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.inf
-  ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf
+  HisiPkg/HiKeyPkg/Drivers/HiKeyFastbootDxe/HiKeyFastbootDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning

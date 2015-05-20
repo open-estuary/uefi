@@ -127,9 +127,9 @@ READ_LOCK_STATUS   = TRUE
   INF EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsbDxe.inf
 
   #
-  # reuse ArmVExpressFastBoot.c FASTBOOT_PLATFORM_PROTOCOL
+  # FASTBOOT_PLATFORM_PROTOCOL
   #
-  INF ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf
+  INF HisiPkg/HiKeyPkg/Drivers/HiKeyFastbootDxe/HiKeyFastbootDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning
