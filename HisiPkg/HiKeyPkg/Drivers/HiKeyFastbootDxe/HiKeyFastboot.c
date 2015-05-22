@@ -437,9 +437,72 @@ HiKeyFastbootPlatformFlashPartition (
 
 EFI_STATUS
 HiKeyFastbootPlatformErasePartition (
-  IN CHAR8 *Partition
+  IN CHAR8 *PartitionName
   )
 {
+  EFI_STATUS               Status;
+  EFI_BLOCK_IO_PROTOCOL   *BlockIo;
+  EFI_DISK_IO_PROTOCOL    *DiskIo;
+  UINT32                   MediaId;
+  UINT64                   Offset;
+  UINTN                    PartitionSize;
+  FASTBOOT_PARTITION_LIST *Entry;
+  CHAR16                   PartitionNameUnicode[60];
+  BOOLEAN                  PartitionFound;
+  CHAR8                    Buffer[EFI_PAGE_SIZE];
+
+  AsciiStrToUnicodeStr (PartitionName, PartitionNameUnicode);
+
+  PartitionFound = FALSE;
+  Entry = (FASTBOOT_PARTITION_LIST *) GetFirstNode (&(mPartitionListHead));
+  while (!IsNull (&mPartitionListHead, &Entry->Link)) {
+    // Search the partition list for the partition named by PartitionName
+    if (StrCmp (Entry->PartitionName, PartitionNameUnicode) == 0) {
+      PartitionFound = TRUE;
+      break;
+    }
+
+   Entry = (FASTBOOT_PARTITION_LIST *) GetNextNode (&mPartitionListHead, &(Entry)->Link);
+  }
+  if (!PartitionFound) {
+    return EFI_NOT_FOUND;
+  }
+
+  Status = gBS->OpenProtocol (
+                  Entry->PartitionHandle,
+                  &gEfiBlockIoProtocolGuid,
+                  (VOID **) &BlockIo,
+                  gImageHandle,
+                  NULL,
+                  EFI_OPEN_PROTOCOL_GET_PROTOCOL
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "Fastboot platform: couldn't open Block IO for flash: %r\n", Status));
+    return EFI_NOT_FOUND;
+  }
+
+  MediaId = BlockIo->Media->MediaId;
+
+  Status = gBS->OpenProtocol (
+                  Entry->PartitionHandle,
+                  &gEfiDiskIoProtocolGuid,
+                  (VOID **) &DiskIo,
+                  gImageHandle,
+                  NULL,
+                  EFI_OPEN_PROTOCOL_GET_PROTOCOL
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+
+  SetMem (Buffer, EFI_PAGE_SIZE, 0xff);
+  for (Offset = 0; Offset < PartitionSize; Offset += BlockIo->Media->BlockSize) {
+    Status = DiskIo->WriteDisk (DiskIo, MediaId, Offset, BlockIo->Media->BlockSize, (VOID *)&Buffer);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((EFI_D_ERROR, "%a: Fail to erase at address 0x%x\n", __func__, Offset));
+      return Status;
+    }
+  }
   return EFI_SUCCESS;
 }
 
