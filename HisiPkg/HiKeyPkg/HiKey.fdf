@@ -151,6 +151,11 @@ READ_LOCK_STATUS   = TRUE
   INF ShellBinPkg/UefiShell/UefiShell.inf
 
   #
+  # HiKey platform driver
+  #
+  INF HisiPkg/HiKeyPkg/Drivers/HiKeyDxe/HiKeyDxe.inf
+
+  #
   # Bds
   #
   INF MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf

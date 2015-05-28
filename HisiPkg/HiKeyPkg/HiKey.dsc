@@ -422,6 +422,11 @@
   MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
 
   #
+  # HiKey platform driver
+  #
+  HisiPkg/HiKeyPkg/Drivers/HiKeyDxe/HiKeyDxe.inf
+
+  #
   # Bds
   #
   MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
