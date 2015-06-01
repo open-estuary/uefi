@@ -550,6 +550,10 @@ HiKeyFastbootPlatformErasePartition (
   ASSERT_EFI_ERROR (Status);
 
   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+  if (AsciiStrnCmp (PartitionName, "ptable", 6) == 0) {
+    // partition table (GPT) cost 34 blocks
+    PartitionSize = 34 * BlockIo->Media->BlockSize;
+  }
 
   SetMem (Buffer, EFI_PAGE_SIZE, 0xff);
   for (Offset = 0; Offset < PartitionSize; Offset += BlockIo->Media->BlockSize) {
