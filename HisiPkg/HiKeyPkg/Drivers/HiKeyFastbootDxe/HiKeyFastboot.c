@@ -236,6 +236,18 @@ HiKeyFastbootPlatformInit (
       // device itself.
       NextNode = NextDevicePathNode (DevicePath);
       if (IsDevicePathEndType (NextNode)) {
+        // Create entry
+        Entry = AllocatePool (sizeof (FASTBOOT_PARTITION_LIST));
+        if (Entry == NULL) {
+          Status = EFI_OUT_OF_RESOURCES;
+          FreePartitionList ();
+          goto Exit;
+        }
+
+        // Copy handle and partition name
+        Entry->PartitionHandle = AllHandles[LoopIndex];
+        StrCpy (Entry->PartitionName, L"ptable");
+        InsertTailList (&mPartitionListHead, &Entry->Link);
         continue;
       }
 
@@ -324,7 +336,8 @@ HiKeyFastbootPlatformFlashPartition (
   SPARSE_HEADER           *SparseHeader;
   CHUNK_HEADER            *ChunkHeader;
   UINTN                    Offset = 0;
-  UINT32                   Chunk;
+  UINT32                   Chunk, EntrySize, EntryOffset;
+  VOID                    *Buffer;
 
 
   AsciiStrToUnicodeStr (PartitionName, PartitionNameUnicode);
@@ -424,7 +437,50 @@ HiKeyFastbootPlatformFlashPartition (
       Offset += WriteSize;
     }
   } else {
-    Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
+    if (AsciiStrCmp (PartitionName, "ptable") == 0) {
+      Buffer = Image;
+      if (AsciiStrnCmp (Buffer, "ENTRYHDR", 8) != 0) {
+        DEBUG ((EFI_D_ERROR, "unknown ptable image\n"));
+        return EFI_UNSUPPORTED;
+      }
+      Buffer += 8;
+      if (AsciiStrnCmp (Buffer, "primary", 7) != 0) {
+        DEBUG ((EFI_D_ERROR, "unknow ptable image\n"));
+        return EFI_UNSUPPORTED;
+      }
+      Buffer += 8;
+      EntryOffset = *(UINT32 *)Buffer * BlockIo->Media->BlockSize;
+      Buffer += 4;
+      EntrySize = *(UINT32 *)Buffer * BlockIo->Media->BlockSize;
+      if ((EntrySize + 512) > Size) {
+        DEBUG ((EFI_D_ERROR, "Entry size doesn't match\n"));
+        return EFI_UNSUPPORTED;
+      }
+      Buffer = Image + 512;
+      Status = DiskIo->WriteDisk (DiskIo, MediaId, EntryOffset, EntrySize, Buffer);
+      if (EFI_ERROR (Status)) {
+        return Status;
+      }
+
+      Buffer = Image + 16 + 12;
+      if (AsciiStrnCmp (Buffer, "ENTRYHDR", 8) != 0)
+        return Status;
+      Buffer += 8;
+      if (AsciiStrnCmp (Buffer, "second", 6) != 0)
+        return Status;
+      Buffer += 8;
+      EntryOffset = *(UINT32 *)Buffer * BlockIo->Media->BlockSize;
+      Buffer += 4;
+      EntrySize = *(UINT32 *)Buffer * BlockIo->Media->BlockSize;
+      if ((EntrySize + 512) > Size) {
+        DEBUG ((EFI_D_ERROR, "Entry size doesn't match\n"));
+        return EFI_UNSUPPORTED;
+      }
+      Buffer = Image + 512;
+      Status = DiskIo->WriteDisk (DiskIo, MediaId, EntryOffset, EntrySize, Buffer);
+    } else {
+      Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
+    }
     if (EFI_ERROR (Status)) {
       return Status;
     }
