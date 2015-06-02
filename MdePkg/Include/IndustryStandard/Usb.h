@@ -174,7 +174,7 @@ typedef struct {
 typedef struct {
   UINT8           Length;
   UINT8           DescriptorType;
-  CHAR16          String[1];
+  CHAR16          String[16];
 } EFI_USB_STRING_DESCRIPTOR;
 
 #pragma pack()
