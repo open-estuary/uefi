@@ -13,8 +13,46 @@
 *
 **/
 
-//#include <Library/ArmShellCmdLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+
+#include <Guid/ArmGlobalVariableHob.h>
+
 #include "HiKeyDxeInternal.h"
+
+#define SERIAL_NUMBER_LENGTH        16
+
+STATIC
+VOID
+EFIAPI
+HiKeyInitSerialNo (
+  IN   VOID
+  )
+{
+  EFI_STATUS           Status;
+  UINTN                VariableSize;
+  CHAR16               DefaultSerialNo[] = L"0123456789abcdef";
+
+  VariableSize = SERIAL_NUMBER_LENGTH * sizeof (CHAR16);
+  Status = gRT->GetVariable (
+                  (CHAR16 *)L"SerialNo",
+                  &gArmGlobalVariableGuid,
+                  NULL,
+                  &VariableSize,
+                  &DefaultSerialNo
+                  );
+  if (Status == EFI_NOT_FOUND) {
+    Status = gRT->SetVariable (
+                    (CHAR16*)L"SerialNo",
+                    &gArmGlobalVariableGuid,
+                    EFI_VARIABLE_NON_VOLATILE       |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS,
+                    VariableSize,
+                    DefaultSerialNo
+                    );
+  }
+}
 
 EFI_STATUS
 EFIAPI
@@ -24,6 +62,8 @@ HiKeyEntryPoint (
   )
 {
   EFI_STATUS           Status;
+
+  HiKeyInitSerialNo ();
 
   // Try to install the Flat Device Tree (FDT). This function actually installs the
   // UEFI Driver Binding Protocol.
