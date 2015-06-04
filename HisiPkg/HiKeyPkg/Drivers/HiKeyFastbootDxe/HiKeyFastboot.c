@@ -29,6 +29,9 @@
 #include <Library/DevicePathLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
+
+#include <Guid/ArmGlobalVariableHob.h>
 
 #define FLASH_DEVICE_PATH_SIZE(DevPath) ( GetDevicePathSize (DevPath) - \
                                             sizeof (EFI_DEVICE_PATH_PROTOCOL))
@@ -37,6 +40,10 @@
 
 #define IS_ALPHA(Char) (((Char) <= L'z' && (Char) >= L'a') || \
                         ((Char) <= L'Z' && (Char) >= L'Z'))
+#define IS_HEXCHAR(Char) (((Char) <= L'9' && (Char) >= L'0') || \
+                          IS_ALPHA(Char))
+
+#define SERIAL_NUMBER_LENGTH      16
 
 typedef struct _FASTBOOT_PARTITION_LIST {
   LIST_ENTRY  Link;
@@ -587,20 +594,67 @@ HiKeyFastbootPlatformOemCommand (
   IN  CHAR8   *Command
   )
 {
-  CHAR16 CommandUnicode[65];
-
-  AsciiStrToUnicodeStr (Command, CommandUnicode);
+  CHAR16     CommandUnicode[65], SerialNo[SERIAL_NUMBER_LENGTH];
+  UINTN      Index = 0, VariableSize;
+  EFI_STATUS Status;
 
   if (AsciiStrCmp (Command, "Demonstrate") == 0) {
     DEBUG ((EFI_D_ERROR, "ARM OEM Fastboot command 'Demonstrate' received.\n"));
     return EFI_SUCCESS;
+  } else if (AsciiStrnCmp (Command, "serialno", AsciiStrLen ("serialno")) == 0) {
+    Index += sizeof ("serialno");
+    while (TRUE) {
+      if (Command[Index] == '\0')
+        goto out;
+      else if (Command[Index] == ' ')
+        Index++;
+      else
+        break;
+    }
+    AsciiStrToUnicodeStr (Command + Index, CommandUnicode);
+    for (Index = 0; Index < SERIAL_NUMBER_LENGTH; Index++) {
+      if (IS_HEXCHAR (CommandUnicode[Index]) == 0)
+        break;
+    }
+    if ((Index == 0) || (Index > SERIAL_NUMBER_LENGTH)) {
+      DEBUG ((EFI_D_ERROR,
+        "HiKey: Invalid Fastboot OEM serialno command: %s\n",
+        CommandUnicode
+        ));
+      return EFI_NOT_FOUND;
+    }
+
+    VariableSize = SERIAL_NUMBER_LENGTH * sizeof (UINT16);
+    Status = gRT->GetVariable (
+                    (CHAR16 *)L"SerialNo",
+                    &gArmGlobalVariableGuid,
+                    NULL,
+                    &VariableSize,
+                    &SerialNo
+                    );
+    if (EFI_ERROR (Status) == 0) {
+      Status = gRT->SetVariable (
+                      (CHAR16*)L"SerialNo",
+                      &gArmGlobalVariableGuid,
+                      EFI_VARIABLE_NON_VOLATILE       |
+                      EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                      EFI_VARIABLE_RUNTIME_ACCESS,
+                      VariableSize,
+                      CommandUnicode
+                      );
+    }
+
+    return Status;
   } else {
+    AsciiStrToUnicodeStr (Command + Index, CommandUnicode);
     DEBUG ((EFI_D_ERROR,
       "HiKey: Unrecognised Fastboot OEM command: %s\n",
       CommandUnicode
       ));
     return EFI_NOT_FOUND;
   }
+out:
+  return EFI_NOT_FOUND;
 }
 
 FASTBOOT_PLATFORM_PROTOCOL mPlatformProtocol = {

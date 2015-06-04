@@ -33,6 +33,7 @@
   MemoryAllocationLib
   PcdLib
   UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
   UefiDriverEntryPoint
 
 [Protocols]
