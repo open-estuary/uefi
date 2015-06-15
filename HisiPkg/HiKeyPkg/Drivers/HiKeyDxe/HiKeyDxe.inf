@@ -23,6 +23,7 @@
 [Sources.common]
   HiKeyDxe.c
   InstallFdt.c
+  InstallBootMenu.c
 
 [Packages]
   ArmPkg/ArmPkg.dec
@@ -49,6 +50,7 @@
   gArmGlobalVariableGuid
   gEfiEndOfDxeEventGroupGuid
   gEfiFileInfoGuid
+  gEfiGlobalVariableGuid
   gFdtTableGuid
 
 [Protocols]

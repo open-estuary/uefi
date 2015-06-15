@@ -27,4 +27,9 @@ HiKeyFdtInstall (
   IN EFI_HANDLE                            ImageHandle
   );
 
+EFI_STATUS
+HiKeyBootMenuInstall (
+  IN VOID
+  );
+
 #endif // __HIKEY_DXE_INTERNAL_H__

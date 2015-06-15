@@ -13,7 +13,12 @@
 *
 **/
 
+#include <Library/BaseMemoryLib.h>
+#include <Library/BdsLib.h>
+#include <Library/DevicePathLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <Guid/ArmGlobalVariableHob.h>
@@ -68,6 +73,10 @@ HiKeyEntryPoint (
   // Try to install the Flat Device Tree (FDT). This function actually installs the
   // UEFI Driver Binding Protocol.
   Status = HiKeyFdtInstall (ImageHandle);
+  if (EFI_ERROR (Status))
+    return Status;
+
+  Status = HiKeyBootMenuInstall ();
 
   return Status;
 }
