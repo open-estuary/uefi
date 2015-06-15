@@ -17,19 +17,103 @@
 #include <Library/BdsLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <Protocol/DevicePathFromText.h>
+#include <Protocol/DevicePathToText.h>
 
 #include <Guid/ArmGlobalVariableHob.h>
 #include <Guid/EventGroup.h>
 #include <Guid/GlobalVariable.h>
+#include <Guid/VariableFormat.h>
 
 #include "HiKeyDxeInternal.h"
 
+#define MAX_BOOT_ENTRIES         16
+
 STATIC CONST BOOLEAN mIsEndOfDxeEvent = TRUE;
+STATIC UINT16 *mBootOrder = NULL;
+STATIC UINT16 mBootCount = 0;
+STATIC UINT16 mBootIndex = 0;
+
+STATIC
+BOOLEAN
+EFIAPI
+HiKeyVerifyBootEntry (
+  IN CHAR16          *BootVariableName,
+  IN CHAR16          *BootDevicePathText,
+  IN CHAR16          *BootArgs,
+  IN CHAR16          *BootDescription,
+  IN UINT16           LoadOptionAttr
+  )
+{
+  EFI_DEVICE_PATH_TO_TEXT_PROTOCOL   *DevicePathToTextProtocol;
+  CHAR16                             *DevicePathText;
+  UINTN                               EfiLoadOptionSize;
+  EFI_LOAD_OPTION                     EfiLoadOption;
+  BDS_LOAD_OPTION                    *LoadOption;
+  EFI_STATUS                          Status;
+  UINTN                               DescriptionLength;
+
+  Status = GetGlobalEnvironmentVariable (BootVariableName, NULL, &EfiLoadOptionSize, (VOID**)&EfiLoadOption);
+  if (EFI_ERROR (Status)) {
+    return FALSE;
+  }
+  if (EfiLoadOption == NULL) {
+    return FALSE;
+  }
+  if (EfiLoadOptionSize < sizeof(UINT32) + sizeof(UINT16) + sizeof(CHAR16) + sizeof(EFI_DEVICE_PATH_PROTOCOL)) {
+    return FALSE;
+  }
+  LoadOption = (BDS_LOAD_OPTION*)AllocateZeroPool (sizeof(BDS_LOAD_OPTION));
+  if (LoadOption == NULL) {
+    return FALSE;
+  }
+
+  LoadOption->LoadOption     = EfiLoadOption;
+  LoadOption->Attributes         = *(UINT32*)EfiLoadOption;
+  LoadOption->FilePathListLength = *(UINT16*)(EfiLoadOption + sizeof(UINT32));
+  LoadOption->Description        = (CHAR16*)(EfiLoadOption + sizeof(UINT32) + sizeof(UINT16));
+  DescriptionLength              = StrSize (LoadOption->Description);
+  LoadOption->FilePathList       = (EFI_DEVICE_PATH_PROTOCOL*)(EfiLoadOption + sizeof(UINT32) + sizeof(UINT16) + DescriptionLength);
+  if ((UINTN)((UINTN)LoadOption->FilePathList + LoadOption->FilePathListLength - (UINTN)EfiLoadOption) == EfiLoadOptionSize) {
+    LoadOption->OptionalData     = NULL;
+    LoadOption->OptionalDataSize = 0;
+  } else {
+    LoadOption->OptionalData     = (VOID*)((UINTN)(LoadOption->FilePathList) + LoadOption->FilePathListLength);
+    LoadOption->OptionalDataSize = EfiLoadOptionSize - ((UINTN)LoadOption->OptionalData - (UINTN)EfiLoadOption);
+  }
+
+  if (((BootArgs == NULL) && (LoadOption->OptionalDataSize)) ||
+      (BootArgs && (LoadOption->OptionalDataSize == 0))) {
+    return FALSE;
+  } else if (BootArgs && LoadOption->OptionalDataSize) {
+    if (StrCmp (BootArgs, LoadOption->OptionalData) != 0)
+      return FALSE;
+  }
+  if ((LoadOption->Description == NULL) || (BootDescription == NULL)) {
+    return FALSE;
+  }
+  if (StrCmp (BootDescription, LoadOption->Description) != 0) {
+    return FALSE;
+  }
+  if ((LoadOption->Attributes & LOAD_OPTION_CATEGORY) != (LoadOptionAttr & LOAD_OPTION_CATEGORY)) {
+    return FALSE;
+  }
+
+  Status = gBS->LocateProtocol (&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevicePathToTextProtocol);
+  ASSERT_EFI_ERROR(Status);
+  DevicePathText = DevicePathToTextProtocol->ConvertDevicePathToText(LoadOption->FilePathList, TRUE, TRUE);
+  if (StrCmp (DevicePathText, BootDevicePathText) != 0) {
+    return FALSE;
+  }
+
+  FreePool (LoadOption);
+  return TRUE;
+}
 
 STATIC
 EFI_STATUS
@@ -45,8 +129,8 @@ HiKeyCreateBootEntry (
   EFI_STATUS                          Status;
   UINTN                               DescriptionSize;
   UINTN                               BootOrderSize;
-  UINT16                              BootOrder;
-  UINT8*                              EfiLoadOptionPtr;
+  CHAR16                              BootVariableName[9];
+  UINT8                              *EfiLoadOptionPtr;
   EFI_DEVICE_PATH_PROTOCOL           *DevicePathNode;
   UINTN                               NodeLength;
   EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL *DevicePathFromTextProtocol;
@@ -56,16 +140,12 @@ HiKeyCreateBootEntry (
     return EFI_INVALID_PARAMETER;
   }
 
-  Status = gRT->GetVariable (
-                  (CHAR16*)L"BootOrder",
-                  &gEfiGlobalVariableGuid,
-                  NULL,
-                  &BootOrderSize,
-                  (VOID*)&BootOrder
-                  );
-  if (EFI_ERROR (Status) == EFI_NOT_FOUND) {
-    BootOrder = 0;
+  UnicodeSPrint (BootVariableName, 9 * sizeof(CHAR16), L"Boot%04X", mBootCount);
+  if (HiKeyVerifyBootEntry (BootVariableName, DevicePathText, BootArgs, BootDescription, LoadOption) == TRUE) {
+    // The boot entry is already created.
+    goto done;
   }
+
   BdsLoadOption = (BDS_LOAD_OPTION*)AllocateZeroPool (sizeof(BDS_LOAD_OPTION));
   ASSERT (BdsLoadOption != NULL);
 
@@ -88,7 +168,7 @@ HiKeyCreateBootEntry (
     StrCpy (BdsLoadOption->OptionalData, BootArgs);
   }
 
-  BdsLoadOption->LoadOptionIndex = BootOrder;
+  BdsLoadOption->LoadOptionIndex = mBootCount;
   DescriptionSize = StrSize (BootDescription);
   BdsLoadOption->Description = (VOID*)AllocateZeroPool (DescriptionSize);
   StrCpy (BdsLoadOption->Description, BootDescription);
@@ -134,13 +214,91 @@ HiKeyCreateBootEntry (
   }
 
   Status = gRT->SetVariable (
-                  (CHAR16*)L"Boot0000",
+                  BootVariableName,
                   &gEfiGlobalVariableGuid,
                   EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
                   BdsLoadOption->LoadOptionSize,
                   BdsLoadOption->LoadOption
                   );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set BootVariable\n", __func__));
+    return Status;
+  }
 
+done:
+  BootOrderSize = mBootCount * sizeof (UINT16);
+  mBootOrder = ReallocatePool (BootOrderSize, BootOrderSize + sizeof (UINT16), mBootOrder);
+  mBootOrder[mBootCount] = mBootCount;
+  mBootCount++;
+  return Status;
+}
+
+STATIC
+EFI_STATUS
+EFIAPI
+HiKeyCreateBootOrder (
+  IN    VOID
+  )
+{
+  UINT16             *BootOrder;
+  UINTN               BootOrderSize;
+  UINTN               Index;
+  EFI_STATUS          Status;
+
+  Status = GetGlobalEnvironmentVariable (L"BootOrder", NULL, &BootOrderSize, (VOID**)&BootOrder);
+  if (EFI_ERROR(Status) == 0) {
+    if (BootOrderSize == mBootCount) {
+      for (Index = 0; Index < mBootCount; Index++) {
+        if (BootOrder[Index] != mBootOrder[Index]) {
+          break;
+        }
+      }
+      if (Index == mBootCount) {
+        // Found BootOrder variable with expected value.
+        return EFI_SUCCESS;
+      }
+    }
+  }
+
+  Status = gRT->SetVariable (
+                  (CHAR16*)L"BootOrder",
+                  &gEfiGlobalVariableGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+                  mBootCount * sizeof(UINT16),
+                  mBootOrder
+                  );
+  return Status;
+}
+
+STATIC
+EFI_STATUS
+EFIAPI
+HiKeyCreateBootNext (
+  IN     VOID
+  )
+{
+  EFI_STATUS          Status;
+  UINT16             *BootNext;
+  UINTN               BootNextSize;
+
+  BootNextSize = sizeof(UINT16);
+  Status = GetGlobalEnvironmentVariable (L"BootNext", NULL, &BootNextSize, (VOID**)&BootNext);
+  if (EFI_ERROR(Status) == 0) {
+    if (BootNextSize == sizeof (UINT16)) {
+      if (*BootNext == mBootOrder[mBootIndex]) {
+        // Found the BootNext variable with expected value.
+        return EFI_SUCCESS;
+      }
+    }
+  }
+  BootNext = &mBootOrder[mBootIndex];
+  Status = gRT->SetVariable (
+                  (CHAR16*)L"BootNext",
+                  &gEfiGlobalVariableGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+                  sizeof (UINT16),
+                  BootNext
+                  );
   return Status;
 }
 
@@ -153,28 +311,38 @@ HiKeyOnEndOfDxe (
   )
 {
   EFI_STATUS          Status;
-  UINT16              BootIndex;
-  UINT16             *BootNext;
+
+  mBootCount = 0;
+  mBootOrder = NULL;
+
+  Status = HiKeyCreateBootEntry (
+             L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/fastboot.efi",
+             NULL,
+             L"fastboot",
+             LOAD_OPTION_CATEGORY_APP
+             );
+  ASSERT_EFI_ERROR (Status);
 
   Status = HiKeyCreateBootEntry (
              L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
-             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img efi=noruntime",
+             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img",
              L"Debian on eMMC",
              LOAD_OPTION_CATEGORY_BOOT
              );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "%a: failed to create new boot entry\n", __func__));
+  ASSERT_EFI_ERROR (Status);
+
+  if ((mBootCount == 0) || (mBootCount >= MAX_BOOT_ENTRIES)) {
+    DEBUG ((EFI_D_ERROR, "%a: can't create boot entries\n", __func__));
     return;
   }
-  BootIndex = 0;
-  BootNext = &BootIndex;
-  Status = gRT->SetVariable (
-                  (CHAR16*)L"BootNext",
-                  &gEfiGlobalVariableGuid,
-                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-                  sizeof (UINT16),
-                  BootNext
-                  );
+
+  Status = HiKeyCreateBootOrder ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set BootOrder variable\n", __func__));
+    return;
+  }
+
+  Status = HiKeyCreateBootNext ();
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "%a: failed to set BootNext variable\n", __func__));
     return;
