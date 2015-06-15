@@ -37,7 +37,8 @@ EFIAPI
 HiKeyCreateBootEntry (
   IN CHAR16          *DevicePathText,
   IN CHAR16          *BootArgs,
-  IN CHAR16          *BootDescription
+  IN CHAR16          *BootDescription,
+  IN UINT16           LoadOption
   )
 {
   BDS_LOAD_OPTION                    *BdsLoadOption;
@@ -50,7 +51,7 @@ HiKeyCreateBootEntry (
   UINTN                               NodeLength;
   EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL *DevicePathFromTextProtocol;
 
-  if ((DevicePathText == NULL) || (BootArgs == NULL) || (BootDescription == NULL)) {
+  if ((DevicePathText == NULL) || (BootDescription == NULL)) {
     DEBUG ((EFI_D_ERROR, "%a: Invalid Parameters\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
@@ -78,12 +79,14 @@ HiKeyCreateBootEntry (
   BdsLoadOption->FilePathList = DevicePathFromTextProtocol->ConvertTextToDevicePath (DevicePathText);
   ASSERT (BdsLoadOption->FilePathList != NULL);
   BdsLoadOption->FilePathListLength = GetDevicePathSize (BdsLoadOption->FilePathList);
-  BdsLoadOption->Attributes = LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_BOOT;
+  BdsLoadOption->Attributes = LOAD_OPTION_ACTIVE | (LoadOption & LOAD_OPTION_CATEGORY);
 
-  BdsLoadOption->OptionalDataSize = StrSize (BootArgs);
-  BdsLoadOption->OptionalData = (CHAR16*)AllocateZeroPool (BdsLoadOption->OptionalDataSize);
-  ASSERT (BdsLoadOption->OptionalData != NULL);
-  StrCpy (BdsLoadOption->OptionalData, BootArgs);
+  if (BootArgs) {
+    BdsLoadOption->OptionalDataSize = StrSize (BootArgs);
+    BdsLoadOption->OptionalData = (CHAR16*)AllocateZeroPool (BdsLoadOption->OptionalDataSize);
+    ASSERT (BdsLoadOption->OptionalData != NULL);
+    StrCpy (BdsLoadOption->OptionalData, BootArgs);
+  }
 
   BdsLoadOption->LoadOptionIndex = BootOrder;
   DescriptionSize = StrSize (BootDescription);
@@ -156,7 +159,8 @@ HiKeyOnEndOfDxe (
   Status = HiKeyCreateBootEntry (
              L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
              L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img efi=noruntime",
-             L"Debian on eMMC"
+             L"Debian on eMMC",
+             LOAD_OPTION_CATEGORY_BOOT
              );
   if (EFI_ERROR (Status)) {
     DEBUG ((EFI_D_ERROR, "%a: failed to create new boot entry\n", __func__));
