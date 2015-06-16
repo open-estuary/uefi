@@ -289,6 +289,9 @@
   ## PL031 RealTimeClock
   gArmPlatformTokenSpaceGuid.PcdPL031RtcBase|0xF8003000
 
+  ## PL061 Gpio
+  gArmPlatformTokenSpaceGuid.PcdPL061GpioBase|0xF8014000
+
   #
   # ARM General Interrupt Controller
   #
@@ -394,6 +397,11 @@
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
 
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
+
+  #
+  # GPIO
+  #
+  ArmPlatformPkg/Drivers/PL061GpioDxe/PL061GpioDxe.inf
 
   #
   # MMC/SD
