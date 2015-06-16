@@ -24,6 +24,7 @@
 
 #include <Protocol/DevicePathFromText.h>
 #include <Protocol/DevicePathToText.h>
+#include <Protocol/EmbeddedGpio.h>
 
 #include <Guid/ArmGlobalVariableHob.h>
 #include <Guid/EventGroup.h>
@@ -33,6 +34,8 @@
 #include "HiKeyDxeInternal.h"
 
 #define MAX_BOOT_ENTRIES         16
+// Jumper on pin5-6 of J15 determines whether boot to fastboot
+#define DETECT_J15_FASTBOOT      0    // pin number in GPIO controller
 
 STATIC CONST BOOLEAN mIsEndOfDxeEvent = TRUE;
 STATIC UINT16 *mBootOrder = NULL;
@@ -305,6 +308,38 @@ HiKeyCreateBootNext (
 STATIC
 VOID
 EFIAPI
+HiKeyDetectJumper (
+  IN     VOID
+  )
+{
+  EMBEDDED_GPIO         *Gpio;
+  EFI_STATUS             Status;
+  UINTN                  Value;
+
+  Status = gBS->LocateProtocol (&gEmbeddedGpioProtocolGuid, NULL, (VOID **)&Gpio);
+  ASSERT_EFI_ERROR (Status);
+
+  Status = Gpio->Set (Gpio, DETECT_J15_FASTBOOT, GPIO_MODE_INPUT);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set jumper as gpio input\n", __func__));
+    return;
+  }
+  Status = Gpio->Get (Gpio, DETECT_J15_FASTBOOT, &Value);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to get value from jumper\n", __func__));
+    return;
+  }
+  if (Value == 1) {
+    // Jump not connected on pin5-6 of J15
+    mBootIndex = 1;
+  } else {
+    mBootIndex = 0;
+  }
+}
+
+STATIC
+VOID
+EFIAPI
 HiKeyOnEndOfDxe (
   EFI_EVENT                               Event,
   VOID                                    *Context
@@ -341,6 +376,8 @@ HiKeyOnEndOfDxe (
     DEBUG ((EFI_D_ERROR, "%a: failed to set BootOrder variable\n", __func__));
     return;
   }
+
+  HiKeyDetectJumper ();
 
   Status = HiKeyCreateBootNext ();
   if (EFI_ERROR (Status)) {

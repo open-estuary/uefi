@@ -58,6 +58,7 @@
   gEfiDevicePathFromTextProtocolGuid
   gEfiDevicePathToTextProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
+  gEmbeddedGpioProtocolGuid
 
 [FixedPcd]
   gArmTokenSpaceGuid.PcdSystemMemoryBase
