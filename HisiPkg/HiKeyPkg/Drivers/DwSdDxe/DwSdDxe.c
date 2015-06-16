@@ -96,6 +96,21 @@ DwSdIsCardPresent (
   IN EFI_MMC_HOST_PROTOCOL     *This
   )
 {
+  UINT32    Value;
+
+  /*
+   * FIXME
+   * At first, reading GPIO pin shouldn't exist in SD driver. We need to
+   * add some callbacks to handle settings for hardware platform.
+   * In the second, reading GPIO pin should be based on GPIO driver. Now
+   * GPIO driver could only be used for one PL061 gpio controller. And it's
+   * used to detect jumper setting. As a workaround, we have to read the gpio
+   * register instead at here.
+   *
+   */
+  Value = MmioRead32 (0xf8012000 + (1 << 2));
+  if (Value)
+    return FALSE;
   return TRUE;
 }
 
