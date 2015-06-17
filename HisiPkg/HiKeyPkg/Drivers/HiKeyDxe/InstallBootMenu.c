@@ -146,6 +146,7 @@ HiKeyCreateBootEntry (
   UnicodeSPrint (BootVariableName, 9 * sizeof(CHAR16), L"Boot%04X", mBootCount);
   if (HiKeyVerifyBootEntry (BootVariableName, DevicePathText, BootArgs, BootDescription, LoadOption) == TRUE) {
     // The boot entry is already created.
+    Status = EFI_SUCCESS;
     goto done;
   }
 
@@ -379,6 +380,41 @@ HiKeyOnEndOfDxe (
   )
 {
   EFI_STATUS          Status;
+  UINTN               VariableSize;
+  UINT16              BootIndex, AutoBoot;
+
+  VariableSize = sizeof (UINT16);
+  Status = gRT->GetVariable (
+                  (CHAR16 *)L"HiKeyAutoBoot",
+                  &gArmGlobalVariableGuid,
+                  NULL,
+                  &VariableSize,
+                  (VOID*)&AutoBoot
+                  );
+  if (Status == EFI_NOT_FOUND) {
+    AutoBoot = 1;
+    Status = gRT->SetVariable (
+                    (CHAR16*)L"HiKeyAutoBoot",
+                    &gArmGlobalVariableGuid,
+                    EFI_VARIABLE_NON_VOLATILE       |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS,
+                    sizeof (UINT16),
+                    &AutoBoot
+                    );
+    ASSERT_EFI_ERROR (Status);
+  } else if (EFI_ERROR (Status) == 0) {
+    if (AutoBoot == 0) {
+      // Select boot entry by manual.
+      // Delete the BootNext environment variable
+      gRT->SetVariable (L"BootNext",
+             &gEfiGlobalVariableGuid,
+             EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+             0,
+             NULL);
+      return;
+    }
+  }
 
   mBootCount = 0;
   mBootOrder = NULL;
@@ -419,6 +455,21 @@ HiKeyOnEndOfDxe (
   }
 
   HiKeyDetectJumper ();
+
+  // The priority on jumper is higher than HiKeyBoot.
+  if (mBootIndex > 0) {
+    VariableSize = sizeof (UINT16);
+    Status = gRT->GetVariable (
+                    (CHAR16*)L"HiKeyBootNext",
+                    &gArmGlobalVariableGuid,
+                    NULL,
+                    &VariableSize,
+                    (VOID*)&BootIndex
+                    );
+    if ((EFI_ERROR (Status) == 0) && (BootIndex > 0)) {
+      mBootIndex = BootIndex;
+    }
+  }
 
   // Fdt variable should be aligned with Image path.
   // In another word, Fdt and Image file should be located in the same path.
