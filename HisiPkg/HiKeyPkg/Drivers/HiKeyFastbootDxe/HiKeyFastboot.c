@@ -596,6 +596,7 @@ HiKeyFastbootPlatformOemCommand (
 {
   CHAR16     CommandUnicode[65], SerialNo[SERIAL_NUMBER_LENGTH];
   UINTN      Index = 0, VariableSize;
+  UINT16     BootIndex, AutoBoot, Data;
   EFI_STATUS Status;
 
   if (AsciiStrCmp (Command, "Demonstrate") == 0) {
@@ -644,6 +645,74 @@ HiKeyFastbootPlatformOemCommand (
                       );
     }
 
+    return Status;
+  } else if (AsciiStrnCmp (Command, "bootorder", AsciiStrLen ("bootorder")) == 0) {
+    Index += sizeof ("bootorder");
+    while (TRUE) {
+      if (Command[Index] == '\0')
+        goto out;
+      else if (Command[Index] == ' ')
+        Index++;
+      else
+        break;
+    }
+    Data = AsciiStrDecimalToUintn (Command + Index);
+
+    VariableSize = sizeof (UINT16);
+    Status = gRT->GetVariable (
+                    (CHAR16*)L"HiKeyBootNext",
+                    &gArmGlobalVariableGuid,
+                    NULL,
+                    &VariableSize,
+                    &BootIndex
+                    );
+    if ((EFI_ERROR (Status) == 0) && (Data == BootIndex)) {
+      return EFI_SUCCESS;
+    }
+    BootIndex = Data;
+    Status = gRT->SetVariable (
+                    (CHAR16*)L"HiKeyBootNext",
+                    &gArmGlobalVariableGuid,
+                    EFI_VARIABLE_NON_VOLATILE       |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS,
+                    sizeof (UINT16),
+                    &BootIndex
+                    );
+    return Status;
+  } else if (AsciiStrnCmp (Command, "autoboot", AsciiStrLen ("autoboot")) == 0) {
+    Index += sizeof ("autoboot");
+    while (TRUE) {
+      if (Command[Index] == '\0')
+        goto out;
+      else if (Command[Index] == ' ')
+        Index++;
+      else
+        break;
+    }
+    Data = AsciiStrDecimalToUintn (Command + Index);
+
+    VariableSize = sizeof (UINT16);
+    Status = gRT->GetVariable (
+                    (CHAR16 *)L"HiKeyAutoBoot",
+                    &gArmGlobalVariableGuid,
+                    NULL,
+                    &VariableSize,
+                    &AutoBoot
+                    );
+    if ((EFI_ERROR (Status) == 0) && (AutoBoot == Data)) {
+      return EFI_SUCCESS;
+    }
+    AutoBoot = Data;
+    Status = gRT->SetVariable (
+                    (CHAR16*)L"HiKeyAutoBoot",
+                    &gArmGlobalVariableGuid,
+                    EFI_VARIABLE_NON_VOLATILE       |
+                    EFI_VARIABLE_BOOTSERVICE_ACCESS |
+                    EFI_VARIABLE_RUNTIME_ACCESS,
+                    sizeof (UINT16),
+                    &AutoBoot
+                    );
     return Status;
   } else {
     AsciiStrToUnicodeStr (Command + Index, CommandUnicode);
