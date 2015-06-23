@@ -37,10 +37,49 @@
 // Jumper on pin5-6 of J15 determines whether boot to fastboot
 #define DETECT_J15_FASTBOOT      0    // pin number in GPIO controller
 
+struct HiKeyBootEntry {
+  CHAR16    *Path;
+  CHAR16    *Args;
+  CHAR16    *Description;
+  UINT16     LoadType;
+};
+
 STATIC CONST BOOLEAN mIsEndOfDxeEvent = TRUE;
 STATIC UINT16 *mBootOrder = NULL;
 STATIC UINT16 mBootCount = 0;
 STATIC UINT16 mBootIndex = 0;
+
+#define HIKEY_BOOT_ENTRY_FASTBOOT          0
+#define HIKEY_BOOT_ENTRY_DEBIAN_EMMC       1
+#define HIKEY_BOOT_ENTRY_DEBIAN_SD         2
+#define HIKEY_BOOT_ENTRY_ANDROID           3
+
+STATIC struct HiKeyBootEntry Entries[] = {
+  [HIKEY_BOOT_ENTRY_FASTBOOT] = {
+    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/fastboot.efi",
+    NULL,
+    L"fastboot",
+    LOAD_OPTION_CATEGORY_APP
+  },
+  [HIKEY_BOOT_ENTRY_DEBIAN_EMMC] = {
+    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
+    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img efi=noruntime",
+    L"Debian on eMMC",
+    LOAD_OPTION_CATEGORY_BOOT
+  },
+  [HIKEY_BOOT_ENTRY_DEBIAN_SD] = {
+    L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/Image",
+    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/mmcblk1p2 rw rootwait initrd=initrd.img-3.18.0-linaro-hikey efi=noruntime",
+    L"Debian on SD",
+    LOAD_OPTION_CATEGORY_BOOT
+  },
+  [HIKEY_BOOT_ENTRY_ANDROID] = {
+    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
+    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 vmalloc=484M androidboot.console=ttyAMA0 androidboot.hardware=hikey selinux=0 firmware_class.path=/system/etc/firmware root=/dev/disk/by-partlabel/system initrd=ramdisk.img efi=noruntime",
+    L"Android",
+    LOAD_OPTION_CATEGORY_BOOT
+  }
+};
 
 STATIC
 BOOLEAN
@@ -381,7 +420,7 @@ HiKeyOnEndOfDxe (
 {
   EFI_STATUS          Status;
   UINTN               VariableSize;
-  UINT16              BootIndex, AutoBoot;
+  UINT16              BootIndex, AutoBoot, Count, Index;
 
   VariableSize = sizeof (UINT16);
   Status = gRT->GetVariable (
@@ -416,40 +455,20 @@ HiKeyOnEndOfDxe (
     }
   }
 
+  Count = sizeof (Entries) / sizeof (struct HiKeyBootEntry);
+
   mBootCount = 0;
   mBootOrder = NULL;
 
-  Status = HiKeyCreateBootEntry (
-             L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/fastboot.efi",
-             NULL,
-             L"fastboot",
-             LOAD_OPTION_CATEGORY_APP
-             );
-  ASSERT_EFI_ERROR (Status);
-
-  Status = HiKeyCreateBootEntry (
-             L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
-             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img efi=noruntime",
-             L"Debian on eMMC",
-             LOAD_OPTION_CATEGORY_BOOT
-             );
-  ASSERT_EFI_ERROR (Status);
-
-  Status = HiKeyCreateBootEntry (
-             L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/Image",
-             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/mmcblk1p2 rw rootwait initrd=initrd.img-3.18.0-linaro-hikey efi=noruntime",
-             L"Debian on SD",
-             LOAD_OPTION_CATEGORY_BOOT
-             );
-  ASSERT_EFI_ERROR (Status);
-
-  Status = HiKeyCreateBootEntry (
-             L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
-             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 vmalloc=484M androidboot.console=ttyAMA0 androidboot.hardware=hikey selinux=0 firmware_class.path=/system/etc/firmware root=/dev/disk/by-partlabel/system initrd=ramdisk.img efi=noruntime",
-             L"Android",
-             LOAD_OPTION_CATEGORY_BOOT
-             );
-  ASSERT_EFI_ERROR (Status);
+  for (Index = 0; Index < Count; Index++) {
+    Status = HiKeyCreateBootEntry (
+               Entries[Index].Path,
+               Entries[Index].Args,
+               Entries[Index].Description,
+               Entries[Index].LoadType
+               );
+    ASSERT_EFI_ERROR (Status);
+  }
 
   if ((mBootCount == 0) || (mBootCount >= MAX_BOOT_ENTRIES)) {
     DEBUG ((EFI_D_ERROR, "%a: can't create boot entries\n", __func__));
@@ -482,11 +501,11 @@ HiKeyOnEndOfDxe (
   // Fdt variable should be aligned with Image path.
   // In another word, Fdt and Image file should be located in the same path.
   switch (mBootIndex) {
-  case 1:
-  case 3:
+  case HIKEY_BOOT_ENTRY_DEBIAN_EMMC:
+  case HIKEY_BOOT_ENTRY_ANDROID:
     HiKeyCreateFdtVariable (L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/hi6220-hikey.dtb");
     break;
-  case 2:
+  case HIKEY_BOOT_ENTRY_DEBIAN_SD:
     HiKeyCreateFdtVariable (L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/hi6220-hikey.dtb");
     break;
   }
