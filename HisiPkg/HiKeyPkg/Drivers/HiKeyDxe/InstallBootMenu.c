@@ -443,6 +443,14 @@ HiKeyOnEndOfDxe (
              );
   ASSERT_EFI_ERROR (Status);
 
+  Status = HiKeyCreateBootEntry (
+             L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
+             L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 vmalloc=484M androidboot.console=ttyAMA0 androidboot.hardware=hikey selinux=0 firmware_class.path=/system/etc/firmware root=/dev/disk/by-partlabel/system initrd=ramdisk.img efi=noruntime",
+             L"Android",
+             LOAD_OPTION_CATEGORY_BOOT
+             );
+  ASSERT_EFI_ERROR (Status);
+
   if ((mBootCount == 0) || (mBootCount >= MAX_BOOT_ENTRIES)) {
     DEBUG ((EFI_D_ERROR, "%a: can't create boot entries\n", __func__));
     return;
@@ -475,6 +483,7 @@ HiKeyOnEndOfDxe (
   // In another word, Fdt and Image file should be located in the same path.
   switch (mBootIndex) {
   case 1:
+  case 3:
     HiKeyCreateFdtVariable (L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/hi6220-hikey.dtb");
     break;
   case 2:
