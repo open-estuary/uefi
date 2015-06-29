@@ -397,7 +397,7 @@ HiKeyFastbootPlatformFlashPartition (
   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
   if (PartitionSize < Size) {
     DEBUG ((EFI_D_ERROR, "Partition not big enough.\n"));
-    DEBUG ((EFI_D_ERROR, "Partition Size:\t%d\nImage Size:\t%d\n", PartitionSize, Size));
+    DEBUG ((EFI_D_ERROR, "Partition Size:\t%ld\nImage Size:\t%ld\n", PartitionSize, Size));
 
     return EFI_VOLUME_FULL;
   }
