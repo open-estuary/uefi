@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) 2013 Linaro Limited
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the BSD License which accompanies
+ * this distribution, and is available at
+ * http://opensource.org/licenses/bsd-license.php
+ *
+*/
+
+#include "Pv660Platform.h"
+#include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/Acpi60.h>
+
+#pragma pack (1)
+
+typedef struct {
+  EFI_ACPI_6_0_IO_REMAPPING_TABLE						Iort;
+  UINT32								   				Reserved;//must be zero
+  UINT32		 						   				IortNodesNumber;
+  EFI_ACPI_6_0_IORT_NODE_TYPE_SMMUV12_STRUCTURE			SMMUv12;
+ // EFI_ACPI_6_0_IORT_NODE_TYPE_SMMUV3_STRUCTURE			SMMUv3;
+ // EFI_ACPI_6_0_IORT_NODE_TYPE_ITS_GROUP_STRUCTURE		ITS_GROUP;
+ // EFI_ACPI_6_0_IORT_NODE_TYPE_ROOT_COMPLEX_STRUCTURE	ROOT_COMPLEX;
+ // EFI_ACPI_6_0_IORT_NODE_TYPE_NAMED_NODE_STRUCTURE		NAMED_NODE;
+} EFI_ACPI_6_0_IO_REMAPPING_TABLES;
+
+ #pragma pack ()
+ 
+//
+// 
+//
+EFI_ACPI_6_0_IO_REMAPPING_TABLES Iort = {
+	{  
+		ARM_ACPI_HEADER(
+			EFI_ACPI_6_0_IO_REMAPPING_TABLE_SIGNATURE,
+    		EFI_ACPI_6_0_IO_REMAPPING_TABLES,
+    		EFI_ACPI_6_0_IO_REMAPPING_TABLE_REVISION
+    	),
+	},
+		0x0000,				//Reserved
+  		0x0001,				//IortNodesNumber					
+  							//NodeStructure
+  		{{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, // header
+  		0x00,0x00,0x00,0x00,0x00,0x00,			 // data section
+  		{{0x00,0x00,0x00,0x00,0x00},				 // ID section[1]
+  		{0x00,0x00,0x00,0x00,0x00}}}				 // ID section[2]
+};
+
+VOID*
+ReferenceAcpiTable (
+  VOID
+  )
+{
+  //
+  // Reference the table being generated to prevent the optimizer from removing the
+  // data structure from the exeutable
+  //
+  return (VOID*)&Iort;
+}

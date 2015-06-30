@@ -1,0 +1,46 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : CpldDriverLib.inf
+#  版 本 号   : v1.0
+#  作    者   : y00216284
+#  生成日期   : 2014年10月20日
+#  最近修改   :
+#  功能描述   : Inf文件
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = CpldDriverLib
+  FILE_GUID                      = 4633665C-0029-464E-9788-58B8D49FF57E
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = CpldDriverLib
+
+[Sources.common]
+  CpldDriver.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  HwPkg/HwPkg.dec
+
+
+[LibraryClasses]
+  DebugLib
+  IoLib
+  BaseLib
+  ArmLib
+  TimerLib
+  PlatformSysCtrlLib
+  
+[BuildOptions]
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdCpldBaseAddress

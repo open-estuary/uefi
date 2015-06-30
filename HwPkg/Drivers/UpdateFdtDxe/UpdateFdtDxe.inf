@@ -1,0 +1,73 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : UpdateFdtDxe.inf
+#  版 本 号   : v1.0
+#  作    者   : s00296804
+#  生成日期   : 2014年12月23日
+#  最近修改   :
+#  功能描述   : 更新FDT,创建FDT Configuration Table
+#  修改历史   :
+#   日	  期   : 
+#   作	  者   :
+#   修改内容   :
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UpdateFdtDxe
+  FILE_GUID                      = E29977F9-20A4-4551-B0EC-BCE246592E76
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+
+  ENTRY_POINT                    = UpdateFdt
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = ARM32
+#
+
+[Sources.common]
+  UpdateFdtDxe.c
+  
+
+[Packages]
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  MdePkg/MdePkg.dec
+  ArmPkg/ArmPkg.dec
+  HwPkg/HwPkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  
+[LibraryClasses]
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  UefiDriverEntryPoint
+  DebugLib
+  BaseLib
+  FdtLib
+  PcdLib
+  FdtUpdateLib
+  DxeServicesTableLib
+  
+  HwSafeOperationLib
+  
+[Guids]
+ gFdtTableGuid
+[Protocols]
+ 
+ gOemNicProtocolGuid
+
+[Pcd]
+ 
+ gHwTokenSpaceGuid.FdtFileAddress
+ gHwTokenSpaceGuid.PcdReservedNvramSize
+ gHwTokenSpaceGuid.PcdReservedNvramBase
+
+
+[Depex]
+TRUE
+

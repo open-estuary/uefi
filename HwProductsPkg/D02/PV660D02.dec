@@ -1,0 +1,31 @@
+#
+# PV660 D02 Package
+#
+# Copyright (c) 2011 - 2020, Huawei Corporation.
+#
+#
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = Pv660D02Pkg
+  PACKAGE_GUID                   = 54392E0D-972B-459D-8CBE-DB381E7D1B98
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+  Include/Library
+
+[Ppis]
+
+[Protocols]
+
+[Guids]
+  
+
+[LibraryClasses]
+
+[PcdsFixedAtBuild]
+
+[PcdsFeatureFlag]
+
+

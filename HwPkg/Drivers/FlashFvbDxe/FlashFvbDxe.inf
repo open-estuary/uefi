@@ -1,0 +1,55 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = FlashFvbDxe
+  FILE_GUID                      = 93E34C7E-B50E-11DF-9223-2443DFD72085
+  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = FlashFvbInitialize
+
+[Sources.common]
+  FlashFvbDxe.c
+  FlashBlockIoDxe.c
+ 
+        
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  HwPkg/HwPkg.dec  
+
+[LibraryClasses]
+  IoLib
+  BaseLib
+  DebugLib
+  HobLib
+  UefiLib
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiRuntimeLib
+
+[Guids]
+  gEfiSystemNvDataFvGuid
+  gEfiVariableGuid
+
+[Protocols]
+  gEfiBlockIoProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiFirmwareVolumeBlockProtocolGuid
+  gSpiFlashProtocolGuid
+  
+[Pcd.common]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
+  
+  gArmPlatformTokenSpaceGuid.PcdNorFlashCheckBlockLocked
+
+[Depex]
+  gSpiFlashProtocolGuid
+
+[BuildOptions]
+  #GCC:*_*_AARCH64_CC_FLAGS               == -g -Os -fshort-wchar -fno-strict-aliasing -c -include AutoGen.h -mcmodel=large -mlittle-endian -fno-short-enums -save-temps -fverbose-asm -fsigned-char  -ffunction-sections -fdata-sections -fomit-frame-pointer -fno-builtin
+  

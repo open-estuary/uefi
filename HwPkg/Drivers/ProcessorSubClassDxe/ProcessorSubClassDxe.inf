@@ -1,0 +1,67 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : ProcessorSubClassDxe.inf
+#  版 本 号   : v1.0
+#  作    者   : 
+#  生成日期   : 2014年11月10日
+#  最近修改   :
+#  功能描述   : Inf文件
+#  修改历史   :
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ProcessorSubClass
+  FILE_GUID                      = 9B25B1EA-0FD4-455D-A450-AD640C8A9C1B
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ProcessorSubClassEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  ProcessorSubClassStrings.uni
+  ProcessorSubClass.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFrameworkPkg/IntelFrameworkPkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  IoLib
+  HiiLib
+  MemoryAllocationLib  
+  BaseMemoryLib
+  BaseLib
+  DebugLib    
+  PrintLib
+  
+  PlatformSysCtrlLib
+  OemMiscLib
+  HwSafeOperationLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                       # PROTOCOL ALWAYS_CONSUMED
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdIsMPBoot
+
+[Guids]
+     
+
+[Depex]  
+  gEfiSmbiosProtocolGuid 
+  
+

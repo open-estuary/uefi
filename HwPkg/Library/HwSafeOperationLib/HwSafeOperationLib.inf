@@ -1,0 +1,37 @@
+##################################################
+#
+#Copyright (C), 1988-2020, Huawei Tech. Co., Ltd.
+#
+#File name: HwSafeOperationLib.inf
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = HwSafeOperationLib
+  FILE_GUID                      = 8E3C5369-7CE8-4616-AA16-12FE9E1C8E38
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = HwSafeOperationLib
+
+[Sources.common]
+  HwSafeOperationLib.c
+  HwSafeMemOpWrapper.c
+  HwSafeString.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+  DebugLib
+  BaseMemoryLib
+  PrintLib
+
+[BuildOptions]
+
+[Pcd]
+

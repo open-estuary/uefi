@@ -1,0 +1,45 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: Pv660SerdesLib.inf
+#
+#
+#Description: 
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = Pv660SerdesLib
+  FILE_GUID                      = FC5651CA-55D8-4fd2-B6D3-A284D993ABA2
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SerdesLib
+
+[Binaries.common]
+  LIB|Pv660SerdesLib.lib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+  HwPkg/HwPkg.dec
+
+
+[LibraryClasses]
+  DebugLib
+  IoLib
+  BaseLib
+  BaseMemoryLib
+
+
+  OemMiscLib
+  
+[BuildOptions]
+
+[FixedPcd]
+    gHwTokenSpaceGuid.PcdIsMPBoot
+
+
+ 

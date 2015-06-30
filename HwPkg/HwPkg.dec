@@ -1,0 +1,135 @@
+#
+# Huawei Package
+#
+# Copyright (c) 2011 - 2020, Huawei Corporation.
+#
+#
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = HwDriversPkg
+  PACKAGE_GUID                   = c6013a10-758c-4c0d-bd07-e601e6721f86
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+
+[Ppis]
+
+
+
+[Protocols]
+  gWatchDogProtocolGuid = {0x707ac059, 0xf335, 0x4643, 0xa6, 0x99, 0x5e, 0x3b, 0x9b, 0x82, 0x60, 0x74}
+  gLinuxAtagListProtocolGuid = {0x46f1ef63, 0x24d3, 0x423b, {0x9d, 0x9, 0x8f, 0xc6, 0x77, 0xd0, 0x24, 0x9d}}
+  gUniNorFlashProtocolGuid = {0x86F305EA, 0xDFAC, 0x4A6B, {0x92, 0x77, 0x47, 0x31, 0x2E, 0xCE, 0x42, 0xA}}
+  gEfiHffsDriverProtocolGuid = {0xf355bca3, 0x232d, 0x4dbe, 0xad, 0x05, 0x94, 0xbb, 0x29, 0xc8, 0x4d, 0x46}
+  gSpiFlashProtocolGuid = {0x339132DC, 0xCED7, 0x4f84, {0xAA, 0xE7, 0x2E, 0xC4, 0xF9, 0x14, 0x38, 0x2F}}
+  gOemFtpProtocolGuid = {0x21655A5D, 0x1233, 0x4CE8, {0xB4, 0xD8, 0x87, 0xFD, 0xC1, 0x6C, 0x39, 0x68}}
+
+  gOemNicProtocolGuid = {0xb5903955, 0x31e9, 0x4aaf, {0xb2, 0x83, 0x7, 0x9f, 0x3c, 0xc4, 0x71, 0x66}}
+
+[Guids]
+  gHwTokenSpaceGuid = { 0x99999999, 0x74c5, 0x4043, { 0xb4, 0x17, 0xa3, 0x22, 0x38, 0x14, 0xce, 0x76 } }
+  gBootLineVariableGuid = { 0xc3253c90, 0xa24f, 0x4588, { 0xa6, 0x64, 0x1f, 0x88, 0x13, 0x77, 0x8f, 0xc9} }
+
+## Ramdisk GUID统一定义
+  gRamDiskGuid = {0x6ED4DD0, 0xFF78, 0x11d3, {0xbd, 0xc4, 0x00, 0xa0, 0xc9, 0x40, 0x53, 0xd1}}
+  gEfiMemoryMapGuid  = { 0xf8870015, 0x6994, 0x4b98, { 0x95, 0xa2, 0xbd, 0x56, 0xda, 0x91, 0xc0, 0x7f }} 
+
+[LibraryClasses]
+  I2CLib|HwPkg\Include\Library\I2CLib.h
+  HwMemInitLib|HwPkg\Include\Library\HwMemInitLib.h
+
+  UniL1L2Lib|HwPkg\Include\Library\UniL1L2Lib.h
+
+## c00213799 2014.11.26 LLC功能合入
+  CacheMbistLib|HwPkg\Include\Library\CacheMbistLib.h
+
+[PcdsFixedAtBuild]
+  ## NORFlash add by c00213799
+  gHwTokenSpaceGuid.PcdNORFlashBase|0x00000000|UINT64|0x01000008
+  gHwTokenSpaceGuid.PcdNORFlashCachableSize|0x1000000|UINT32|0x0100000c
+
+  ## Add Custom Data FV base Address and Size
+  gHwTokenSpaceGuid.PcdCustDataFvAddress|0x0|UINT32|0x0100000d
+  gHwTokenSpaceGuid.PcdCustDataFvSize|0x0|UINT32|0x0100000e
+
+  gHwTokenSpaceGuid.PcdSerialPortSendDelay|500000|UINT32|0x01000010
+  gHwTokenSpaceGuid.PcdUartClkInHz|24000000|UINT32|0x0100001F
+  gHwTokenSpaceGuid.PcdSerialRegisterSpaceSize|0x10000|UINT64|0x01000019
+
+  gHwTokenSpaceGuid.PcdL1BiosBaseAddress|0x90000000|UINT64|0x02000012
+  gHwTokenSpaceGuid.PcdL2BiosBaseAddress|0x90200000|UINT64|0x02000013
+
+  #初始化相关寄存器基地址 add by t00200952
+  gHwTokenSpaceGuid.PcdSysControlBaseAddress|0|UINT64|0x01000023
+  gHwTokenSpaceGuid.PcdCpldBaseAddress|0|UINT64|0x01000024
+  gHwTokenSpaceGuid.PcdMailBoxAddress|0|UINT64|0x01000025
+
+
+  #定时器寄存器基地址 add by t00200952
+  gHwTokenSpaceGuid.PcdTimerBaseAddress|0|UINT64|0x01000030
+
+  gHwTokenSpaceGuid.PcdSFCCFGBaseAddress|0|UINT64|0x01000037      #配置口寄存器基址
+  gHwTokenSpaceGuid.PcdSFCMEM0BaseAddress|0|UINT64|0x01000038      #MEM口基址
+
+  #PMBUS寄存器基地址  
+  gHwTokenSpaceGuid.PcdPmBusBaseAddress|0x403A0000|UINT32|0x01000039      
+
+  #Ramdisk占用内存大小 add by t00200952
+  gHwTokenSpaceGuid.PcdRamDiskMaxSize|0|UINT32|0x01000040
+
+  #sub 11 的sub ctrl地址 add by t00200952
+  gHwTokenSpaceGuid.PcdPeriSubctrlAddress|0|UINT64|0x01000041
+
+  gHwTokenSpaceGuid.PcdMdioSubctrlAddress|0|UINT64|0x01000042
+  
+  #内存诊断起始地址、大小 add by t00216239
+  gHwTokenSpaceGuid.PcdDdrExamStartAdd|0|UINT32|0x03000050
+  gHwTokenSpaceGuid.PcdDdrExamLenth|0x100000|UINT32|0x03000051
+
+  gHwTokenSpaceGuid.PcdFirmwareVendor|L"Huawei Corp."|VOID*|0x30000052
+  gHwTokenSpaceGuid.PcdSystemProductName|L""|VOID*|0x30000053
+  gHwTokenSpaceGuid.PcdSystemVersion|L""|VOID*|0x30000054
+  gHwTokenSpaceGuid.PcdBaseBoardProductName|L""|VOID*|0x30000055
+  gHwTokenSpaceGuid.PcdBaseBoardVersion|L""|VOID*|0x30000056  
+  ## Null-terminated Unicode string that describes the firmware version.
+  # @Prompt Firmware version string.
+  gHwTokenSpaceGuid.PcdBiosVersionString|L""|VOID*|0x00010069
+
+  gHwTokenSpaceGuid.PcdPlatformDefaultPackageType|0x0|UINT32|0x40000001
+
+  gHwTokenSpaceGuid.PcdTopOfLowMemory|0x0|UINT32|0x40000002
+  gHwTokenSpaceGuid.PcdBottomOfHighMemory|0x0|UINT64|0x40000003
+  
+  gHwTokenSpaceGuid.PcdSlotPerChannelNum|0x0|UINT32|0x40000004
+  
+  #FDT File Address
+  gHwTokenSpaceGuid.FdtFileAddress|0x0|UINT64|0x40000005
+
+  #Reserved for NVRAM
+  gHwTokenSpaceGuid.PcdReservedNvramBase|0x0|UINT64|0x40000006
+  gHwTokenSpaceGuid.PcdReservedNvramSize|0x0|UINT64|0x40000007
+
+  gHwTokenSpaceGuid.PcdTrustedFirmwareEnable|0x0|UINT64|0x40000008
+  gHwTokenSpaceGuid.PcdTrustedFirmwareBL1Base|0x0|UINT64|0x40000009
+  gHwTokenSpaceGuid.PcdTrustedFirmwareMagicNum|0x5A5A5A5A|UINT32|0x4000000a
+
+  gHwTokenSpaceGuid.PcdIsMPBoot|0|UINT32|0x4000000b
+  gHwTokenSpaceGuid.PcdMacAddress|0x0|UINT64|0x4000000c
+  gHwTokenSpaceGuid.PcdNumaEnable|0|UINT32|0x4000000d
+
+  gHwTokenSpaceGuid.PcdArmPrimaryCoreTemp|0x0|UINT64|0x10000038
+
+  # Number of the CPU Interface for the Primary Core (eg: The number for the CPU0 of
+  # Cluster1 might be 4 if the implementer had followed the convention: Cpu Interface
+  # = 4 * Cluster)
+  # This pcd was originally defined in ArmPkg and later was removed
+  # But in our driver code we still need this, so move it to HwPkg
+  gHwTokenSpaceGuid.PcdGicPrimaryCoreId|0|UINT32|0x00000043
+
+
+[PcdsFeatureFlag]
+
+
+

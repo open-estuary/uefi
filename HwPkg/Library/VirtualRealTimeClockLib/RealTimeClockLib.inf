@@ -1,0 +1,44 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: HwPkg\VirtualRealTimeClockLib\RealTimeClockLib.inf
+#
+#Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.11.28
+#
+#Description: 利用核内timer来模拟RTC
+#
+#*************************************************/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RealTimeClockLibVirtual
+  FILE_GUID                      = 432B35C1-A0CC-4720-A4B9-1EFD70050107
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = RealTimeClockLib
+
+[Sources.common]
+  RealTimeClockLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  ArmPkg/ArmPkg.dec
+
+[LibraryClasses]
+  IoLib
+  UefiLib
+  DebugLib
+  PcdLib
+  DxeServicesTableLib
+  UefiRuntimeLib
+
+  ArmLib       #by z00201473  RTC不可用,适配GetTime服务,增加依赖库
+
+[Guids]
+  gEfiEventVirtualAddressChangeGuid
+
+[Pcd]
+## uniBIOS-g00179230 2013-9-18, ESL上计时器调整
+  gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz

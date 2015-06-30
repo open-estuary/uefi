@@ -1,0 +1,66 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : MemorySubClassDxe.inf
+#  版 本 号   : v1.0
+#  作    者   : 
+#  生成日期   : 2014年10月20日
+#  最近修改   :
+#  功能描述   : Inf文件
+#  修改历史   :
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MemorySubClass
+  FILE_GUID                      = 62194F1A-5A0D-4B33-9EF0-7D05C6CB923A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MemorySubClassEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  MemorySubClassStrings.uni
+  MemorySubClass.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFrameworkPkg/IntelFrameworkPkg.dec
+  IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  HobLib
+  HiiLib
+  MemoryAllocationLib  
+  BaseMemoryLib
+  BaseLib
+  DebugLib    
+  PrintLib
+  PlatformSysCtrlLib
+  PcdLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                       # PROTOCOL ALWAYS_CONSUMED
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdIsMPBoot
+  
+[Guids]
+   gEfiMemoryMapGuid  
+
+[Depex]  
+  gEfiSmbiosProtocolGuid 
+  
+

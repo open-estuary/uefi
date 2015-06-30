@@ -1,0 +1,40 @@
+####################################################
+#
+# Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+# File name: HwPkg\FdtUpdateLib\FdtUpdateLib.inf
+#
+# Author: 
+#
+# Description: 
+#
+####################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = FdtUpdateLib
+  FILE_GUID                      = 02CF1727-E697-47fc-8CC2-5DCB81B26DD9
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = FdtUpdateLib
+
+
+[Sources.common]
+  FdtUpdateLib.c
+
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]  
+  FdtLib
+  OemAddressMapLib
+
+[Protocols]
+  gOemNicProtocolGuid
+
+[Pcd]
+

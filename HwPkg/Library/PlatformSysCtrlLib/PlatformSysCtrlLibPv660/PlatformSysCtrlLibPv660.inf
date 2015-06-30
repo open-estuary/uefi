@@ -1,0 +1,46 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: PlatformSysCtrlLibPv660.inf
+#
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PlatformSysCtrlLibPv660
+  FILE_GUID                      = EBF63479-8F72-4ada-8B2A-960322F7F61A
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PlatformSysCtrlLib
+
+[Sources.common]
+
+
+[Sources.AARCH64]
+
+[Binaries.AARCH64]
+ LIB|PlatformSysCtrlLibPv660.lib|*
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+  ArmLib
+  OemAddressMapLib
+  OemMiscLib
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdPlatformDefaultPackageType
+  gHwTokenSpaceGuid.PcdIsMPBoot
+  gHwTokenSpaceGuid.PcdTrustedFirmwareEnable
+
+[BuildOptions]
+

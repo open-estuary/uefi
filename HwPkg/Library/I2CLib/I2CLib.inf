@@ -1,0 +1,48 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : I2CHw.h
+#  版 本 号   : v1.0
+#  作    者   : C00213799
+#  生成日期   : 2013年03月15日
+#  最近修改   :
+#  功能描述   : 头文件
+#  修改历史   :
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = I2CLib
+  FILE_GUID                      = FC5651CA-55D8-4fd2-B6D3-A284D993ABA2
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = I2CLib
+
+[Sources.common]
+  I2CLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  HwPkg/HwPkg.dec
+
+
+[LibraryClasses]
+  DebugLib
+  IoLib
+  BaseLib
+  ArmLib
+  TimerLib
+
+  PlatformSysCtrlLib
+  
+[BuildOptions]
+
+[Pcd]
+

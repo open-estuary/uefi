@@ -1,0 +1,46 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: OemNicConfig.inf
+#
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OemNicConfig
+  FILE_GUID                      = 3A23A929-1F38-4d04-8A01-38AD993EB2CE
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = OemNicConfigEntry
+
+[Sources.common]
+  OemNicConfigD02.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+  HwPkg/HwPkg.dec
+
+[Protocols]
+  gOemNicProtocolGuid       ##Produce
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  DebugLib
+  IoLib
+  TimerLib
+  I2CLib
+  
+[FixedPcd]
+
+[Depex]
+  TRUE
+
+[BuildOptions]
+

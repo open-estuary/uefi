@@ -1,0 +1,242 @@
+diff --git a/ArmPkg/Include/Chipset/AArch64Mmu.h b/ArmPkg/Include/Chipset/AArch64Mmu.h
+index 77a96ec..3691cfe 100644
+--- a/ArmPkg/Include/Chipset/AArch64Mmu.h
++++ b/ArmPkg/Include/Chipset/AArch64Mmu.h
+@@ -51,8 +51,9 @@
+ #define TT_ALIGNMENT_BLOCK_ENTRY                BIT12
+ #define TT_ALIGNMENT_DESCRIPTION_TABLE          BIT12
+ 
+-#define TT_ADDRESS_MASK_BLOCK_ENTRY             (0xFFFFFFFULL << 12)
+-#define TT_ADDRESS_MASK_DESCRIPTION_TABLE       (0xFFFFFFFULL << 12)
++// l00228991: ARMv8 supports 48 bits address
++#define TT_ADDRESS_MASK_BLOCK_ENTRY             (0xFFFFFFFFFULL << 12)
++#define TT_ADDRESS_MASK_DESCRIPTION_TABLE       (0xFFFFFFFFFULL << 12)
+ 
+ #define TT_TYPE_MASK                            0x3
+ #define TT_TYPE_TABLE_ENTRY                     0x3
+diff --git a/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S b/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
+index 1ac0108..91da3cb 100644
+--- a/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
++++ b/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
+@@ -58,7 +58,11 @@ ASM_PFX(ArmReadCntkCtl):
+ 
+ 
+ ASM_PFX(ArmWriteCntkCtl):
+-  mrs   x0, cntkctl_el1          // Write to CNTK_CTL (Timer PL1 Control Register)
++  // start-uniBIOS-y00216284-005 DTS2014110703996 2014-11-28 >>>
++  // Desc: ARM基础代码ArmWriteCntkCtl函数实现错误
++  //mrs   x0, cntkctl_el1         // Write to CNTK_CTL (Timer PL1 Control Register) 
++  msr   cntkctl_el1, x0            
++  // end-uniBIOS-y00216284-005 DTS2014110703996 2014-11-28 <<<
+   ret
+ 
+ 
+diff --git a/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c b/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
+index f215fe9..b5bf912 100644
+--- a/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
++++ b/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
+@@ -38,7 +38,7 @@ ArmMemoryAttributeToPageAttribute (
+   case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH:
+     return TT_ATTR_INDX_MEMORY_WRITE_THROUGH;
+   case ARM_MEMORY_REGION_ATTRIBUTE_DEVICE:
+-    return TT_ATTR_INDX_DEVICE_MEMORY;
++    return (TT_ATTR_INDX_DEVICE_MEMORY | TT_UXN_MASK);
+   case ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED:
+     return TT_ATTR_INDX_MEMORY_NON_CACHEABLE;
+   case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
+@@ -253,7 +253,10 @@ GetBlockEntryListFromAddress (
+   UINT64 *BlockEntry;
+   UINT64 *SubTableBlockEntry;
+   UINT64  BlockEntryAddress;
++  //按地址取最小对齐单元
+   UINTN   BaseAddressAlignment;
++  //按长度取最小对齐单元
++  UINTN   EntrySizeAlignment;
+   UINTN   PageLevel;
+   UINTN   Index;
+   UINTN   IndexLevel;
+@@ -290,27 +293,24 @@ GetBlockEntryListFromAddress (
+   GetRootTranslationTableInfo (T0SZ, &RootTableLevel, &RootTableEntryCount);
+   // The last block of the root table depends on the number of entry in this table
+   *LastBlockEntry = TT_LAST_BLOCK_ADDRESS(RootTable, RootTableEntryCount);
++  /*BEGIN:Modify by t00200952 DTS2013110106122 */
+ 
+-  // If the start address is 0x0 then we use the size of the region to identify the alignment
+-  if (RegionStart == 0) {
+-    // Identify the highest possible alignment for the Region Size
+     for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
+-      if ((1 << BaseAddressAlignment) & *BlockEntrySize) {
++      if ((1 << BaseAddressAlignment) & RegionStart) {
+         break;
+       }
+     }
+-  } else {
+-    // Identify the highest possible alignment for the Base Address
+-    for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
+-      if ((1 << BaseAddressAlignment) & RegionStart) {
++    for (EntrySizeAlignment = 0; EntrySizeAlignment < 64; EntrySizeAlignment++) {
++      if ((1 << EntrySizeAlignment) & *BlockEntrySize) {
+         break;
+       }
+     }
+-  }
++  
++  
+ 
+   // Identify the Page Level the RegionStart must belongs to
+-  PageLevel = 3 - ((BaseAddressAlignment - 12) / 9);
+-
++  PageLevel = 3 - ((((BaseAddressAlignment > EntrySizeAlignment) ? EntrySizeAlignment : BaseAddressAlignment)- 12) / 9);
++  /*BEGIN:Modify by t00200952 DTS2013110106122 */
+   // If the required size is smaller than the current block size then we need to go to the page below.
+   // The PageLevel was calculated on the Base Address alignment but did not take in account the alignment
+   // of the allocation size
+@@ -497,7 +497,6 @@ SetMemoryAttributes (
+   RETURN_STATUS                Status;
+   ARM_MEMORY_REGION_DESCRIPTOR MemoryRegion;
+   UINT64                      *TranslationTable;
+-
+   MemoryRegion.PhysicalBase = BaseAddress;
+   MemoryRegion.VirtualBase = BaseAddress;
+   MemoryRegion.Length = Length;
+@@ -509,7 +508,6 @@ SetMemoryAttributes (
+   if (RETURN_ERROR (Status)) {
+     return Status;
+   }
+-
+   // Flush d-cache so descriptors make it back to uncached memory for subsequent table walks
+   // flush and invalidate pages
+   ArmCleanInvalidateDataCache ();
+@@ -623,6 +621,12 @@ ArmConfigureMmu (
+     return RETURN_OUT_OF_RESOURCES;
+   }
+   TranslationTable = (VOID*)((UINTN)TranslationTable & TT_ADDRESS_MASK_DESCRIPTION_TABLE);
++
++  // uniBIOS-g00179230 DTS2013102904527 2013-10-29
++  // 【HRD ARM PV660 V100R001C00B010 BIOS】提供FPGA上调试网口下载功能
++  // 打印页表基地址, 方便问题定位
++  DEBUG((EFI_D_ERROR, "[%a]:[%dL] TranslationTable=0x%X\n", __FUNCTION__, __LINE__, TranslationTable));
++  
+   // We set TTBR0 just after allocating the table to retrieve its location from the subsequent
+   // functions without needing to pass this value across the functions. The MMU is only enabled
+   // after the translation tables are populated.
+@@ -644,7 +648,8 @@ ArmConfigureMmu (
+   ArmDisableInstructionCache ();
+ 
+   // Make sure nothing sneaked into the cache
+-  ArmCleanInvalidateDataCache ();
++  // l00228991: 暂时关闭以提高启动速度
++  //ArmCleanInvalidateDataCache ();
+   ArmInvalidateInstructionCache ();
+ 
+   TranslationTableAttribute = TT_ATTR_INDX_INVALID;
+diff --git a/ArmPkg/Library/UncachedMemoryAllocationLib/UncachedMemoryAllocationLib.c b/ArmPkg/Library/UncachedMemoryAllocationLib/UncachedMemoryAllocationLib.c
+index e70d877..c06197a 100644
+--- a/ArmPkg/Library/UncachedMemoryAllocationLib/UncachedMemoryAllocationLib.c
++++ b/ArmPkg/Library/UncachedMemoryAllocationLib/UncachedMemoryAllocationLib.c
+@@ -25,6 +25,10 @@
+ #include <Library/PcdLib.h>
+ #include <Library/ArmLib.h>
+ #include <Library/DxeServicesTableLib.h>
++//uniBIOS_z00304930_000_start 2015-3-24 18:46:09
++ //Issue ID:DTS2015033005516 Description:UncachedAllocate函数添加刷LLC
++#include <Library/CacheMaintenanceLib.h>
++//uniBIOS_z00304930_000_end   2015-3-24 18:46:09
+ 
+ VOID *
+ UncachedInternalAllocatePages (
+@@ -164,6 +168,12 @@ AllocatePagesFromList (
+     return Status;
+   }
+ 
++  //uniBIOS_z00304930_000_start 2015-3-24 18:46:09
++   //Issue ID:DTS2015033005516 Description:UncachedAllocate函数添加刷LLC
++  WriteBackInvalidateDataCacheRange((VOID *)(UINTN)Memory, EFI_PAGES_TO_SIZE(Pages));
++  //uniBIOS_z00304930_000_end   2015-3-24 18:46:09
++
++
+   NewNode = AllocatePool (sizeof (FREE_PAGE_NODE));
+   if (NewNode == NULL) {
+     ASSERT (FALSE);
+diff --git a/ArmPlatformPkg/Library/EblCmdLib/EblCmdLib.c b/ArmPlatformPkg/Library/EblCmdLib/EblCmdLib.c
+index 8999910..436aa25 100644
+--- a/ArmPlatformPkg/Library/EblCmdLib/EblCmdLib.c
++++ b/ArmPlatformPkg/Library/EblCmdLib/EblCmdLib.c
+@@ -297,8 +297,8 @@ EblDumpGcd (
+   if (EFI_ERROR (Status)) {
+       return Status;
+   }
+-  AsciiPrint ("    Address Range       Image     Device   Attributes\n");
+-  AsciiPrint ("__________________________________________________________\n");
++  AsciiPrint ("    Address Range                       Image     Device   Attributes\n");
++  AsciiPrint ("__________________________________________________________________________\n");
+   for (i=0; i < NumberOfDescriptors; i++) {
+     AsciiPrint ("MEM %016lx - %016lx",(UINT64)MemorySpaceMap[i].BaseAddress,MemorySpaceMap[i].BaseAddress+MemorySpaceMap[i].Length-1);
+     AsciiPrint (" %08x %08x",MemorySpaceMap[i].ImageHandle,MemorySpaceMap[i].DeviceHandle);
+@@ -325,13 +325,14 @@ EblDumpGcd (
+     if (MemorySpaceMap[i].Attributes & EFI_MEMORY_XP)
+         AsciiPrint (" MEM_XP");
+ 
+-    if (MemorySpaceMap[i].GcdMemoryType & EfiGcdMemoryTypeNonExistent)
++//问题单号:DTS2014011706527    修改日期:2014.1.17  修改人:z00201473   问题描述:dumpgcd命令实现有误  
++    if (MemorySpaceMap[i].GcdMemoryType == EfiGcdMemoryTypeNonExistent)
+         AsciiPrint (" TYPE_NONEXISTENT");
+-    if (MemorySpaceMap[i].GcdMemoryType & EfiGcdMemoryTypeReserved)
++    if (MemorySpaceMap[i].GcdMemoryType == EfiGcdMemoryTypeReserved)
+         AsciiPrint (" TYPE_RESERVED");
+-    if (MemorySpaceMap[i].GcdMemoryType & EfiGcdMemoryTypeSystemMemory)
++    if (MemorySpaceMap[i].GcdMemoryType == EfiGcdMemoryTypeSystemMemory)
+         AsciiPrint (" TYPE_SYSMEM");
+-    if (MemorySpaceMap[i].GcdMemoryType & EfiGcdMemoryTypeMemoryMappedIo)
++    if (MemorySpaceMap[i].GcdMemoryType == EfiGcdMemoryTypeMemoryMappedIo)
+         AsciiPrint (" TYPE_MEMMAP");
+ 
+     AsciiPrint ("\n");
+@@ -347,12 +348,24 @@ EblDumpGcd (
+     AsciiPrint ("IO  %08lx - %08lx",IoSpaceMap[i].BaseAddress,IoSpaceMap[i].BaseAddress+IoSpaceMap[i].Length);
+     AsciiPrint ("\t%08x %08x",IoSpaceMap[i].ImageHandle,IoSpaceMap[i].DeviceHandle);
+ 
++    //uniBIOS_y00216284_010_start 2014-12-13 16:17:29
++    //Issue ID:DTS2014121302102 
++    //Description:静态扫描整改
++    /*
+     if (IoSpaceMap[i].GcdIoType & EfiGcdMemoryTypeNonExistent)
+         AsciiPrint (" TYPE_NONEXISTENT");
+     if (IoSpaceMap[i].GcdIoType & EfiGcdMemoryTypeReserved)
+         AsciiPrint (" TYPE_RESERVED");
+     if (IoSpaceMap[i].GcdIoType & EfiGcdIoTypeIo)
+         AsciiPrint (" TYPE_IO");
++    */
++    if (IoSpaceMap[i].GcdIoType == EfiGcdIoTypeNonExistent)
++        AsciiPrint (" TYPE_NONEXISTENT");
++    if (IoSpaceMap[i].GcdIoType == EfiGcdIoTypeReserved)
++        AsciiPrint (" TYPE_RESERVED");
++    if (IoSpaceMap[i].GcdIoType == EfiGcdIoTypeIo)
++        AsciiPrint (" TYPE_IO");
++    //uniBIOS_y00216284_010_end 2014-12-11 15:31:14
+ 
+     AsciiPrint ("\n");
+   }
+diff --git a/MdePkg/Include/IndustryStandard/SmBios.h b/MdePkg/Include/IndustryStandard/SmBios.h
+index d0496bb..9021952 100644
+--- a/MdePkg/Include/IndustryStandard/SmBios.h
++++ b/MdePkg/Include/IndustryStandard/SmBios.h
+@@ -363,6 +363,10 @@ typedef struct {
+   UINT8                       ContainedElementCount;
+   UINT8                       ContainedElementRecordLength;
+   CONTAINED_ELEMENT           ContainedElements[1];
++  // start-uniBIOS-y00216284-FFF DTS2014081208809 2014-8-13 >>>
++  // Desc: SMBIOS 2.7及之后版本新增字段
++  SMBIOS_TABLE_STRING         ChassisSkuNumber;
++  // end-uniBIOS-y00216284-FFF DTS2014081208809 2014-8-13 <<<
+ } SMBIOS_TABLE_TYPE3;
+ 
+ ///
+@@ -1943,6 +1947,7 @@ typedef struct {
+   SMBIOS_STRUCTURE                        Hdr;
+   UINT8                                   Reserved[6];
+   UINT8                                   BootStatus;     ///< The enumeration value from MISC_BOOT_INFORMATION_STATUS_DATA_TYPE.
++  UINT8                                   BootInformationData[9];   //uniBIOS_y00216284_029_start DTS2015041706310 SMBIOS 2.3新增字段 2015-4-17 >>>
+ } SMBIOS_TABLE_TYPE32;
+ 
+ ///

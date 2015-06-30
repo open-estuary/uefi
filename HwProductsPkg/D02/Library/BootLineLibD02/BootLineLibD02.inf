@@ -1,0 +1,33 @@
+##################################################
+#
+#Copyright (C), 1988-2020, Huawei Tech. Co., Ltd.
+#
+#File name: OemMiscLibEvb.inf
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BootLineLib
+  FILE_GUID                      = 1DCE7EC8-3DB6-47cf-A2B5-717FD9AB2574
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = BootLineLib
+
+[Sources.common]
+  BootLineLibD02.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+
+[BuildOptions]
+
+[Pcd]
+

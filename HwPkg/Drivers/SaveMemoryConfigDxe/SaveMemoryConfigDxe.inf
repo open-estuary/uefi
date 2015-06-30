@@ -1,0 +1,62 @@
+#******************************************************************************
+#
+#                  版权所有 (C), 2009-2019, 华为技术有限公司
+#
+# ******************************************************************************
+#  文 件 名   : SfcDxeDriver.inf
+#  版 本 号   : v1.0
+#  作    者   : z00201473
+#  生成日期   : 2013年10月21日
+#  最近修改   :
+#  功能描述   : 头文件
+#  修改历史   :
+#******************************************************************************/
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SFCDriver
+  FILE_GUID                      = 7E197D40-5A7F-4517-86B8-FD8A353B2106
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT	                 = SaveMemoryConfigDxeEntry
+
+
+
+[Sources.common]
+  SaveMemoryConfigDxe.c
+
+[Packages]
+  ArmPlatformPkg/ArmPlatformPkg.dec
+  MdePkg/MdePkg.dec
+  ArmPkg/ArmPkg.dec
+  HwPkg/HwPkg.dec
+  
+[LibraryClasses]
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  DebugLib
+  BaseLib
+  DebugLib
+  SerialPortLib
+  ArmLib
+  CacheMaintenanceLib
+  UefiLib
+  PrintLib
+  PcdLib
+  IoLib
+  DxeServicesTableLib
+  TimerLib
+  HobLib
+  
+[Guids]
+  gEfiMemoryMapGuid
+
+[Protocols]
+  gSpiFlashProtocolGuid
+
+[FixedPcd.common]
+
+
+[Depex]
+TRUE

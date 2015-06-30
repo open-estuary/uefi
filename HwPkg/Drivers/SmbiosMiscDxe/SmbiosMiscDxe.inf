@@ -1,0 +1,105 @@
+## @file
+# Component description file for SmbiosMisc instance.
+#
+# Parses the MiscSubclassDataTable and reports any generated data to the DataHub.
+#  All .uni file who tagged with "ToolCode="DUMMY"" in following file list is included by
+#  MiscSubclassDriver.uni file, the StrGather tool will expand MiscSubclassDriver.uni file
+#  and parse all .uni file.
+# Copyright (c) 2006 - 2010, Intel Corporation. All rights reserved.<BR>
+#
+#  This program and the accompanying materials
+#  are licensed and made available under the terms and conditions of the BSD License
+#  which accompanies this distribution. The full text of the license may be found at
+#  http://opensource.org/licenses/bsd-license.php
+#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+#
+#
+##
+
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SmbiosMiscDxe
+  FILE_GUID                      = EF0C99B6-B1D3-4025-9405-BF6A560FE0E0
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SmbiosMiscEntryPoint
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
+#
+
+[Sources]
+  SmbiosMisc.h
+  SmbiosMiscDataTable.c
+  SmbiosMiscEntryPoint.c
+  SmbiosMiscLibString.uni
+  ./Type00/MiscBiosVendorData.c
+  ./Type00/MiscBiosVendorFunction.c
+  ./Type01/MiscSystemManufacturerData.c
+  ./Type01/MiscSystemManufacturerFunction.c
+  ./Type02/MiscBaseBoardManufacturerData.c
+  ./Type02/MiscBaseBoardManufacturerFunction.c 
+  ./Type03/MiscChassisManufacturerData.c
+  ./Type03/MiscChassisManufacturerFunction.c
+  ./Type13/MiscNumberOfInstallableLanguagesData.c
+  ./Type13/MiscNumberOfInstallableLanguagesFunction.c
+  ./Type32/MiscBootInformationData.c
+  ./Type32/MiscBootInformationFunction.c 
+  ./Type38/MiscIpmiDeviceInformationData.c
+  ./Type38/MiscIpmiDeviceInformationFunction.c
+ 
+[Packages]
+  ArmPkg/ArmPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  IntelFrameworkPkg/IntelFrameworkPkg.dec
+  IntelFrameworkModulePkg/IntelFrameworkModulePkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+  PcdLib
+  HiiLib
+  MemoryAllocationLib
+  DevicePathLib
+  BaseMemoryLib
+  BaseLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+  HwSafeOperationLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                       # PROTOCOL ALWAYS_CONSUMED
+
+[Pcd]
+  gArmTokenSpaceGuid.PcdFdSize
+  gHwTokenSpaceGuid.PcdFirmwareVendor
+  gHwTokenSpaceGuid.PcdBiosVersionString
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareReleaseDateString
+
+  gHwTokenSpaceGuid.PcdSystemProductName
+  gHwTokenSpaceGuid.PcdSystemVersion
+  gHwTokenSpaceGuid.PcdBaseBoardProductName
+  gHwTokenSpaceGuid.PcdBaseBoardVersion
+
+  gHwTokenSpaceGuid.PcdCustDataFvAddress
+  gArmTokenSpaceGuid.PcdFdBaseAddress
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString
+
+  gEfiMdePkgTokenSpaceGuid.PcdUefiVariableDefaultPlatformLang  
+  
+[Guids]
+  gEfiGenericVariableGuid
+
+[Depex]  
+  gEfiSmbiosProtocolGuid 
+  
+

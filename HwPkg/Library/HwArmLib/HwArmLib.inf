@@ -1,0 +1,35 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: HwArmLib.inf
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = HwArmLib
+  FILE_GUID                      = 06EE68C3-2CF2-4a09-AA26-3F1F2CE525A6
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = HwArmLib
+
+[Sources.common]
+
+
+[Sources.AARCH64]
+  AArch64/HwArmLib.s
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+
+[Pcd]
+
+[BuildOptions]
