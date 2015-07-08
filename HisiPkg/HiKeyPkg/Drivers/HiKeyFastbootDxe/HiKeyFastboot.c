@@ -656,7 +656,8 @@ HiKeyFastbootPlatformOemCommand (
       else
         break;
     }
-    Data = AsciiStrDecimalToUintn (Command + Index);
+    // HiKeyBootNext is counted from 0, bootorder is counted from 1.
+    Data = AsciiStrDecimalToUintn (Command + Index) - 1;
 
     VariableSize = sizeof (UINT16);
     Status = gRT->GetVariable (
