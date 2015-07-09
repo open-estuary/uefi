@@ -228,7 +228,6 @@
   gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath|L"EFI\GRUB2\grubaa64.efi"
   gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument|""
   gArmPlatformTokenSpaceGuid.PcdDefaultBootType|2
-  gArmPlatformTokenSpaceGuid.PcdFdtDevicePath|L"Pci(0x0,0x0)/Sata(0x6,0x0,0x0)/HD(1,MBR,0x9A5462F0,0x800,0x19000)/fdt.dtb"
 
   # Use the serial console (ConIn & ConOut) and the Graphic driver (ConOut)
   gArmPlatformTokenSpaceGuid.PcdDefaultConOutPaths|L"VenHw(D3987D4B-971A-435F-8CAF-4967EB627241)/Uart(115200,8,N,1)/VenPcAnsi();VenHw(407B4008-BF5B-11DF-9547-CF16E0D72085)"

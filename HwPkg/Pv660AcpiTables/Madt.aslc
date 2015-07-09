@@ -20,7 +20,7 @@
 #include <Library/ArmLib.h>
 #include <Library/PcdLib.h>
 #include <IndustryStandard/Acpi.h>
-#include <IndustryStandard/Acpi60.h>
+#include <IndustryStandard/HwAcpi60.h>
 #include <Library/AcpiNextLib.h>
 
 // Differs from Juno, we have another affinity level beyond cluster and core

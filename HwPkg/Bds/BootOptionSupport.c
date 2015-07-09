@@ -18,9 +18,12 @@
 
 #include <Protocol/BlockIo.h>
 #include <Protocol/DevicePathToText.h>
+#include <Protocol/FirmwareVolumeBlock.h>
 #include <Protocol/PxeBaseCode.h>
 #include <Protocol/SimpleFileSystem.h>
 #include <Protocol/SimpleNetwork.h>
+#include <Protocol/Dhcp4.h>
+#include <Protocol/Mtftp4.h>
 
 #include <Guid/FileSystemInfo.h>
 
@@ -362,8 +365,7 @@ BdsLoadOptionFileSystemList (
   UINTN                             Size;
   EFI_FILE_SYSTEM_INFO*             FsInfo;
   EFI_DEVICE_PATH_PROTOCOL*         DevicePathProtocol;
-  EFI_DEVICE_PATH_PROTOCOL          *DevicePathNode;
-  
+
   // List all the Simple File System Protocols
   Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &HandleBuffer);
   if (EFI_ERROR (Status)) {
@@ -390,25 +392,16 @@ BdsLoadOptionFileSystemList (
         FsInfo = AllocatePool (Size);
         Status = Fs->GetInfo (Fs, &gEfiFileSystemInfoGuid, &Size, FsInfo);
       }
-      if (NULL != FsInfo)
-	  {
-		  UnicodeSPrint (SupportedDevice->Description,BOOT_DEVICE_DESCRIPTION_MAX,L"%s (%d MB)",FsInfo->VolumeLabel,(UINT32)(FsInfo->VolumeSize / (1024 * 1024)));
-	      FreePool(FsInfo);
+      if (NULL != FsInfo) {
+        UnicodeSPrint (SupportedDevice->Description,BOOT_DEVICE_DESCRIPTION_MAX,L"%s (%d MB)",FsInfo->VolumeLabel,(UINT32)(FsInfo->VolumeSize / (1024 * 1024)));
+        FreePool(FsInfo);
       }
       Fs->Close (Fs);
 
       SupportedDevice->DevicePathProtocol = DevicePathProtocol;
+      SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_FILESYSTEM];
 
-      DevicePathNode = DevicePathProtocol;
-      while (!IsDevicePathEnd (DevicePathNode)) {
-        if ((DevicePathType (DevicePathNode) == MESSAGING_DEVICE_PATH) &&
-              ( DevicePathSubType (DevicePathNode) == MSG_SATA_DP) ) {
-            SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_FILESYSTEM];
-            InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);            
-            break;
-        }
-        DevicePathNode = NextDevicePathNode (DevicePathNode);
-      }
+      InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
     }
   }
 
@@ -620,17 +613,19 @@ BdsLoadOptionMemMapList (
   IN OUT LIST_ENTRY* BdsLoadOptionList
   )
 {
-  EFI_STATUS                        Status;
-  UINTN                             HandleCount;
-  EFI_HANDLE                        *HandleBuffer;
-  UINTN                             DevicePathHandleCount;
-  EFI_HANDLE                        *DevicePathHandleBuffer;
-  BOOLEAN                           IsParent;
-  UINTN                             Index;
-  UINTN                             Index2;
-  BDS_SUPPORTED_DEVICE              *SupportedDevice;
-  EFI_DEVICE_PATH_PROTOCOL*         DevicePathProtocol;
-  EFI_DEVICE_PATH*                  DevicePath;
+  EFI_STATUS                          Status;
+  UINTN                               HandleCount;
+  EFI_HANDLE                         *HandleBuffer;
+  UINTN                               DevicePathHandleCount;
+  EFI_HANDLE                         *DevicePathHandleBuffer;
+  BOOLEAN                             IsParent;
+  UINTN                               Index;
+  UINTN                               Index2;
+  BDS_SUPPORTED_DEVICE               *SupportedDevice;
+  EFI_DEVICE_PATH_PROTOCOL*           DevicePathProtocol;
+  EFI_DEVICE_PATH*                    DevicePath;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL    *FileProtocol;
+  EFI_FIRMWARE_VOLUME_BLOCK_PROTOCOL *FvbProtocol;
 
   // List all the BlockIo Protocols
   Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiBlockIoProtocolGuid, NULL, &HandleCount, &HandleBuffer);
@@ -639,7 +634,35 @@ BdsLoadOptionMemMapList (
   }
 
   for (Index = 0; Index < HandleCount; Index++) {
-    // We only select the handle WITH a Device Path AND not part of Media (to avoid duplication with HardDisk, CDROM, etc)
+    // We only select handles WITH a Device Path AND not part of Media (to
+    // avoid duplication with HardDisk, CDROM, etc). Skip handles used by
+    // Simple Filesystem or used for Variable Storage.
+
+
+    Status = gBS->HandleProtocol (HandleBuffer[Index],
+                                  &gEfiSimpleFileSystemProtocolGuid,
+                                  (VOID *)&FileProtocol);
+    if (!EFI_ERROR(Status)) {
+      // SimpleFilesystem supported on this handle, skip
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (HandleBuffer[Index],
+                                  &gEfiFirmwareVolumeBlockProtocolGuid,
+                                  (VOID *)&FvbProtocol);
+    if (!EFI_ERROR(Status)) {
+      // Firmware Volme Block / Variable storage supported on this handle, skip
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (HandleBuffer[Index],
+                                  &gEfiFirmwareVolumeBlock2ProtocolGuid,
+                                  (VOID *)&FvbProtocol);
+    if (!EFI_ERROR(Status)) {
+      // Firmware Volme Block / Variable storage supported on this handle, skip
+      continue;
+    }
+
     Status = gBS->HandleProtocol (HandleBuffer[Index], &gEfiDevicePathProtocolGuid, (VOID **)&DevicePathProtocol);
     if (!EFI_ERROR(Status)) {
       // BlockIo is not part of Media Device Path
@@ -830,7 +853,6 @@ BdsLoadOptionPxeList (
   EFI_SIMPLE_NETWORK_PROTOCOL*      SimpleNet;
   CHAR16                            DeviceDescription[BOOT_DEVICE_DESCRIPTION_MAX];
   EFI_MAC_ADDRESS                   *Mac;
-  EFI_DEVICE_PATH_PROTOCOL          *DevicePathNode;
   
   // List all the PXE Protocols
   Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiPxeBaseCodeProtocolGuid, NULL, &HandleCount, &HandleBuffer);
@@ -855,24 +877,14 @@ BdsLoadOptionPxeList (
         ASSERT_EFI_ERROR (Status);
       }
       UnicodeSPrint (SupportedDevice->Description,BOOT_DEVICE_DESCRIPTION_MAX,L"PXE on %s",DeviceDescription);
-      if(NULL != SupportedDevice)
-      {
-	      SupportedDevice->DevicePathProtocol = DevicePathProtocol;
 
-          DevicePathNode = DevicePathProtocol;
-          while (!IsDevicePathEnd (DevicePathNode)) {
-            if ((DevicePathType (DevicePathNode) == MESSAGING_DEVICE_PATH) &&
-                  ( DevicePathSubType (DevicePathNode) == MSG_MAC_ADDR_DP) ) 
-            {
-    	        SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_PXE];
-    	        InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);           
-                break;
-            }
-            DevicePathNode = NextDevicePathNode (DevicePathNode);
-          }      
-      }
+      SupportedDevice->DevicePathProtocol = DevicePathProtocol;
+      SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_PXE];
+
+      InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
     }
   }
+
   return EFI_SUCCESS;
 }
 
@@ -946,51 +958,96 @@ BdsLoadOptionPxeIsSupported (
   }
 }
 
+/**
+  Add to the list of boot devices the devices allowing a TFTP boot
+
+  @param[in]   BdsLoadOptionList  List of devices to boot from
+
+  @retval  EFI_SUCCESS            Update completed
+  @retval  EFI_OUT_OF_RESOURCES   Fail to perform the update due to lack of resource
+**/
 EFI_STATUS
 BdsLoadOptionTftpList (
   IN OUT LIST_ENTRY* BdsLoadOptionList
   )
 {
-  EFI_STATUS                        Status;
-  UINTN                             HandleCount;
-  EFI_HANDLE                        *HandleBuffer;
-  UINTN                             Index;
-  BDS_SUPPORTED_DEVICE              *SupportedDevice;
-  EFI_DEVICE_PATH_PROTOCOL*         DevicePathProtocol;
-  EFI_SIMPLE_NETWORK_PROTOCOL*      SimpleNet;
-  CHAR16                            DeviceDescription[BOOT_DEVICE_DESCRIPTION_MAX];
-  EFI_MAC_ADDRESS                   *Mac;
+  EFI_STATUS                   Status;
+  UINTN                        HandleCount;
+  EFI_HANDLE                   *HandleBuffer;
+  EFI_HANDLE                   Handle;
+  UINTN                        Index;
+  EFI_DEVICE_PATH_PROTOCOL     *DevicePathProtocol;
+  VOID                         *Interface;
+  EFI_SIMPLE_NETWORK_PROTOCOL  *SimpleNetworkProtocol;
+  BDS_SUPPORTED_DEVICE         *SupportedDevice;
+  EFI_MAC_ADDRESS              *Mac;
 
-  // List all the PXE Protocols
-  Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiPxeBaseCodeProtocolGuid, NULL, &HandleCount, &HandleBuffer);
+  //
+  // List all the handles on which the Simple Network Protocol is installed.
+  //
+  Status = gBS->LocateHandleBuffer (
+                  ByProtocol,
+                  &gEfiSimpleNetworkProtocolGuid,
+                  NULL,
+                  &HandleCount,
+                  &HandleBuffer
+                  );
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
   for (Index = 0; Index < HandleCount; Index++) {
-    // We only select the handle WITH a Device Path AND the PXE Protocol AND the TFTP Protocol (the TFTP protocol is required to start PXE)
-    Status = gBS->HandleProtocol (HandleBuffer[Index], &gEfiDevicePathProtocolGuid, (VOID **)&DevicePathProtocol);
-    if (!EFI_ERROR(Status)) {
-      // Allocate BDS Supported Device structure
-      SupportedDevice = (BDS_SUPPORTED_DEVICE*)AllocatePool(sizeof(BDS_SUPPORTED_DEVICE));
-      if (NULL == SupportedDevice){
-          return EFI_INVALID_PARAMETER;
-      }
-      Status = gBS->LocateProtocol (&gEfiSimpleNetworkProtocolGuid, NULL, (VOID **)&SimpleNet);
-      if (!EFI_ERROR(Status)) {
-        Mac = &SimpleNet->Mode->CurrentAddress;
-        UnicodeSPrint (DeviceDescription,BOOT_DEVICE_DESCRIPTION_MAX,L"MAC Address: %02x:%02x:%02x:%02x:%02x:%02x", Mac->Addr[0],  Mac->Addr[1],  Mac->Addr[2],  Mac->Addr[3],  Mac->Addr[4],  Mac->Addr[5]);
-      } else {
-        Status = GenerateDeviceDescriptionName (HandleBuffer[Index], DeviceDescription);
-        ASSERT_EFI_ERROR (Status);
-      }
-      UnicodeSPrint (SupportedDevice->Description,BOOT_DEVICE_DESCRIPTION_MAX,L"TFTP on %s",DeviceDescription);
-
-      SupportedDevice->DevicePathProtocol = DevicePathProtocol;
-      SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_TFTP];
-
-      InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
+    Handle = HandleBuffer[Index];
+    //
+    // We select the handles that support :
+    // . the Device Path Protocol
+    // . the MTFTP4 Protocol
+    //
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEfiDevicePathProtocolGuid,
+                    (VOID **)&DevicePathProtocol
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
     }
+
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEfiMtftp4ServiceBindingProtocolGuid,
+                    &Interface
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    Status = gBS->HandleProtocol (
+                    Handle,
+                    &gEfiSimpleNetworkProtocolGuid,
+                    (VOID **)&SimpleNetworkProtocol
+                    );
+    if (EFI_ERROR (Status)) {
+      continue;
+    }
+
+    // Allocate BDS Supported Device structure
+    SupportedDevice = (BDS_SUPPORTED_DEVICE*)AllocatePool (sizeof (BDS_SUPPORTED_DEVICE));
+    if (SupportedDevice == NULL) {
+      continue;
+    }
+
+    Mac = &SimpleNetworkProtocol->Mode->CurrentAddress;
+    UnicodeSPrint (
+      SupportedDevice->Description,
+      BOOT_DEVICE_DESCRIPTION_MAX,
+      L"TFTP on MAC Address: %02x:%02x:%02x:%02x:%02x:%02x",
+      Mac->Addr[0],  Mac->Addr[1],  Mac->Addr[2],  Mac->Addr[3],  Mac->Addr[4],  Mac->Addr[5]
+      );
+
+    SupportedDevice->DevicePathProtocol = DevicePathProtocol;
+    SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_TFTP];
+
+    InsertTailList (BdsLoadOptionList, &SupportedDevice->Link);
   }
 
   return EFI_SUCCESS;
@@ -1002,38 +1059,50 @@ BdsLoadOptionTftpCreateDevicePath (
   OUT EFI_DEVICE_PATH_PROTOCOL  **DevicePathNodes
   )
 {
-  EFI_STATUS    Status;
-  BOOLEAN       IsDHCP;
-  EFI_IP_ADDRESS  LocalIp;
-  EFI_IP_ADDRESS  RemoteIp;
-  IPv4_DEVICE_PATH*   IPv4DevicePathNode;
-  FILEPATH_DEVICE_PATH* FilePathDevicePath;
-  CHAR16      BootFilePath[BOOT_DEVICE_FILEPATH_MAX];
-  UINTN       BootFilePathSize;
+  EFI_STATUS            Status;
+  BOOLEAN               IsDHCP;
+  EFI_IP_ADDRESS        LocalIp;
+  EFI_IP_ADDRESS        SubnetMask;
+  EFI_IP_ADDRESS        GatewayIp;
+  EFI_IP_ADDRESS        RemoteIp;
+  IPv4_DEVICE_PATH      *IPv4DevicePathNode;
+  FILEPATH_DEVICE_PATH  *FilePathDevicePath;
+  CHAR16                BootFilePath[BOOT_DEVICE_FILEPATH_MAX];
+  UINTN                 BootFilePathSize;
 
-  Print(L"Get the IP address from DHCP: ");
+  Print (L"Get the IP address from DHCP: ");
   Status = GetHIInputBoolean (&IsDHCP);
-  if (EFI_ERROR(Status)) {
+  if (EFI_ERROR (Status)) {
     return EFI_ABORTED;
   }
 
   if (!IsDHCP) {
-    Print(L"Get the static IP address: ");
+    Print (L"Local static IP address: ");
     Status = GetHIInputIP (&LocalIp);
-    if (EFI_ERROR(Status)) {
+    if (EFI_ERROR (Status)) {
+      return EFI_ABORTED;
+    }
+    Print (L"Get the network mask: ");
+    Status = GetHIInputIP (&SubnetMask);
+    if (EFI_ERROR (Status)) {
+      return EFI_ABORTED;
+    }
+    Print (L"Get the gateway IP address: ");
+    Status = GetHIInputIP (&GatewayIp);
+    if (EFI_ERROR (Status)) {
       return EFI_ABORTED;
     }
   }
 
-  Print(L"Get the TFTP server IP address: ");
+  Print (L"Get the TFTP server IP address: ");
   Status = GetHIInputIP (&RemoteIp);
-  if (EFI_ERROR(Status)) {
+  if (EFI_ERROR (Status)) {
     return EFI_ABORTED;
   }
 
-  Print(L"File path of the %s : ", FileName);
+  Print (L"File path of the %s : ", FileName);
   Status = GetHIInputStr (BootFilePath, BOOT_DEVICE_FILEPATH_MAX);
-  if (EFI_ERROR(Status)) {
+  if (EFI_ERROR (Status)) {
     return EFI_ABORTED;
   }
 
@@ -1053,7 +1122,13 @@ BdsLoadOptionTftpCreateDevicePath (
   IPv4DevicePathNode->Header.Type    = MESSAGING_DEVICE_PATH;
   IPv4DevicePathNode->Header.SubType = MSG_IPv4_DP;
   SetDevicePathNodeLength (&IPv4DevicePathNode->Header, sizeof(IPv4_DEVICE_PATH));
-  CopyMem (&IPv4DevicePathNode->LocalIpAddress, &LocalIp.v4, sizeof (EFI_IPv4_ADDRESS));
+
+  if (!IsDHCP) {
+    CopyMem (&IPv4DevicePathNode->LocalIpAddress, &LocalIp.v4, sizeof (EFI_IPv4_ADDRESS));
+    CopyMem (&IPv4DevicePathNode->SubnetMask, &SubnetMask.v4, sizeof (EFI_IPv4_ADDRESS));
+    CopyMem (&IPv4DevicePathNode->GatewayIpAddress, &GatewayIp.v4, sizeof (EFI_IPv4_ADDRESS));
+  }
+
   CopyMem (&IPv4DevicePathNode->RemoteIpAddress, &RemoteIp.v4, sizeof (EFI_IPv4_ADDRESS));
   IPv4DevicePathNode->LocalPort  = 0;
   IPv4DevicePathNode->RemotePort = 0;
@@ -1107,7 +1182,11 @@ BdsLoadOptionTftpUpdateDevicePath (
   IPv4_DEVICE_PATH       Ipv4Node;
   BOOLEAN                IsDHCP;
   EFI_IP_ADDRESS         OldIp;
+  EFI_IP_ADDRESS         OldSubnetMask;
+  EFI_IP_ADDRESS         OldGatewayIp;
   EFI_IP_ADDRESS         LocalIp;
+  EFI_IP_ADDRESS         SubnetMask;
+  EFI_IP_ADDRESS         GatewayIp;
   EFI_IP_ADDRESS         RemoteIp;
   UINT8                 *FileNodePtr;
   CHAR16                 BootFilePath[BOOT_DEVICE_FILEPATH_MAX];
@@ -1160,12 +1239,32 @@ BdsLoadOptionTftpUpdateDevicePath (
   if (!IsDHCP) {
     Print (L"Local static IP address: ");
     if (Ipv4Node.StaticIpAddress) {
-      // Copy local IPv4 address into IPv4 or IPv6 union
       CopyMem (&OldIp.v4, &Ipv4Node.LocalIpAddress, sizeof (EFI_IPv4_ADDRESS));
-
       Status = EditHIInputIP (&OldIp, &LocalIp);
     } else {
       Status = GetHIInputIP (&LocalIp);
+    }
+    if (EFI_ERROR (Status)) {
+      goto ErrorExit;
+    }
+
+    Print (L"Get the network mask: ");
+    if (Ipv4Node.StaticIpAddress) {
+      CopyMem (&OldSubnetMask.v4, &Ipv4Node.SubnetMask, sizeof (EFI_IPv4_ADDRESS));
+      Status = EditHIInputIP (&OldSubnetMask, &SubnetMask);
+    } else {
+      Status = GetHIInputIP (&SubnetMask);
+    }
+    if (EFI_ERROR (Status)) {
+      goto ErrorExit;
+    }
+
+    Print (L"Get the gateway IP address: ");
+    if (Ipv4Node.StaticIpAddress) {
+      CopyMem (&OldGatewayIp.v4, &Ipv4Node.GatewayIpAddress, sizeof (EFI_IPv4_ADDRESS));
+      Status = EditHIInputIP (&OldGatewayIp, &GatewayIp);
+    } else {
+      Status = GetHIInputIP (&GatewayIp);
     }
     if (EFI_ERROR (Status)) {
       goto ErrorExit;
@@ -1212,12 +1311,18 @@ BdsLoadOptionTftpUpdateDevicePath (
   //
   // Update the IPv4 node. IPv6 case not handled yet.
   //
-  if (IsDHCP == TRUE) {
+  if (IsDHCP) {
     Ipv4Node.StaticIpAddress = FALSE;
+    ZeroMem (&Ipv4Node.LocalIpAddress, sizeof (EFI_IPv4_ADDRESS));
+    ZeroMem (&Ipv4Node.SubnetMask, sizeof (EFI_IPv4_ADDRESS));
+    ZeroMem (&Ipv4Node.GatewayIpAddress, sizeof (EFI_IPv4_ADDRESS));
   } else {
     Ipv4Node.StaticIpAddress = TRUE;
+    CopyMem (&Ipv4Node.LocalIpAddress, &LocalIp.v4, sizeof (EFI_IPv4_ADDRESS));
+    CopyMem (&Ipv4Node.SubnetMask, &SubnetMask.v4, sizeof (EFI_IPv4_ADDRESS));
+    CopyMem (&Ipv4Node.GatewayIpAddress, &GatewayIp.v4, sizeof (EFI_IPv4_ADDRESS));
   }
-  CopyMem (&Ipv4Node.LocalIpAddress, &LocalIp.v4, sizeof (EFI_IPv4_ADDRESS));
+
   CopyMem (&Ipv4Node.RemoteIpAddress, &RemoteIp.v4, sizeof (EFI_IPv4_ADDRESS));
   CopyMem (Ipv4NodePtr, &Ipv4Node, sizeof (IPv4_DEVICE_PATH));
 

@@ -115,8 +115,6 @@
 
   # BDS Libraries
   BdsLib|ArmPkg/Library/BdsLib/BdsLib.inf
-  ## Upgrade to Linaro release 2015.01
-  ArmBdsHelperLib|ArmPkg/Library/ArmBdsHelperLib/ArmBdsHelperLib.inf
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
   UefiDevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
 
@@ -382,8 +380,4 @@
   gArmPlatformTokenSpaceGuid.PcdDefaultConOutPaths|L"VenHw(D3987D4B-971A-435F-8CAF-4967EB627241)/Uart(38400,8,N,1)/VenPcAnsi();VenHw(CE660500-824D-11E0-AC72-0002A5D5C51B)"
   gArmPlatformTokenSpaceGuid.PcdDefaultConInPaths|L"VenHw(D3987D4B-971A-435F-8CAF-4967EB627241)/Uart(38400,8,N,1)/VenPcAnsi()"
   gArmPlatformTokenSpaceGuid.PcdPlatformBootTimeOut|10
-
-  # g00179230: 由于PV660上按set/way刷cache只能刷到L3 Cache, 因此配置门限为足够大的值, 保证按cacheline刷cache
-  gArmTokenSpaceGuid.PcdArmCacheOperationThreshold|0xFFFFFFFF
-
 

@@ -2,7 +2,7 @@
 #
 #  Component description file for Bds module
 #
-#  Copyright (c) 2011-2014, ARM Ltd. All rights reserved.<BR>
+#  Copyright (c) 2011-2015, ARM Ltd. All rights reserved.<BR>
 #
 #  This program and the accompanying materials
 #  are licensed and made available under the terms and conditions of the BSD License
@@ -76,6 +76,10 @@
   gEfiPxeBaseCodeProtocolGuid
   gEfiSimpleNetworkProtocolGuid
   gEfiDevicePathToTextProtocolGuid
+  gEfiFirmwareVolumeBlockProtocolGuid
+  gEfiFirmwareVolumeBlock2ProtocolGuid
+  gEfiDhcp4ServiceBindingProtocolGuid
+  gEfiMtftp4ServiceBindingProtocolGuid
 
 [Pcd]
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor
@@ -84,7 +88,6 @@
   gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath
   gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument
   gArmPlatformTokenSpaceGuid.PcdDefaultBootType
-  gArmPlatformTokenSpaceGuid.PcdFdtDevicePath
   gArmPlatformTokenSpaceGuid.PcdPlatformBootTimeOut
   gArmPlatformTokenSpaceGuid.PcdDefaultConInPaths
   gArmPlatformTokenSpaceGuid.PcdDefaultConOutPaths

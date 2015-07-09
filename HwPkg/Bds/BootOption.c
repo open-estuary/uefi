@@ -40,13 +40,9 @@ BootOptionStart (
   )
 {
   EFI_STATUS                            Status;
-  EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL*   EfiDevicePathFromTextProtocol;
   UINT32                                LoaderType;
   ARM_BDS_LOADER_OPTIONAL_DATA*         OptionalData;
   ARM_BDS_LINUX_ARGUMENTS*              LinuxArguments;
-  EFI_DEVICE_PATH_PROTOCOL*             FdtDevicePath;
-  EFI_DEVICE_PATH_PROTOCOL*             DefaultFdtDevicePath;
-  UINTN                                 FdtDevicePathSize;
   UINTN                                 CmdLineSize;
   UINTN                                 InitrdSize;
   EFI_DEVICE_PATH*                      Initrd;
@@ -88,28 +84,11 @@ BootOptionStart (
       } else {
         Initrd = NULL;
       }
-
-      // Get the default FDT device path
-      Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
-      ASSERT_EFI_ERROR(Status);
-      DefaultFdtDevicePath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdFdtDevicePath));
-
-      // Get the FDT device path
-      FdtDevicePathSize = GetDevicePathSize (DefaultFdtDevicePath);
-      Status = GetEnvironmentVariable ((CHAR16 *)L"Fdt", &gArmGlobalVariableGuid,
-                 DefaultFdtDevicePath, &FdtDevicePathSize, (VOID **)&FdtDevicePath);
-      ASSERT_EFI_ERROR(Status);
-
-      Status = BdsBootLinuxFdt (BootOption->FilePathList,
-                                Initrd, // Initrd
-                                (CHAR8*)(LinuxArguments + 1),
-                                FdtDevicePath);
-
-      if(DefaultFdtDevicePath != FdtDevicePath)
-      {
-        FreePool (DefaultFdtDevicePath);
-      }        
-      FreePool (FdtDevicePath);
+      Status = BdsBootLinuxFdt (
+                 BootOption->FilePathList,
+                 Initrd,
+                 (CHAR8*)(LinuxArguments + 1)
+                 );
     }
   } else {
     // Connect all the drivers if the EFI Application is not a EFI OS Loader
@@ -226,7 +205,7 @@ BootOptionSetFields (
   IN UINTN                      OptionalDataSize
   )
 {
-  EFI_LOAD_OPTION               EfiLoadOption;
+  EFI_LOAD_OPTION               *EfiLoadOption;
   UINTN                         EfiLoadOptionSize;
   UINTN                         BootDescriptionSize;
   UINT16                        FilePathListLength;
@@ -253,12 +232,12 @@ BootOptionSetFields (
 
   // Allocate the memory for the EFI Load Option
   EfiLoadOptionSize = sizeof(UINT32) + sizeof(UINT16) + BootDescriptionSize + FilePathListLength + OptionalDataSize;
-  EfiLoadOption = (EFI_LOAD_OPTION)AllocatePool(EfiLoadOptionSize);
+  EfiLoadOption = (EFI_LOAD_OPTION *)AllocatePool(EfiLoadOptionSize);
   if (NULL == EfiLoadOption)
   {
     return EFI_OUT_OF_RESOURCES;
   }
-  EfiLoadOptionPtr = EfiLoadOption;
+  EfiLoadOptionPtr = (UINT8 *)EfiLoadOption;
 
   //
   // Populate the EFI Load Option and BDS Boot Option structures
@@ -292,6 +271,8 @@ BootOptionSetFields (
     WriteUnaligned32 ((UINT32 *)EfiLoadOptionPtr, ARM_BDS_OPTIONAL_DATA_SIGNATURE);
     WriteUnaligned32 ((UINT32 *)(EfiLoadOptionPtr + 4), BootType);
 
+    // OptionalData should have been initialized by the caller of this function
+    ASSERT (OptionalData != NULL);
     BootArguments = (ARM_BDS_LOADER_ARGUMENTS*)OptionalData;
     SrcLinuxArguments = &(BootArguments->LinuxArguments);
     DestLinuxArguments = &((ARM_BDS_LOADER_OPTIONAL_DATA*)EfiLoadOptionPtr)->Arguments.LinuxArguments;
@@ -308,7 +289,9 @@ BootOptionSetFields (
       CopyMem (InitrdPathListPtr, (VOID*)((UINTN)(SrcLinuxArguments + 1) + SrcLinuxArguments->CmdLineSize), SrcLinuxArguments->InitrdSize);
     }
   } else {
-    CopyMem (BootOption->OptionalData, OptionalData, OptionalDataSize);
+    if (OptionalData != NULL) {
+      CopyMem (BootOption->OptionalData, OptionalData, OptionalDataSize);
+    }
   }
   BootOption->OptionalDataSize = OptionalDataSize;
 
@@ -336,7 +319,7 @@ BootOptionCreate (
   OUT BDS_LOAD_OPTION**         BdsLoadOption
   )
 {
-  EFI_STATUS                    Status=EFI_SUCCESS;
+  EFI_STATUS                    Status;
   BDS_LOAD_OPTION_ENTRY*        BootOptionEntry;
   BDS_LOAD_OPTION*              BootOption;
   CHAR16                        BootVariableName[9];

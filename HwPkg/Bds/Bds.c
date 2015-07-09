@@ -51,7 +51,7 @@ GetConsoleDevicePathFromVariable (
   Status = GetGlobalEnvironmentVariable (ConsoleVarName, NULL, NULL, (VOID**)&DevicePathInstances);
   if (EFI_ERROR(Status)) {
     // In case no default console device path has been defined we assume a driver handles the console (eg: SimpleTextInOutSerial)
-    if ((NULL == DefaultConsolePaths) || ( L'\0' == DefaultConsolePaths[0])) {
+    if ((DefaultConsolePaths == NULL) || (DefaultConsolePaths[0] == L'\0')) {
       *DevicePaths = NULL;
       return EFI_SUCCESS;
     }
@@ -160,7 +160,7 @@ InitializeConsolePipe (
   if (*Interface == NULL) {
     Status = gBS->LocateHandleBuffer (ByProtocol, Protocol, NULL, &NoHandles, &Buffer);
     if (EFI_ERROR (Status)) {
-      Status = BdsConnectAllDrivers();
+      BdsConnectAllDrivers();
       Status = gBS->LocateHandleBuffer (ByProtocol, Protocol, NULL, &NoHandles, &Buffer);
     }
 
@@ -168,8 +168,8 @@ InitializeConsolePipe (
       *Handle = Buffer[0];
       Status = gBS->HandleProtocol (*Handle, Protocol, Interface);
       ASSERT_EFI_ERROR(Status);
+      FreePool (Buffer);
     }
-    FreePool (Buffer);
   } else {
     Status = EFI_SUCCESS;
   }
@@ -228,16 +228,137 @@ DefineDefaultBootEntries (
   VOID
   )
 {
+  BDS_LOAD_OPTION*                    BdsLoadOption;
+  UINTN                               Size;
+  EFI_STATUS                          Status;
+  EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* EfiDevicePathFromTextProtocol;
+  EFI_DEVICE_PATH*                    BootDevicePath;
+  UINT8*                              OptionalData;
+  UINTN                               OptionalDataSize;
+  ARM_BDS_LOADER_ARGUMENTS*           BootArguments;
+  ARM_BDS_LOADER_TYPE                 BootType;
+  EFI_DEVICE_PATH*                    InitrdPath;
+  UINTN                               InitrdSize;
+  UINTN                               CmdLineSize;
+  UINTN                               CmdLineAsciiSize;
+  CHAR16*                             DefaultBootArgument;
+  CHAR8*                              AsciiDefaultBootArgument;
 
-    EFI_STATUS                          Status=EFI_SUCCESS;
-
-    Status = ListAllSupportedBootDevice();
-    if (EFI_ERROR(Status)) {
-        DEBUG((EFI_D_ERROR,"Error: Bds ListAllSupportedBootDevice\n"));
-        return Status;
+  //
+  // If Boot Order does not exist then create a default entry
+  //
+  Size = 0;
+  Status = gRT->GetVariable (L"BootOrder", &gEfiGlobalVariableGuid, NULL, &Size, NULL);
+  if (Status == EFI_NOT_FOUND) {
+    if ((PcdGetPtr(PcdDefaultBootDevicePath) == NULL) || (StrLen ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath)) == 0)) {
+      return EFI_UNSUPPORTED;
     }
 
-    return Status;
+    Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
+    if (EFI_ERROR(Status)) {
+      // You must provide an implementation of DevicePathFromTextProtocol in your firmware (eg: DevicePathDxe)
+      DEBUG((EFI_D_ERROR,"Error: Bds requires DevicePathFromTextProtocol\n"));
+      return Status;
+    }
+    BootDevicePath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath));
+
+    DEBUG_CODE_BEGIN();
+      // We convert back to the text representation of the device Path to see if the initial text is correct
+      EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
+      CHAR16* DevicePathTxt;
+
+      Status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevicePathToTextProtocol);
+      ASSERT_EFI_ERROR(Status);
+      DevicePathTxt = DevicePathToTextProtocol->ConvertDevicePathToText (BootDevicePath, TRUE, TRUE);
+
+      ASSERT (StrCmp ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath), DevicePathTxt) == 0);
+
+      FreePool (DevicePathTxt);
+    DEBUG_CODE_END();
+
+    // Create the entry is the Default values are correct
+    if (BootDevicePath != NULL) {
+      BootType = (ARM_BDS_LOADER_TYPE)PcdGet32 (PcdDefaultBootType);
+
+      // We do not support NULL pointer
+      ASSERT (PcdGetPtr (PcdDefaultBootArgument) != NULL);
+
+      //
+      // Logic to handle ASCII or Unicode default parameters
+      //
+      if (*(CHAR8*)PcdGetPtr (PcdDefaultBootArgument) == '\0') {
+        CmdLineSize = 0;
+        CmdLineAsciiSize = 0;
+        DefaultBootArgument = NULL;
+        AsciiDefaultBootArgument = NULL;
+      } else if (IsUnicodeString ((CHAR16*)PcdGetPtr (PcdDefaultBootArgument))) {
+        // The command line is a Unicode string
+        DefaultBootArgument = (CHAR16*)PcdGetPtr (PcdDefaultBootArgument);
+        CmdLineSize = StrSize (DefaultBootArgument);
+
+        // Initialize ASCII variables
+        CmdLineAsciiSize = CmdLineSize / 2;
+        AsciiDefaultBootArgument = AllocatePool (CmdLineAsciiSize);
+        if (AsciiDefaultBootArgument == NULL) {
+          return EFI_OUT_OF_RESOURCES;
+        }
+        UnicodeStrToAsciiStr ((CHAR16*)PcdGetPtr (PcdDefaultBootArgument), AsciiDefaultBootArgument);
+      } else {
+        // The command line is a ASCII string
+        AsciiDefaultBootArgument = (CHAR8*)PcdGetPtr (PcdDefaultBootArgument);
+        CmdLineAsciiSize = AsciiStrSize (AsciiDefaultBootArgument);
+
+        // Initialize ASCII variables
+        CmdLineSize = CmdLineAsciiSize * 2;
+        DefaultBootArgument = AllocatePool (CmdLineSize);
+        if (DefaultBootArgument == NULL) {
+          return EFI_OUT_OF_RESOURCES;
+        }
+        AsciiStrToUnicodeStr (AsciiDefaultBootArgument, DefaultBootArgument);
+      }
+
+      if ((BootType == BDS_LOADER_KERNEL_LINUX_ATAG) || (BootType == BDS_LOADER_KERNEL_LINUX_FDT)) {
+        InitrdPath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootInitrdPath));
+        InitrdSize = GetDevicePathSize (InitrdPath);
+
+        OptionalDataSize = sizeof(ARM_BDS_LOADER_ARGUMENTS) + CmdLineAsciiSize + InitrdSize;
+        BootArguments = (ARM_BDS_LOADER_ARGUMENTS*)AllocatePool (OptionalDataSize);
+        if (BootArguments == NULL) {
+          return EFI_OUT_OF_RESOURCES;
+        }
+        BootArguments->LinuxArguments.CmdLineSize = CmdLineAsciiSize;
+        BootArguments->LinuxArguments.InitrdSize = InitrdSize;
+
+        CopyMem ((VOID*)(BootArguments + 1), AsciiDefaultBootArgument, CmdLineAsciiSize);
+        CopyMem ((VOID*)((UINTN)(BootArguments + 1) + CmdLineAsciiSize), InitrdPath, InitrdSize);
+
+        OptionalData = (UINT8*)BootArguments;
+      } else {
+        OptionalData = (UINT8*)DefaultBootArgument;
+        OptionalDataSize = CmdLineSize;
+      }
+
+      BootOptionCreate (LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_BOOT,
+        (CHAR16*)PcdGetPtr(PcdDefaultBootDescription),
+        BootDevicePath,
+        BootType,
+        OptionalData,
+        OptionalDataSize,
+        &BdsLoadOption
+        );
+      FreePool (BdsLoadOption);
+
+      if (DefaultBootArgument == (CHAR16*)PcdGetPtr (PcdDefaultBootArgument)) {
+        FreePool (AsciiDefaultBootArgument);
+      } else if (DefaultBootArgument != NULL) {
+        FreePool (DefaultBootArgument);
+      }
+    } else {
+      Status = EFI_UNSUPPORTED;
+    }
+  }
+
+  return Status;
 }
 
 //find string in string, return the first start location or -1 if can not find   
@@ -420,8 +541,8 @@ StartDefaultBootOnTimeout (
   if (Timeout != 0xFFFF) {
     if (Timeout > 0) {
       // Create the waiting events (keystroke and 1sec timer)
-      Status = gBS->CreateEvent (EVT_TIMER, 0, NULL, NULL, &WaitList[0]);
-      Status = gBS->SetTimer (WaitList[0], TimerPeriodic, EFI_SET_TIMER_TO_SECOND);
+      gBS->CreateEvent (EVT_TIMER, 0, NULL, NULL, &WaitList[0]);
+      gBS->SetTimer (WaitList[0], TimerPeriodic, EFI_SET_TIMER_TO_SECOND);
       WaitList[1] = gST->ConIn->WaitForKey;
 
       // Start the timer
@@ -429,7 +550,7 @@ StartDefaultBootOnTimeout (
       Print(L"The default boot selection will start in ");
       while ((Timeout > 0) && (WaitIndex == 0)) {
         Print(L"%3d seconds",Timeout);
-        Status = gBS->WaitForEvent (2, WaitList, &WaitIndex);
+        gBS->WaitForEvent (2, WaitList, &WaitIndex);
         if (WaitIndex == 0) {
           Print(L"\b\b\b\b\b\b\b\b\b\b\b");
           Timeout--;
@@ -466,16 +587,15 @@ StartDefaultBootOnTimeout (
         }
       }
       
-      for (Index = 0; Index < BootOrderSize / sizeof (UINT16); Index++) 
-      {
+      for (Index = 0; Index < BootOrderSize / sizeof (UINT16); Index++) {
         UnicodeSPrint (BootVariableName, 9 * sizeof(CHAR16), L"Boot%04X", BootOrder[Index]);
         OemPreStartBootOptionAction(BootOrder[Index]);
         Print(L"Bds TimeOut Start Boot Option [%s] ....Begin!...\n\r",BootVariableName);                  
         Status = BdsStartBootOption (BootVariableName);
         if(!EFI_ERROR(Status)){
-        	// Boot option returned successfully, hence don't need to start next boot option
-        	break;
-          }
+          // Boot option returned successfully, hence don't need to start next boot option
+          break;
+        }
         Print(L"Bds TimeOut Start Boot Option [%s] ....Fail!...\n\r",BootVariableName);          
       }
       
@@ -497,7 +617,6 @@ StartDefaultBootOnTimeout (
       OpenAlarmLed();
       Print(L"[WARNING]Bds TimeOut: All Boot Option Start Fail! Lighting The Alarm Led!!! \n\r");     
     }
-  //Reboot();
   }
   return EFI_SUCCESS;
 }
@@ -510,7 +629,6 @@ StartDefaultBootOnTimeout (
                                 which is implementation-dependent.
 
 **/
-STATIC
 VOID
 EFIAPI
 EmptyCallbackFunction (
@@ -646,10 +764,10 @@ BdsEntry (
   }
 
   // If Boot Order does not exist then create a default entry
-  Status = DefineDefaultBootEntries ();
+  DefineDefaultBootEntries ();
 
   // Now we need to setup the EFI System Table with information about the console devices.
-  Status = InitializeConsole ();
+  InitializeConsole ();
 
   //
   // Update the CRC32 in the EFI System Table header
@@ -663,7 +781,7 @@ BdsEntry (
   }
 
   // Timer before initiating the default boot selection
-  Status = StartDefaultBootOnTimeout ();
+  StartDefaultBootOnTimeout ();
 
   Status = VerifyBootLineEntry ();
   if(EFI_ERROR(Status))

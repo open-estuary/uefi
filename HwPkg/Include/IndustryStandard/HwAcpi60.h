@@ -11,8 +11,8 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.             
 **/
 
-#ifndef _ACPI_6_0_H_
-#define _ACPI_6_0_H_
+#ifndef _HW_ACPI_6_0_H_
+#define _HW_ACPI_6_0_H_
 
 #include <IndustryStandard/Acpi51.h>
 
@@ -28,18 +28,6 @@
 // Ensure proper structure formats
 //
 #pragma pack(1)
-
-///
-/// GIC ITS Structure
-///
-typedef struct {
-  UINT8   Type;
-  UINT8   Length;
-  UINT16  Reserved1;
-  UINT32  GicITSId;
-  UINT64  PhysicalBaseAddress;
-  UINT32  Reserved2;
-} EFI_ACPI_6_0_GIC_ITS_STRUCTURE;
 
 ///
 /// GIC MBI Structure

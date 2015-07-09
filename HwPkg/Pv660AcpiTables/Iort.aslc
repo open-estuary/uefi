@@ -10,7 +10,7 @@
 
 #include "Pv660Platform.h"
 #include <IndustryStandard/Acpi.h>
-#include <IndustryStandard/Acpi60.h>
+#include <IndustryStandard/HwAcpi60.h>
 
 #pragma pack (1)
 
