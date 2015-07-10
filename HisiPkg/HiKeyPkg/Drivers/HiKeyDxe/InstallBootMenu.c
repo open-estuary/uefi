@@ -50,9 +50,7 @@ STATIC UINT16 mBootCount = 0;
 STATIC UINT16 mBootIndex = 0;
 
 #define HIKEY_BOOT_ENTRY_FASTBOOT          0
-#define HIKEY_BOOT_ENTRY_DEBIAN_EMMC       1
-#define HIKEY_BOOT_ENTRY_DEBIAN_SD         2
-#define HIKEY_BOOT_ENTRY_ANDROID           3
+#define HIKEY_BOOT_ENTRY_GRUB              1
 
 STATIC struct HiKeyBootEntry Entries[] = {
   [HIKEY_BOOT_ENTRY_FASTBOOT] = {
@@ -61,23 +59,11 @@ STATIC struct HiKeyBootEntry Entries[] = {
     L"fastboot",
     LOAD_OPTION_CATEGORY_APP
   },
-  [HIKEY_BOOT_ENTRY_DEBIAN_EMMC] = {
-    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
-    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait initrd=initrd.img efi=noruntime",
-    L"Debian on eMMC",
-    LOAD_OPTION_CATEGORY_BOOT
-  },
-  [HIKEY_BOOT_ENTRY_DEBIAN_SD] = {
-    L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/Image",
-    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/mmcblk1p2 rw rootwait initrd=initrd.img-3.18.0-linaro-hikey efi=noruntime",
-    L"Debian on SD",
-    LOAD_OPTION_CATEGORY_BOOT
-  },
-  [HIKEY_BOOT_ENTRY_ANDROID] = {
-    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image",
-    L"console=ttyAMA0,115200 earlycon=pl011,0xf8015000 vmalloc=484M androidboot.console=ttyAMA0 androidboot.hardware=hikey selinux=0 firmware_class.path=/system/etc/firmware root=/dev/disk/by-partlabel/system initrd=ramdisk.img efi=noruntime",
-    L"Android",
-    LOAD_OPTION_CATEGORY_BOOT
+  [HIKEY_BOOT_ENTRY_GRUB] = {
+    L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/grubaa64.efi",
+    NULL,
+    L"grub",
+    LOAD_OPTION_CATEGORY_APP
   }
 };
 
@@ -380,39 +366,6 @@ HiKeyDetectJumper (
 STATIC
 VOID
 EFIAPI
-HiKeyCreateFdtVariable (
-  IN CHAR16          *FdtPathText
-  )
-{
-  UINTN                     FdtDevicePathSize;
-  EFI_DEVICE_PATH_PROTOCOL *FdtDevicePath;
-  EFI_STATUS                Status;
-  EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL *DevicePathFromTextProtocol;
-
-  Status = gBS->LocateProtocol (
-                  &gEfiDevicePathFromTextProtocolGuid,
-                  NULL,
-                  (VOID**)&DevicePathFromTextProtocol
-                  );
-  ASSERT_EFI_ERROR(Status);
-
-  FdtDevicePath = DevicePathFromTextProtocol->ConvertTextToDevicePath (FdtPathText);
-  ASSERT (FdtDevicePath != NULL);
-
-  FdtDevicePathSize = GetDevicePathSize (FdtDevicePath);
-  Status = gRT->SetVariable (
-                  (CHAR16*)L"Fdt",
-                  &gArmGlobalVariableGuid,
-                  EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-                  FdtDevicePathSize,
-                  FdtDevicePath
-                  );
-  ASSERT_EFI_ERROR(Status);
-}
-
-STATIC
-VOID
-EFIAPI
 HiKeyOnEndOfDxe (
   EFI_EVENT                               Event,
   VOID                                    *Context
@@ -420,7 +373,7 @@ HiKeyOnEndOfDxe (
 {
   EFI_STATUS          Status;
   UINTN               VariableSize;
-  UINT16              BootIndex, AutoBoot, Count, Index;
+  UINT16              AutoBoot, Count, Index;
 
   VariableSize = sizeof (UINT16);
   Status = gRT->GetVariable (
@@ -482,33 +435,6 @@ HiKeyOnEndOfDxe (
   }
 
   HiKeyDetectJumper ();
-
-  // The priority on jumper is higher than HiKeyBoot.
-  if (mBootIndex > 0) {
-    VariableSize = sizeof (UINT16);
-    Status = gRT->GetVariable (
-                    (CHAR16*)L"HiKeyBootNext",
-                    &gArmGlobalVariableGuid,
-                    NULL,
-                    &VariableSize,
-                    (VOID*)&BootIndex
-                    );
-    if ((EFI_ERROR (Status) == 0) && (BootIndex > 0)) {
-      mBootIndex = BootIndex;
-    }
-  }
-
-  // Fdt variable should be aligned with Image path.
-  // In another word, Fdt and Image file should be located in the same path.
-  switch (mBootIndex) {
-  case HIKEY_BOOT_ENTRY_DEBIAN_EMMC:
-  case HIKEY_BOOT_ENTRY_ANDROID:
-    HiKeyCreateFdtVariable (L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/hi6220-hikey.dtb");
-    break;
-  case HIKEY_BOOT_ENTRY_DEBIAN_SD:
-    HiKeyCreateFdtVariable (L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/hi6220-hikey.dtb");
-    break;
-  }
 
   Status = HiKeyCreateBootNext ();
   if (EFI_ERROR (Status)) {
