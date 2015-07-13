@@ -324,6 +324,7 @@
   #
   gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|1200000
   gEmbeddedTokenSpaceGuid.PcdMetronomeTickPeriod|1000
+  gEmbeddedTokenSpaceGuid.PcdTimerPeriod|10000
 
   #
   # DW MMC/SD card controller
