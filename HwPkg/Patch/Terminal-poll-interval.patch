@@ -1,0 +1,13 @@
+diff --git a/MdeModulePkg/Universal/Console/TerminalDxe/Terminal.h b/MdeModulePkg/Universal/Console/TerminalDxe/Terminal.h
+index d393acb..4c6406d 100644
+--- a/MdeModulePkg/Universal/Console/TerminalDxe/Terminal.h
++++ b/MdeModulePkg/Universal/Console/TerminalDxe/Terminal.h
+@@ -67,7 +67,7 @@ typedef struct {
+   UINTN   Rows;
+ } TERMINAL_CONSOLE_MODE_DATA;
+ 
+-#define KEYBOARD_TIMER_INTERVAL         200000  // 0.02s
++#define KEYBOARD_TIMER_INTERVAL         20000  // 0.02s
+ 
+ #define TERMINAL_DEV_SIGNATURE  SIGNATURE_32 ('t', 'm', 'n', 'l')
+ 

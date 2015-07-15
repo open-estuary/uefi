@@ -381,3 +381,7 @@
   gArmPlatformTokenSpaceGuid.PcdDefaultConInPaths|L"VenHw(D3987D4B-971A-435F-8CAF-4967EB627241)/Uart(38400,8,N,1)/VenPcAnsi()"
   gArmPlatformTokenSpaceGuid.PcdPlatformBootTimeOut|10
 
+  # Set timer interrupt to be triggerred in 1ms to avoid missing
+  # serial terminal input characters.
+  gEmbeddedTokenSpaceGuid.PcdTimerPeriod|10000
+
