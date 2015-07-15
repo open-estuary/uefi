@@ -365,6 +365,7 @@ BdsLoadOptionFileSystemList (
   UINTN                             Size;
   EFI_FILE_SYSTEM_INFO*             FsInfo;
   EFI_DEVICE_PATH_PROTOCOL*         DevicePathProtocol;
+  EFI_DEVICE_PATH_PROTOCOL          *DevicePathNode;
 
   // List all the Simple File System Protocols
   Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &HandleBuffer);
@@ -399,9 +400,17 @@ BdsLoadOptionFileSystemList (
       Fs->Close (Fs);
 
       SupportedDevice->DevicePathProtocol = DevicePathProtocol;
-      SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_FILESYSTEM];
 
-      InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
+      DevicePathNode = DevicePathProtocol;
+      while (!IsDevicePathEnd (DevicePathNode)) {
+        if ((DevicePathType (DevicePathNode) == MESSAGING_DEVICE_PATH) &&
+              ( DevicePathSubType (DevicePathNode) == MSG_SATA_DP) ) {
+            SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_FILESYSTEM];
+            InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
+            break;
+        }
+        DevicePathNode = NextDevicePathNode (DevicePathNode);
+      }
     }
   }
 
@@ -853,6 +862,8 @@ BdsLoadOptionPxeList (
   EFI_SIMPLE_NETWORK_PROTOCOL*      SimpleNet;
   CHAR16                            DeviceDescription[BOOT_DEVICE_DESCRIPTION_MAX];
   EFI_MAC_ADDRESS                   *Mac;
+  EFI_DEVICE_PATH_PROTOCOL          *DevicePathNode;
+
   
   // List all the PXE Protocols
   Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiPxeBaseCodeProtocolGuid, NULL, &HandleCount, &HandleBuffer);
@@ -877,11 +888,20 @@ BdsLoadOptionPxeList (
         ASSERT_EFI_ERROR (Status);
       }
       UnicodeSPrint (SupportedDevice->Description,BOOT_DEVICE_DESCRIPTION_MAX,L"PXE on %s",DeviceDescription);
+      if(NULL != SupportedDevice) {
+        SupportedDevice->DevicePathProtocol = DevicePathProtocol;
 
-      SupportedDevice->DevicePathProtocol = DevicePathProtocol;
-      SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_PXE];
-
-      InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
+        DevicePathNode = DevicePathProtocol;
+        while (!IsDevicePathEnd (DevicePathNode)) {
+          if ((DevicePathType (DevicePathNode) == MESSAGING_DEVICE_PATH) &&
+                ( DevicePathSubType (DevicePathNode) == MSG_MAC_ADDR_DP) ) {
+            SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_PXE];
+            InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
+            break;
+          }
+          DevicePathNode = NextDevicePathNode (DevicePathNode);
+        }
+    }
     }
   }
 

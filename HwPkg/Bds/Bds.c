@@ -228,137 +228,16 @@ DefineDefaultBootEntries (
   VOID
   )
 {
-  BDS_LOAD_OPTION*                    BdsLoadOption;
-  UINTN                               Size;
-  EFI_STATUS                          Status;
-  EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL* EfiDevicePathFromTextProtocol;
-  EFI_DEVICE_PATH*                    BootDevicePath;
-  UINT8*                              OptionalData;
-  UINTN                               OptionalDataSize;
-  ARM_BDS_LOADER_ARGUMENTS*           BootArguments;
-  ARM_BDS_LOADER_TYPE                 BootType;
-  EFI_DEVICE_PATH*                    InitrdPath;
-  UINTN                               InitrdSize;
-  UINTN                               CmdLineSize;
-  UINTN                               CmdLineAsciiSize;
-  CHAR16*                             DefaultBootArgument;
-  CHAR8*                              AsciiDefaultBootArgument;
 
-  //
-  // If Boot Order does not exist then create a default entry
-  //
-  Size = 0;
-  Status = gRT->GetVariable (L"BootOrder", &gEfiGlobalVariableGuid, NULL, &Size, NULL);
-  if (Status == EFI_NOT_FOUND) {
-    if ((PcdGetPtr(PcdDefaultBootDevicePath) == NULL) || (StrLen ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath)) == 0)) {
-      return EFI_UNSUPPORTED;
-    }
+    EFI_STATUS                          Status=EFI_SUCCESS;
 
-    Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
+    Status = ListAllSupportedBootDevice();
     if (EFI_ERROR(Status)) {
-      // You must provide an implementation of DevicePathFromTextProtocol in your firmware (eg: DevicePathDxe)
-      DEBUG((EFI_D_ERROR,"Error: Bds requires DevicePathFromTextProtocol\n"));
-      return Status;
+        DEBUG((EFI_D_ERROR,"Error: Bds ListAllSupportedBootDevice\n"));
+        return Status;
     }
-    BootDevicePath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath));
 
-    DEBUG_CODE_BEGIN();
-      // We convert back to the text representation of the device Path to see if the initial text is correct
-      EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* DevicePathToTextProtocol;
-      CHAR16* DevicePathTxt;
-
-      Status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID **)&DevicePathToTextProtocol);
-      ASSERT_EFI_ERROR(Status);
-      DevicePathTxt = DevicePathToTextProtocol->ConvertDevicePathToText (BootDevicePath, TRUE, TRUE);
-
-      ASSERT (StrCmp ((CHAR16*)PcdGetPtr(PcdDefaultBootDevicePath), DevicePathTxt) == 0);
-
-      FreePool (DevicePathTxt);
-    DEBUG_CODE_END();
-
-    // Create the entry is the Default values are correct
-    if (BootDevicePath != NULL) {
-      BootType = (ARM_BDS_LOADER_TYPE)PcdGet32 (PcdDefaultBootType);
-
-      // We do not support NULL pointer
-      ASSERT (PcdGetPtr (PcdDefaultBootArgument) != NULL);
-
-      //
-      // Logic to handle ASCII or Unicode default parameters
-      //
-      if (*(CHAR8*)PcdGetPtr (PcdDefaultBootArgument) == '\0') {
-        CmdLineSize = 0;
-        CmdLineAsciiSize = 0;
-        DefaultBootArgument = NULL;
-        AsciiDefaultBootArgument = NULL;
-      } else if (IsUnicodeString ((CHAR16*)PcdGetPtr (PcdDefaultBootArgument))) {
-        // The command line is a Unicode string
-        DefaultBootArgument = (CHAR16*)PcdGetPtr (PcdDefaultBootArgument);
-        CmdLineSize = StrSize (DefaultBootArgument);
-
-        // Initialize ASCII variables
-        CmdLineAsciiSize = CmdLineSize / 2;
-        AsciiDefaultBootArgument = AllocatePool (CmdLineAsciiSize);
-        if (AsciiDefaultBootArgument == NULL) {
-          return EFI_OUT_OF_RESOURCES;
-        }
-        UnicodeStrToAsciiStr ((CHAR16*)PcdGetPtr (PcdDefaultBootArgument), AsciiDefaultBootArgument);
-      } else {
-        // The command line is a ASCII string
-        AsciiDefaultBootArgument = (CHAR8*)PcdGetPtr (PcdDefaultBootArgument);
-        CmdLineAsciiSize = AsciiStrSize (AsciiDefaultBootArgument);
-
-        // Initialize ASCII variables
-        CmdLineSize = CmdLineAsciiSize * 2;
-        DefaultBootArgument = AllocatePool (CmdLineSize);
-        if (DefaultBootArgument == NULL) {
-          return EFI_OUT_OF_RESOURCES;
-        }
-        AsciiStrToUnicodeStr (AsciiDefaultBootArgument, DefaultBootArgument);
-      }
-
-      if ((BootType == BDS_LOADER_KERNEL_LINUX_ATAG) || (BootType == BDS_LOADER_KERNEL_LINUX_FDT)) {
-        InitrdPath = EfiDevicePathFromTextProtocol->ConvertTextToDevicePath ((CHAR16*)PcdGetPtr(PcdDefaultBootInitrdPath));
-        InitrdSize = GetDevicePathSize (InitrdPath);
-
-        OptionalDataSize = sizeof(ARM_BDS_LOADER_ARGUMENTS) + CmdLineAsciiSize + InitrdSize;
-        BootArguments = (ARM_BDS_LOADER_ARGUMENTS*)AllocatePool (OptionalDataSize);
-        if (BootArguments == NULL) {
-          return EFI_OUT_OF_RESOURCES;
-        }
-        BootArguments->LinuxArguments.CmdLineSize = CmdLineAsciiSize;
-        BootArguments->LinuxArguments.InitrdSize = InitrdSize;
-
-        CopyMem ((VOID*)(BootArguments + 1), AsciiDefaultBootArgument, CmdLineAsciiSize);
-        CopyMem ((VOID*)((UINTN)(BootArguments + 1) + CmdLineAsciiSize), InitrdPath, InitrdSize);
-
-        OptionalData = (UINT8*)BootArguments;
-      } else {
-        OptionalData = (UINT8*)DefaultBootArgument;
-        OptionalDataSize = CmdLineSize;
-      }
-
-      BootOptionCreate (LOAD_OPTION_ACTIVE | LOAD_OPTION_CATEGORY_BOOT,
-        (CHAR16*)PcdGetPtr(PcdDefaultBootDescription),
-        BootDevicePath,
-        BootType,
-        OptionalData,
-        OptionalDataSize,
-        &BdsLoadOption
-        );
-      FreePool (BdsLoadOption);
-
-      if (DefaultBootArgument == (CHAR16*)PcdGetPtr (PcdDefaultBootArgument)) {
-        FreePool (AsciiDefaultBootArgument);
-      } else if (DefaultBootArgument != NULL) {
-        FreePool (DefaultBootArgument);
-      }
-    } else {
-      Status = EFI_UNSUPPORTED;
-    }
-  }
-
-  return Status;
+    return Status;
 }
 
 //find string in string, return the first start location or -1 if can not find   
