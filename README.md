@@ -6,7 +6,7 @@ HwPkg and HwProductsPkg are for D02 specifically, while Hw stands for Huawei.
 Use below command to apply patch before building
 (some changes have been upstream to Tiano edk2 and the patch will not be needed in future):
 
-    git apply HwPkg/Patch/20150511.patch
+    git apply HwPkg/Patch/*.patch
 
 Use below commands to build D02 UEFI:
 
