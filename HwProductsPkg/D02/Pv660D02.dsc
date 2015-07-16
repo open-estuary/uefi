@@ -472,6 +472,13 @@
 
   #HwPkg/Pcie/PcieInitDxe.inf
 
+  #
+  # USB Support
+  #
+  HwPkg/Drivers/EhciDxe/EhciDxe.inf
+  MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
+  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
   # ¡¾HRD ARM PV660 V100R001C00B010 BIOS¡¿SmbisoÄ£¿é
   MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
   HwPkg/Drivers/SmbiosMiscDxe/SmbiosMiscDxe.inf

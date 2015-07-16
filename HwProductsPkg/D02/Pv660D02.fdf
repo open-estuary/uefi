@@ -268,6 +268,13 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
 
   #
+  # USB Support
+  #
+  INF HwPkg/Drivers/EhciDxe/EhciDxe.inf
+  INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
+  INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
+  #
   # UEFI application (Shell Embedded Boot Loader)
   #
   INF HwPkg/Override/EmbeddedPkg/Ebl/Ebl.inf
