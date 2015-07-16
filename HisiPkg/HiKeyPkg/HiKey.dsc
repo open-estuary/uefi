@@ -281,7 +281,7 @@
   #
 
   ## PL011 - Serial Terminal
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xF8015000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xF7113000
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|115200
   gArmPlatformTokenSpaceGuid.PL011UartInteger|10
   gArmPlatformTokenSpaceGuid.PL011UartFractional|26
@@ -305,7 +305,7 @@
   gArmPlatformTokenSpaceGuid.PcdDefaultBootDevicePath|L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/Image"
   gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath|L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/initrd.img"
   gEmbeddedTokenSpaceGuid.PcdFdtDevicePaths|L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/hi6220-hikey.dtb"
-  gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument|L"dtb=hi6220-hikey.dtb console=ttyAMA0,115200 earlycon=pl011,0xf8015000 root=/dev/disk/by-partlabel/system rw rootwait efi=noruntime"
+  gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument|L"dtb=hi6220-hikey.dtb console=ttyAMA3,115200 earlycon=pl011,0xf7113000 root=/dev/disk/by-partlabel/system rw rootwait efi=noruntime"
   gArmPlatformTokenSpaceGuid.PcdDefaultBootType|0
 
   # Use the serial console (ConIn & ConOut) and the Graphic driver (ConOut)
