@@ -37,6 +37,8 @@
 // Jumper on pin5-6 of J15 determines whether boot to fastboot
 #define DETECT_J15_FASTBOOT      0    // pin number in GPIO controller
 
+#define BOOT_DEVICE_LENGTH       16
+
 struct HiKeyBootEntry {
   CHAR16    *Path;
   CHAR16    *Args;
@@ -50,7 +52,8 @@ STATIC UINT16 mBootCount = 0;
 STATIC UINT16 mBootIndex = 0;
 
 #define HIKEY_BOOT_ENTRY_FASTBOOT          0
-#define HIKEY_BOOT_ENTRY_GRUB              1
+#define HIKEY_BOOT_ENTRY_GRUB_EMMC         1
+#define HIKEY_BOOT_ENTRY_GRUB_SD           2
 
 STATIC struct HiKeyBootEntry Entries[] = {
   [HIKEY_BOOT_ENTRY_FASTBOOT] = {
@@ -59,10 +62,16 @@ STATIC struct HiKeyBootEntry Entries[] = {
     L"fastboot",
     LOAD_OPTION_CATEGORY_APP
   },
-  [HIKEY_BOOT_ENTRY_GRUB] = {
+  [HIKEY_BOOT_ENTRY_GRUB_EMMC] = {
     L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/grubaa64.efi",
     NULL,
-    L"grub",
+    L"grub on eMMC",
+    LOAD_OPTION_CATEGORY_APP
+  },
+  [HIKEY_BOOT_ENTRY_GRUB_SD] = {
+    L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/grubaa64.efi",
+    NULL,
+    L"grub on SD",
     LOAD_OPTION_CATEGORY_APP
   }
 };
@@ -366,6 +375,39 @@ HiKeyDetectJumper (
 STATIC
 VOID
 EFIAPI
+HiKeyCreateFdtVariable (
+  IN CHAR16          *FdtPathText
+  )
+{
+  UINTN                     FdtDevicePathSize;
+  EFI_DEVICE_PATH_PROTOCOL *FdtDevicePath;
+  EFI_STATUS                Status;
+  EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL *DevicePathFromTextProtocol;
+
+  Status = gBS->LocateProtocol (
+                  &gEfiDevicePathFromTextProtocolGuid,
+                  NULL,
+                  (VOID**)&DevicePathFromTextProtocol
+                  );
+  ASSERT_EFI_ERROR(Status);
+
+  FdtDevicePath = DevicePathFromTextProtocol->ConvertTextToDevicePath (FdtPathText);
+  ASSERT (FdtDevicePath != NULL);
+
+  FdtDevicePathSize = GetDevicePathSize (FdtDevicePath);
+  Status = gRT->SetVariable (
+                  (CHAR16*)L"Fdt",
+                  &gArmGlobalVariableGuid,
+                  EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  FdtDevicePathSize,
+                  FdtDevicePath
+                  );
+  ASSERT_EFI_ERROR(Status);
+}
+
+STATIC
+VOID
+EFIAPI
 HiKeyOnEndOfDxe (
   EFI_EVENT                               Event,
   VOID                                    *Context
@@ -374,6 +416,7 @@ HiKeyOnEndOfDxe (
   EFI_STATUS          Status;
   UINTN               VariableSize;
   UINT16              AutoBoot, Count, Index;
+  CHAR16              BootDevice[BOOT_DEVICE_LENGTH];
 
   VariableSize = sizeof (UINT16);
   Status = gRT->GetVariable (
@@ -435,6 +478,41 @@ HiKeyOnEndOfDxe (
   }
 
   HiKeyDetectJumper ();
+
+  if (mBootIndex > 0) {
+    VariableSize = BOOT_DEVICE_LENGTH * sizeof (UINT16);
+    Status = gRT->GetVariable (
+                    (CHAR16 *)L"HiKeyBootDevice",
+                    &gArmGlobalVariableGuid,
+                    NULL,
+                    &VariableSize,
+                    &BootDevice
+                    );
+     if (EFI_ERROR (Status) == 0) {
+       if (StrnCmp (BootDevice, L"emmc", StrLen (L"emmc")) == 0) {
+         mBootIndex = HIKEY_BOOT_ENTRY_GRUB_EMMC;
+       } else if (StrnCmp (BootDevice, L"sd", StrLen (L"sd")) == 0) {
+         mBootIndex = HIKEY_BOOT_ENTRY_GRUB_SD;
+       } else {
+         DEBUG ((EFI_D_ERROR, "%a: invalid boot device (%a) is specified\n", __func__, BootDevice));
+         mBootIndex = HIKEY_BOOT_ENTRY_GRUB_EMMC;
+       }
+     } else {
+       mBootIndex = HIKEY_BOOT_ENTRY_GRUB_EMMC;
+     }
+  }
+
+  // Fdt variable should be aligned with Image path.
+  // In another word, Fdt and Image file should be located in the same path.
+  switch (mBootIndex) {
+  case HIKEY_BOOT_ENTRY_GRUB_EMMC:
+    HiKeyCreateFdtVariable (L"VenHw(B549F005-4BD4-4020-A0CB-06F42BDA68C3)/HD(6,GPT,5C0F213C-17E1-4149-88C8-8B50FB4EC70E,0x7000,0x20000)/hi6220-hikey.dtb");
+    break;
+  case HIKEY_BOOT_ENTRY_GRUB_SD:
+    HiKeyCreateFdtVariable (L"VenHw(594BFE73-5E18-4F12-8119-19DB8C5FC849)/HD(1,MBR,0x00000000,0x3F,0x21FC0)/hi6220-hikey.dtb");
+    break;
+  }
+
 
   Status = HiKeyCreateBootNext ();
   if (EFI_ERROR (Status)) {
