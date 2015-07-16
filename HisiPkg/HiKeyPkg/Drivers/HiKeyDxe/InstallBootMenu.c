@@ -37,8 +37,6 @@
 // Jumper on pin5-6 of J15 determines whether boot to fastboot
 #define DETECT_J15_FASTBOOT      0    // pin number in GPIO controller
 
-#define BOOT_DEVICE_LENGTH       16
-
 struct HiKeyBootEntry {
   CHAR16    *Path;
   CHAR16    *Args;

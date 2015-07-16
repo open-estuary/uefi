@@ -22,6 +22,8 @@
 #include <Library/DxeServicesTableLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
+#define BOOT_DEVICE_LENGTH       16
+
 EFI_STATUS
 HiKeyFdtInstall (
   IN EFI_HANDLE                            ImageHandle
