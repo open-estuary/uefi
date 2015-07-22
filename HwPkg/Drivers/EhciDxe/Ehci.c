@@ -74,6 +74,8 @@ UncachedAllocatePagesBelow4G(
   IN UINTN  Pages
   ) 
 {
+  // Work around
+#if 0
   EFI_STATUS            Status;
   EFI_PHYSICAL_ADDRESS  PhysicalAddress;
   EFI_GCD_MEMORY_SPACE_DESCRIPTOR   Descriptor;
@@ -108,6 +110,9 @@ UncachedAllocatePagesBelow4G(
   (VOID)WriteBackInvalidateDataCacheRange((VOID *)(UINTN)PhysicalAddress, EFI_PAGES_TO_SIZE(Pages));
   
   return  (VOID *)(UINTN)PhysicalAddress;
+#else
+  return UncachedAllocatePages (Pages);
+#endif
 }
 
 EFI_STATUS
