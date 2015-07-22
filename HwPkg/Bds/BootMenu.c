@@ -436,7 +436,7 @@ ListAllSupportedBootDevice (VOID)
   // List the supported BDS_DEVICE_FILESYSTEM && BDS_DEVICE_PXE devices
   Status =  BootDeviceTypeListSupportedInit (&SupportedDeviceList,BDS_DEVICE_FILESYSTEM); 
   if (EFI_ERROR(Status)) {
-        Print(L" SATA BOOT DEVICE LIST fail!\n");
+        Print(L" FILE SYSTEM BOOT DEVICE LIST fail!\n");
     }
   Status = BootDeviceTypeListSupportedInit (&SupportedDeviceList,BDS_DEVICE_PXE);
   if (EFI_ERROR(Status)) {

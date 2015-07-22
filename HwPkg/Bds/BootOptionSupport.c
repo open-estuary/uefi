@@ -404,7 +404,8 @@ BdsLoadOptionFileSystemList (
       DevicePathNode = DevicePathProtocol;
       while (!IsDevicePathEnd (DevicePathNode)) {
         if ((DevicePathType (DevicePathNode) == MESSAGING_DEVICE_PATH) &&
-              ( DevicePathSubType (DevicePathNode) == MSG_SATA_DP) ) {
+              (DevicePathSubType (DevicePathNode) == MSG_SATA_DP ||
+               DevicePathSubType (DevicePathNode) == MSG_USB_DP)) {
             SupportedDevice->Support = &BdsLoadOptionSupportList[BDS_DEVICE_FILESYSTEM];
             InsertTailList (BdsLoadOptionList,&SupportedDevice->Link);
             break;
