@@ -22,6 +22,7 @@
 #include <Protocol/AndroidFastbootPlatform.h>
 #include <Protocol/BlockIo.h>
 #include <Protocol/DiskIo.h>
+#include <Protocol/SimpleTextOut.h>
 
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -30,6 +31,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/PrintLib.h>
 
 #include <Guid/ArmGlobalVariableHob.h>
 
@@ -53,6 +55,8 @@ typedef struct _FASTBOOT_PARTITION_LIST {
 } FASTBOOT_PARTITION_LIST;
 
 STATIC LIST_ENTRY mPartitionListHead;
+
+STATIC EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL *mTextOut;
 
 /*
   Helper to free the partition list
@@ -170,6 +174,14 @@ HiKeyFastbootPlatformInit (
   FASTBOOT_PARTITION_LIST            *Entry;
 
   InitializeListHead (&mPartitionListHead);
+
+  Status = gBS->LocateProtocol (&gEfiSimpleTextOutProtocolGuid, NULL, (VOID **) &mTextOut);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR,
+      "Fastboot platform: Couldn't open Text Output Protocol: %r\n", Status
+      ));
+    return Status;
+  }
 
   //
   // Get EFI_HANDLES for all the partitions on the block devices pointed to by
@@ -416,10 +428,27 @@ HiKeyFastbootPlatformFlashPartition (
   ASSERT_EFI_ERROR (Status);
 
   if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
+    CHAR16 OutputString[64];
+    UINTN ChunkPrintDensity =
+        SparseHeader->TotalChunks > 1600 ? SparseHeader->TotalChunks / 200 : 32;
+
     Image += SparseHeader->FileHeaderSize;
     for (Chunk = 0; Chunk < SparseHeader->TotalChunks; Chunk++) {
       UINTN WriteSize;
       ChunkHeader = (CHUNK_HEADER *)Image;
+
+      // Show progress. Don't do it for every packet as outputting text
+      // might be time consuming. ChunkPrintDensity is calculated to
+      // provide an update every half percent change for large
+      // downloads.
+      if (Chunk % ChunkPrintDensity == 0) {
+        UnicodeSPrint(OutputString, sizeof(OutputString),
+                      L"\r%5d / %5d chunks written (%d%%)", Chunk,
+                      SparseHeader->TotalChunks,
+                     (Chunk * 100) / SparseHeader->TotalChunks);
+        mTextOut->OutputString(mTextOut, OutputString);
+      }
+
       DEBUG ((EFI_D_INFO, "Chunk #%d - Type: 0x%x Size: %d TotalSize: %d Offset %d\n",
                   (Chunk+1), ChunkHeader->ChunkType, ChunkHeader->ChunkSize,
                   ChunkHeader->TotalSize, Offset));
@@ -444,6 +473,11 @@ HiKeyFastbootPlatformFlashPartition (
       }
       Offset += WriteSize;
     }
+
+    UnicodeSPrint(OutputString, sizeof(OutputString),
+                  L"\r%5d / %5d chunks written (100%%)\r\n",
+                  SparseHeader->TotalChunks, SparseHeader->TotalChunks);
+    mTextOut->OutputString(mTextOut, OutputString);
   } else {
     if (AsciiStrCmp (PartitionName, "ptable") == 0) {
       Buffer = Image;
