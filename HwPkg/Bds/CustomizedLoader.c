@@ -236,10 +236,10 @@ Flash_Start_OS (
         gBS->CopyMem((void *)0x6000000,(void *)FDTConfigTable,0x100000);
         MicroSecondDelay(20000);
         
-        gBS->CopyMem((void *)LinuxKernel,(void *)0x90300000,0xA00000);
+        gBS->CopyMem((void *)LinuxKernel,(void *)0x90100000,0x1F00000);
         MicroSecondDelay(200000);
         
-        gBS->CopyMem((void *)0x7000000,(void *)0x91000000,0x2000000);
+        gBS->CopyMem((void *)0x7000000,(void *)0x92000000,0x4000000);
         MicroSecondDelay(200000);
     }
     else
