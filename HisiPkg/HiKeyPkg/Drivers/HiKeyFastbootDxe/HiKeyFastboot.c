@@ -439,7 +439,7 @@ HiKeyFastbootPlatformFlashPartition (
         case CHUNK_TYPE_CRC32:
           break;
         default:
-          DEBUG ((EFI_D_ERROR, "Unknown Chunk Type: 0x%x"));
+          DEBUG ((EFI_D_ERROR, "Unknown Chunk Type: 0x%x", ChunkHeader->ChunkType));
           return EFI_PROTOCOL_ERROR;
       }
       Offset += WriteSize;
@@ -453,7 +453,7 @@ HiKeyFastbootPlatformFlashPartition (
       }
       Buffer += 8;
       if (AsciiStrnCmp (Buffer, "primary", 7) != 0) {
-        DEBUG ((EFI_D_ERROR, "unknow ptable image\n"));
+        DEBUG ((EFI_D_ERROR, "unknown ptable image\n"));
         return EFI_UNSUPPORTED;
       }
       Buffer += 8;
