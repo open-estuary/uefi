@@ -239,6 +239,7 @@ InitNonVolatileVariableStore (
   EFI_BLOCK_IO_PROTOCOL                 *NvStorageBlockIo;
   EFI_STATUS                            Status;
   UINTN                                 HeadersLength;
+  UINTN                                 HeadersBlockLength;
   VARIABLE_STORE_HEADER                 *VariableStoreHeader;
 
   Lba = (EFI_LBA) PcdGet32 (PcdNvStorageVariableBlockLba);
@@ -246,9 +247,11 @@ InitNonVolatileVariableStore (
   Instance->Media.BlockSize = PcdGet32 (PcdNvStorageVariableBlockSize);
   NvStorageSize = Count * Instance->Media.BlockSize;
   Instance->StartLba = Lba;
-  if (NvStorageSize == 0) {
+  HeadersLength = sizeof(EFI_FIRMWARE_VOLUME_HEADER) + sizeof(EFI_FV_BLOCK_MAP_ENTRY) + sizeof(VARIABLE_STORE_HEADER);
+  if (NvStorageSize < HeadersLength) {
     return EFI_BAD_BUFFER_SIZE;
   }
+  HeadersBlockLength = (HeadersLength + Instance->Media.BlockSize - 1) / Instance->Media.BlockSize * Instance->Media.BlockSize;
   NvStorageData = (UINT8 *) (UINTN) PcdGet32(PcdFlashNvStorageVariableBase);
   mMapNvStorageVariableBase = PcdGet32(PcdFlashNvStorageVariableBase);
   NvBlockDevicePath = &Instance->DevicePath;
@@ -273,14 +276,13 @@ InitNonVolatileVariableStore (
   }
   WriteBackDataCacheRange (Instance, sizeof(BLOCK_VARIABLE_INSTANCE));
   NvStorageBlockIo = Instance->BlockIoProtocol;
-  Status = NvStorageBlockIo->ReadBlocks (NvStorageBlockIo, NvStorageBlockIo->Media->MediaId, Lba, NvStorageSize, (VOID *)NvStorageData);
+  Status = NvStorageBlockIo->ReadBlocks (NvStorageBlockIo, NvStorageBlockIo->Media->MediaId, Lba, HeadersBlockLength, (VOID *)NvStorageData);
 
   if (EFI_ERROR (Status)) {
     return Status;
   }
   FvHeader = (EFI_FIRMWARE_VOLUME_HEADER *) NvStorageData;
   if ((FvHeader->Signature != EFI_FVH_SIGNATURE) || (!CompareGuid (&gEfiSystemNvDataFvGuid, &FvHeader->FileSystemGuid))) {
-    HeadersLength = sizeof(EFI_FIRMWARE_VOLUME_HEADER) + sizeof(EFI_FV_BLOCK_MAP_ENTRY) + sizeof(VARIABLE_STORE_HEADER);
     // Check if the size of the area is at least one block size
     ASSERT((PcdGet32(PcdFlashNvStorageVariableSize) > 0) && (PcdGet32(PcdFlashNvStorageVariableSize) / NvStorageBlockIo->Media->BlockSize > 0));
     ASSERT((PcdGet32(PcdFlashNvStorageFtwWorkingSize) > 0) && (PcdGet32(PcdFlashNvStorageFtwWorkingSize) / NvStorageBlockIo->Media->BlockSize > 0));
@@ -322,7 +324,7 @@ InitNonVolatileVariableStore (
     VariableStoreHeader->Format            = VARIABLE_STORE_FORMATTED;
     VariableStoreHeader->State             = VARIABLE_STORE_HEALTHY;
 
-    Status = NvStorageBlockIo->WriteBlocks (NvStorageBlockIo, NvStorageBlockIo->Media->MediaId, Lba, NvStorageSize, (VOID *)NvStorageData);
+    Status = NvStorageBlockIo->WriteBlocks (NvStorageBlockIo, NvStorageBlockIo->Media->MediaId, Lba, HeadersBlockLength, (VOID *)NvStorageData);
   }
   return Status;
 }
