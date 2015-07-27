@@ -238,7 +238,6 @@ InitNonVolatileVariableStore (
   EFI_DEVICE_PATH_PROTOCOL              *NvBlockDevicePath;
   EFI_BLOCK_IO_PROTOCOL                 *NvStorageBlockIo;
   EFI_STATUS                            Status;
-  VOID*                                 Headers;
   UINTN                                 HeadersLength;
   VARIABLE_STORE_HEADER                 *VariableStoreHeader;
 
@@ -282,10 +281,6 @@ InitNonVolatileVariableStore (
   FvHeader = (EFI_FIRMWARE_VOLUME_HEADER *) NvStorageData;
   if ((FvHeader->Signature != EFI_FVH_SIGNATURE) || (!CompareGuid (&gEfiSystemNvDataFvGuid, &FvHeader->FileSystemGuid))) {
     HeadersLength = sizeof(EFI_FIRMWARE_VOLUME_HEADER) + sizeof(EFI_FV_BLOCK_MAP_ENTRY) + sizeof(VARIABLE_STORE_HEADER);
-    Headers = AllocateZeroPool(HeadersLength);
-    if (Headers == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
     // Check if the size of the area is at least one block size
     ASSERT((PcdGet32(PcdFlashNvStorageVariableSize) > 0) && (PcdGet32(PcdFlashNvStorageVariableSize) / NvStorageBlockIo->Media->BlockSize > 0));
     ASSERT((PcdGet32(PcdFlashNvStorageFtwWorkingSize) > 0) && (PcdGet32(PcdFlashNvStorageFtwWorkingSize) / NvStorageBlockIo->Media->BlockSize > 0));
