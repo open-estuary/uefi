@@ -191,7 +191,7 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultParity|1
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultStopBits|1
 
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"D02 BIOS LINARO B902"
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"D02 BIOS LINARO B905"
 
   gHwTokenSpaceGuid.PcdSystemProductName|L"D02"
   gHwTokenSpaceGuid.PcdSystemVersion|L"LINARO"
