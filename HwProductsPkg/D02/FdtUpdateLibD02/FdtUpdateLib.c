@@ -44,16 +44,13 @@ IsMemMapRegion (
         case EfiRuntimeServicesCode:
         case EfiRuntimeServicesData:
         case EfiConventionalMemory:
-        case EfiUnusableMemory:
         case EfiACPIReclaimMemory:
         case EfiACPIMemoryNVS:
-        case EfiReservedMemoryType:
         case EfiLoaderCode:
         case EfiLoaderData: 
         case EfiBootServicesCode:
         case EfiBootServicesData:
         case EfiPalCode:
-        case EfiMaxMemoryType:
                 return TRUE;
         default:
                 return FALSE;
