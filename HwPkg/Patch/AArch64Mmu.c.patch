@@ -1,0 +1,99 @@
+diff --git a/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c b/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
+index f215fe9..b5bf912 100644
+--- a/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
++++ b/ArmPkg/Library/ArmLib/AArch64/AArch64Mmu.c
+@@ -38,7 +38,7 @@ ArmMemoryAttributeToPageAttribute (
+   case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH:
+     return TT_ATTR_INDX_MEMORY_WRITE_THROUGH;
+   case ARM_MEMORY_REGION_ATTRIBUTE_DEVICE:
+-    return TT_ATTR_INDX_DEVICE_MEMORY;
++    return (TT_ATTR_INDX_DEVICE_MEMORY | TT_UXN_MASK);
+   case ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED:
+     return TT_ATTR_INDX_MEMORY_NON_CACHEABLE;
+   case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
+@@ -253,7 +253,10 @@ GetBlockEntryListFromAddress (
+   UINT64 *BlockEntry;
+   UINT64 *SubTableBlockEntry;
+   UINT64  BlockEntryAddress;
++  //按地址取最小对齐单元
+   UINTN   BaseAddressAlignment;
++  //按长度取最小对齐单元
++  UINTN   EntrySizeAlignment;
+   UINTN   PageLevel;
+   UINTN   Index;
+   UINTN   IndexLevel;
+@@ -290,27 +293,24 @@ GetBlockEntryListFromAddress (
+   GetRootTranslationTableInfo (T0SZ, &RootTableLevel, &RootTableEntryCount);
+   // The last block of the root table depends on the number of entry in this table
+   *LastBlockEntry = TT_LAST_BLOCK_ADDRESS(RootTable, RootTableEntryCount);
++  /*BEGIN:Modify by t00200952 DTS2013110106122 */
+ 
+-  // If the start address is 0x0 then we use the size of the region to identify the alignment
+-  if (RegionStart == 0) {
+-    // Identify the highest possible alignment for the Region Size
+     for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
+-      if ((1 << BaseAddressAlignment) & *BlockEntrySize) {
++      if ((1 << BaseAddressAlignment) & RegionStart) {
+         break;
+       }
+     }
+-  } else {
+-    // Identify the highest possible alignment for the Base Address
+-    for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
+-      if ((1 << BaseAddressAlignment) & RegionStart) {
++    for (EntrySizeAlignment = 0; EntrySizeAlignment < 64; EntrySizeAlignment++) {
++      if ((1 << EntrySizeAlignment) & *BlockEntrySize) {
+         break;
+       }
+     }
+-  }
++  
++  
+ 
+   // Identify the Page Level the RegionStart must belongs to
+-  PageLevel = 3 - ((BaseAddressAlignment - 12) / 9);
+-
++  PageLevel = 3 - ((((BaseAddressAlignment > EntrySizeAlignment) ? EntrySizeAlignment : BaseAddressAlignment)- 12) / 9);
++  /*BEGIN:Modify by t00200952 DTS2013110106122 */
+   // If the required size is smaller than the current block size then we need to go to the page below.
+   // The PageLevel was calculated on the Base Address alignment but did not take in account the alignment
+   // of the allocation size
+@@ -497,7 +497,6 @@ SetMemoryAttributes (
+   RETURN_STATUS                Status;
+   ARM_MEMORY_REGION_DESCRIPTOR MemoryRegion;
+   UINT64                      *TranslationTable;
+-
+   MemoryRegion.PhysicalBase = BaseAddress;
+   MemoryRegion.VirtualBase = BaseAddress;
+   MemoryRegion.Length = Length;
+@@ -509,7 +508,6 @@ SetMemoryAttributes (
+   if (RETURN_ERROR (Status)) {
+     return Status;
+   }
+-
+   // Flush d-cache so descriptors make it back to uncached memory for subsequent table walks
+   // flush and invalidate pages
+   ArmCleanInvalidateDataCache ();
+@@ -623,6 +621,12 @@ ArmConfigureMmu (
+     return RETURN_OUT_OF_RESOURCES;
+   }
+   TranslationTable = (VOID*)((UINTN)TranslationTable & TT_ADDRESS_MASK_DESCRIPTION_TABLE);
++
++  // uniBIOS-g00179230 DTS2013102904527 2013-10-29
++  // 【HRD ARM PV660 V100R001C00B010 BIOS】提供FPGA上调试网口下载功能
++  // 打印页表基地址, 方便问题定位
++  DEBUG((EFI_D_ERROR, "[%a]:[%dL] TranslationTable=0x%X\n", __FUNCTION__, __LINE__, TranslationTable));
++  
+   // We set TTBR0 just after allocating the table to retrieve its location from the subsequent
+   // functions without needing to pass this value across the functions. The MMU is only enabled
+   // after the translation tables are populated.
+@@ -644,7 +648,8 @@ ArmConfigureMmu (
+   ArmDisableInstructionCache ();
+ 
+   // Make sure nothing sneaked into the cache
+-  ArmCleanInvalidateDataCache ();
++  // l00228991: 暂时关闭以提高启动速度
++  //ArmCleanInvalidateDataCache ();
+   ArmInvalidateInstructionCache ();
+ 
+   TranslationTableAttribute = TT_ATTR_INDX_INVALID;

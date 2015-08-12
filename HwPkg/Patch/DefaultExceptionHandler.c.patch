@@ -1,0 +1,10 @@
+diff --git a/ArmPkg/Library/DefaultExceptionHandlerLib/AArch64/DefaultExceptionHandler.c b/ArmPkg/Library/DefaultExceptionHandlerLib/AArch64/DefaultExceptionHandler.c
+index 49d36ed..a4de980 100644
+--- a/ArmPkg/Library/DefaultExceptionHandlerLib/AArch64/DefaultExceptionHandler.c
++++ b/ArmPkg/Library/DefaultExceptionHandlerLib/AArch64/DefaultExceptionHandler.c
+@@ -184,4 +184,5 @@ DefaultExceptionHandler (
+ 
+   DescribeExceptionSyndrome (SystemContext.SystemContextAArch64->ESR);
+   ASSERT (FALSE);
++  CpuDeadLoop ();
+ }

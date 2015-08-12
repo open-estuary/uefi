@@ -1,0 +1,16 @@
+diff --git a/ArmPkg/Include/Chipset/AArch64Mmu.h b/ArmPkg/Include/Chipset/AArch64Mmu.h
+index 77a96ec..3691cfe 100644
+--- a/ArmPkg/Include/Chipset/AArch64Mmu.h
++++ b/ArmPkg/Include/Chipset/AArch64Mmu.h
+@@ -51,8 +51,9 @@
+ #define TT_ALIGNMENT_BLOCK_ENTRY                BIT12
+ #define TT_ALIGNMENT_DESCRIPTION_TABLE          BIT12
+ 
+-#define TT_ADDRESS_MASK_BLOCK_ENTRY             (0xFFFFFFFULL << 12)
+-#define TT_ADDRESS_MASK_DESCRIPTION_TABLE       (0xFFFFFFFULL << 12)
++// l00228991: ARMv8 supports 48 bits address
++#define TT_ADDRESS_MASK_BLOCK_ENTRY             (0xFFFFFFFFFULL << 12)
++#define TT_ADDRESS_MASK_DESCRIPTION_TABLE       (0xFFFFFFFFFULL << 12)
+ 
+ #define TT_TYPE_MASK                            0x3
+ #define TT_TYPE_TABLE_ENTRY                     0x3

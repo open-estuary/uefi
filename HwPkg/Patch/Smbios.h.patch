@@ -1,0 +1,23 @@
+diff --git a/MdePkg/Include/IndustryStandard/SmBios.h b/MdePkg/Include/IndustryStandard/SmBios.h
+index 14b5208..ed9971b 100644
+--- a/MdePkg/Include/IndustryStandard/SmBios.h
++++ b/MdePkg/Include/IndustryStandard/SmBios.h
+@@ -379,6 +379,10 @@ typedef struct {
+   UINT8                       ContainedElementCount;
+   UINT8                       ContainedElementRecordLength;
+   CONTAINED_ELEMENT           ContainedElements[1];
++  // start-uniBIOS-y00216284-FFF DTS2014081208809 2014-8-13 >>>
++  // Desc: SMBIOS 2.7及之后版本新增字段
++  SMBIOS_TABLE_STRING         ChassisSkuNumber;
++  // end-uniBIOS-y00216284-FFF DTS2014081208809 2014-8-13 <<<
+ } SMBIOS_TABLE_TYPE3;
+ 
+ ///
+@@ -1991,6 +1995,7 @@ typedef struct {
+   SMBIOS_STRUCTURE                        Hdr;
+   UINT8                                   Reserved[6];
+   UINT8                                   BootStatus;     ///< The enumeration value from MISC_BOOT_INFORMATION_STATUS_DATA_TYPE.
++  UINT8                                   BootInformationData[9];   //uniBIOS_y00216284_029_start DTS2015041706310 SMBIOS 2.3新增字段 2015-4-17 >>>
+ } SMBIOS_TABLE_TYPE32;
+ 
+ ///

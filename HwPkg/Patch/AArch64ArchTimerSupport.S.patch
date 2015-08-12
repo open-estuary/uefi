@@ -1,0 +1,17 @@
+diff --git a/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S b/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
+index 1ac0108..91da3cb 100644
+--- a/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
++++ b/ArmPkg/Library/ArmLib/AArch64/AArch64ArchTimerSupport.S
+@@ -58,7 +58,11 @@ ASM_PFX(ArmReadCntkCtl):
+ 
+ 
+ ASM_PFX(ArmWriteCntkCtl):
+-  mrs   x0, cntkctl_el1          // Write to CNTK_CTL (Timer PL1 Control Register)
++  // start-uniBIOS-y00216284-005 DTS2014110703996 2014-11-28 >>>
++  // Desc: ARM基础代码ArmWriteCntkCtl函数实现错误
++  //mrs   x0, cntkctl_el1         // Write to CNTK_CTL (Timer PL1 Control Register) 
++  msr   cntkctl_el1, x0            
++  // end-uniBIOS-y00216284-005 DTS2014110703996 2014-11-28 <<<
+   ret
+ 
+ 
