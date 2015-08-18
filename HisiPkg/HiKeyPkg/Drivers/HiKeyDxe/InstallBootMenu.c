@@ -35,7 +35,12 @@
 
 #define MAX_BOOT_ENTRIES         16
 // Jumper on pin5-6 of J15 determines whether boot to fastboot
-#define DETECT_J15_FASTBOOT      0    // pin number in GPIO controller
+#define DETECT_J15_FASTBOOT      24    // GPIO 3_0
+
+#define USER_LED1                32    // GPIO 4_0
+#define USER_LED2                33    // GPIO 4_1
+#define USER_LED3                34    // GPIO 4_2
+#define USER_LED4                35    // GPIO 4_3
 
 struct HiKeyBootEntry {
   CHAR16    *Path;
@@ -341,6 +346,37 @@ HiKeyCreateBootNext (
 STATIC
 VOID
 EFIAPI
+HiKeyTestLed (
+  IN     EMBEDDED_GPIO   *Gpio
+  )
+{
+  EFI_STATUS             Status;
+
+  Status = Gpio->Set (Gpio, USER_LED1, GPIO_MODE_OUTPUT_0);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set LED1\n", __func__));
+    return;
+  }
+  Status = Gpio->Set (Gpio, USER_LED2, GPIO_MODE_OUTPUT_1);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set LED2\n", __func__));
+    return;
+  }
+  Status = Gpio->Set (Gpio, USER_LED3, GPIO_MODE_OUTPUT_0);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set LED3\n", __func__));
+    return;
+  }
+  Status = Gpio->Set (Gpio, USER_LED4, GPIO_MODE_OUTPUT_1);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "%a: failed to set LED4\n", __func__));
+    return;
+  }
+}
+
+STATIC
+VOID
+EFIAPI
 HiKeyDetectJumper (
   IN     VOID
   )
@@ -368,6 +404,8 @@ HiKeyDetectJumper (
   } else {
     mBootIndex = 0;
   }
+
+  HiKeyTestLed (Gpio);
 }
 
 STATIC
