@@ -11,53 +11,6 @@ index f215fe9..b5bf912 100644
    case ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED:
      return TT_ATTR_INDX_MEMORY_NON_CACHEABLE;
    case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
-@@ -253,7 +253,10 @@ GetBlockEntryListFromAddress (
-   UINT64 *BlockEntry;
-   UINT64 *SubTableBlockEntry;
-   UINT64  BlockEntryAddress;
-+  //按地址取最小对齐单元
-   UINTN   BaseAddressAlignment;
-+  //按长度取最小对齐单元
-+  UINTN   EntrySizeAlignment;
-   UINTN   PageLevel;
-   UINTN   Index;
-   UINTN   IndexLevel;
-@@ -290,27 +293,24 @@ GetBlockEntryListFromAddress (
-   GetRootTranslationTableInfo (T0SZ, &RootTableLevel, &RootTableEntryCount);
-   // The last block of the root table depends on the number of entry in this table
-   *LastBlockEntry = TT_LAST_BLOCK_ADDRESS(RootTable, RootTableEntryCount);
-+  /*BEGIN:Modify by t00200952 DTS2013110106122 */
- 
--  // If the start address is 0x0 then we use the size of the region to identify the alignment
--  if (RegionStart == 0) {
--    // Identify the highest possible alignment for the Region Size
-     for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
--      if ((1 << BaseAddressAlignment) & *BlockEntrySize) {
-+      if ((1 << BaseAddressAlignment) & RegionStart) {
-         break;
-       }
-     }
--  } else {
--    // Identify the highest possible alignment for the Base Address
--    for (BaseAddressAlignment = 0; BaseAddressAlignment < 64; BaseAddressAlignment++) {
--      if ((1 << BaseAddressAlignment) & RegionStart) {
-+    for (EntrySizeAlignment = 0; EntrySizeAlignment < 64; EntrySizeAlignment++) {
-+      if ((1 << EntrySizeAlignment) & *BlockEntrySize) {
-         break;
-       }
-     }
--  }
-+  
-+  
- 
-   // Identify the Page Level the RegionStart must belongs to
--  PageLevel = 3 - ((BaseAddressAlignment - 12) / 9);
--
-+  PageLevel = 3 - ((((BaseAddressAlignment > EntrySizeAlignment) ? EntrySizeAlignment : BaseAddressAlignment)- 12) / 9);
-+  /*BEGIN:Modify by t00200952 DTS2013110106122 */
-   // If the required size is smaller than the current block size then we need to go to the page below.
-   // The PageLevel was calculated on the Base Address alignment but did not take in account the alignment
-   // of the allocation size
 @@ -497,7 +497,6 @@ SetMemoryAttributes (
    RETURN_STATUS                Status;
    ARM_MEMORY_REGION_DESCRIPTOR MemoryRegion;
