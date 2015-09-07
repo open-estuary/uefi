@@ -466,7 +466,7 @@ TimerInterruptHandler (
     HITMER_ClearInt();
 
     // Signal end of interrupt early to help avoid losing subsequent ticks from long duration handlers
-    //gInterrupt->EndOfInterrupt (gInterrupt, Source);
+    gInterrupt->EndOfInterrupt (gInterrupt, Source);
     
 
     if (mTimerNotifyFunction) {
