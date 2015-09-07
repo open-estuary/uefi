@@ -12,7 +12,7 @@ HwPkg and HwProductsPkg are for D02 specifically, while Hw stands for Huawei.
 
 3. Use below commands to build D02 UEFI:
 
-    export LC_CTYPE=C
-    make -C BaseTools
-    source edksetup.sh
-    build -a AARCH64 -b RELEASE -t ARMLINUXGCC -p HwProductsPkg/D02/Pv660D02.dsc
+    export LC_CTYPE=C<br>
+    make -C BaseTools<br>
+    source edksetup.sh<br>
+    build -a AARCH64 -b RELEASE -t ARMLINUXGCC -p HwProductsPkg/D02/Pv660D02.dsc<br>
