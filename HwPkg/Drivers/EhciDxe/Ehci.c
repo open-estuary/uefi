@@ -1565,6 +1565,9 @@ EhcDriverEntryPoint (
   Node.DevPath.Type = HARDWARE_DEVICE_PATH;
   Node.DevPath.SubType = HW_PCI_DP;
   (void)SetDevicePathNodeLength (&Node.DevPath, sizeof (PCI_DEVICE_PATH));
+  // Make USB controller device path different from built-in SATA controller
+  Node.Pci.Function = 1;
+  Node.Pci.Device = 0;
 
   SetDevicePathEndNode (&EndNode.DevPath);
   
