@@ -385,3 +385,8 @@
   # serial terminal input characters.
   gEmbeddedTokenSpaceGuid.PcdTimerPeriod|10000
 
+  gHwTokenSpaceGuid.PcdM3SmmuBaseAddress|0xA0040000
+  gHwTokenSpaceGuid.PcdPcieSmmuBaseAddress|0xB0040000
+  gHwTokenSpaceGuid.PcdDsaSmmuBaseAddress|0xC0040000
+  gHwTokenSpaceGuid.PcdAlgSmmuBaseAddress|0xD0040000
+

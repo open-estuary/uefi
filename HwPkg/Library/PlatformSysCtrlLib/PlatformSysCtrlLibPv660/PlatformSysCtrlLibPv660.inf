@@ -42,5 +42,10 @@
   gHwTokenSpaceGuid.PcdIsMPBoot
   gHwTokenSpaceGuid.PcdTrustedFirmwareEnable
 
+  gHwTokenSpaceGuid.PcdM3SmmuBaseAddress
+  gHwTokenSpaceGuid.PcdPcieSmmuBaseAddress
+  gHwTokenSpaceGuid.PcdDsaSmmuBaseAddress
+  gHwTokenSpaceGuid.PcdAlgSmmuBaseAddress
+
 [BuildOptions]
 
