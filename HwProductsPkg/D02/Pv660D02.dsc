@@ -414,6 +414,9 @@
 
   HwPkg/Pv660AcpiTables/AcpiTables.inf
 
+  #Pci Express
+  HwPkg/Override/UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
+  
   #
   #network
   #

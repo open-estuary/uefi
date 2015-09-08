@@ -159,6 +159,9 @@ READ_LOCK_STATUS   = TRUE
 
   INF HwPkg/Drivers/SFC/SfcDxeDriver.inf
 
+  # PCI Express
+  INF HwPkg/Override/UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
+
   #INF HwPkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   #INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   #INF MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
