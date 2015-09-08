@@ -354,6 +354,8 @@
       NULL|MdeModulePkg/Library/DxeCrc32GuidedSectionExtractLib/DxeCrc32GuidedSectionExtractLib.inf
   }
 
+  HwPkg/Drivers/IoInitDxe/IoInitDxe.inf
+
   #
   # Architectural Protocols
   #

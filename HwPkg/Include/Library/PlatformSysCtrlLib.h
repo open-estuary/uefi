@@ -67,6 +67,7 @@ VOID ITSCONFIG (VOID);
 VOID MN_CONFIG (VOID);
 
 VOID SmmuConfigForLinux (VOID);
+VOID SmmuConfigForBios (VOID);
 
 VOID StartupAp (VOID);
 

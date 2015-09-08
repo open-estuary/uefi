@@ -143,6 +143,8 @@ READ_LOCK_STATUS   = TRUE
 
   INF MdeModulePkg/Core/Dxe/DxeMain.inf
 
+  INF HwPkg/Drivers/IoInitDxe/IoInitDxe.inf
+
   #
   # PI DXE Drivers producing Architectural Protocols (EFI Services)
   #

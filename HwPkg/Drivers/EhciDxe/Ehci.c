@@ -55,7 +55,6 @@ gEhciDriverBinding = {
   NULL
 };
 
-EFI_EVENT       EfiExitBootServicesEvent = (EFI_EVENT)NULL;
 EFI_HANDLE      gGlobalController = NULL;
 BOOLEAN         gEhciAleadyInit = FALSE;
 
@@ -239,16 +238,6 @@ MemUnmap (
   return EFI_SUCCESS;
 }
 
-VOID
-EFIAPI
-ExitBootServicesEvent (
-  IN EFI_EVENT  Event,
-  IN VOID       *Context
-  )
-{
-    MmioWrite32(0xA0040000, 0x0A850101);
-    DEBUG((EFI_D_ERROR,"EHCI ExitBootServicesEvent\n"));
-}
 
 /**
   Retrieves the capability of root hub ports.
@@ -1582,13 +1571,6 @@ EhcDriverEntryPoint (
   if(EFI_ERROR(Status))
   {
       DEBUG((EFI_D_ERROR, "[%a]:[%dL] InstallProtocolInterface fail. %r\n", __FUNCTION__, __LINE__, Status));
-  }
-
-  Status = gBS->CreateEvent (EVT_SIGNAL_EXIT_BOOT_SERVICES, TPL_NOTIFY, ExitBootServicesEvent, NULL, &EfiExitBootServicesEvent);  
-  if (EFI_ERROR(Status))
-  {        
-      DEBUG((EFI_D_ERROR, " CreateEvent fail\n "));
-      return Status;
   }
 
   return Status;
