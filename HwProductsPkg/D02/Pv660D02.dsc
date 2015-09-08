@@ -416,7 +416,10 @@
 
   #Pci Express
   HwPkg/Override/UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  
+  HwPkg/Drivers/PcieInitDxe/PcieInitDxe.inf
+  HwPkg/Drivers/PciHostBridge/PciHostBridge.inf
+  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf 
+
   #
   #network
   #

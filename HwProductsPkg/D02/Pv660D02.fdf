@@ -161,6 +161,11 @@ READ_LOCK_STATUS   = TRUE
 
   # PCI Express
   INF HwPkg/Override/UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
+  INF HwPkg/Drivers/PcieInitDxe/PcieInitDxe.inf
+  # Right now only PCI enumeration is not needed
+  #INF HwPkg/Drivers/PciHostBridge/PciHostBridge.inf
+  #INF MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf 
+
 
   #INF HwPkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   #INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
