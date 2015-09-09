@@ -30,4 +30,4 @@
 #
 
 [Binaries]
- PE32|SnpPV600DxeMac5.efi|*
+ PE32|SnpPV600DxeMac5-single-mac-all-phy-init.efi|*

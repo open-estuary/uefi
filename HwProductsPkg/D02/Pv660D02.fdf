@@ -246,7 +246,7 @@ READ_LOCK_STATUS   = TRUE
   #INF HwPkg/Drivers/Network/SnpPV600DxeD02Service_GE5/SnpPV600Dxe.inf
   #INF HwPkg/Drivers/Network/SnpPV600DxeDebug_GE6/SnpPV600Dxe.inf
   #INF HwPkg/Drivers/Network/SnpPV600DxeDebug/SnpPV600Dxe.inf
-  INF HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/SnpPV600DxeMac4.inf
+  #INF HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/SnpPV600DxeMac4.inf
   INF HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/SnpPV600DxeMac5.inf
   
   INF MdeModulePkg/Universal/Network/ArpDxe/ArpDxe.inf
