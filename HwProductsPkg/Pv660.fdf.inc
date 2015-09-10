@@ -116,9 +116,9 @@
     VERSION   STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
   }
 
-[Rule.Common.USER_DEFINED]
+[Rule.Common.USER_DEFINED.ACPITABLE]
   FILE FREEFORM = $(NAMED_GUID) {
-    RAW ACPI  Optional            |.acpi
-    RAW ASL   Optional            |.aml
+    RAW ACPI               |.acpi
+    RAW ASL                |.aml
   }
 
