@@ -14,7 +14,7 @@
 #ifndef _HW_ACPI_6_0_H_
 #define _HW_ACPI_6_0_H_
 
-#include <IndustryStandard/Acpi51.h>
+#include <IndustryStandard/Acpi.h>
 
 //
 // Multiple APIC Description Table APIC structure types
