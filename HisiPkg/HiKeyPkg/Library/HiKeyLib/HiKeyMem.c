@@ -29,6 +29,16 @@
 #define DDR_ATTRIBUTES_CACHED           ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
 #define DDR_ATTRIBUTES_UNCACHED         ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED
 
+STATIC struct HiKeyReservedMemory {
+  EFI_PHYSICAL_ADDRESS         Offset;
+  EFI_PHYSICAL_ADDRESS         Size;
+} HiKeyReservedMemoryBuffer [] = {
+  { 0x05E00000, 0x00100000 },    // MCU
+  { 0x06DFF000, 0x00001000 },    // MAILBOX
+  { 0x0740F000, 0x00001000 },    // MAILBOX
+  { 0x3E000000, 0x02000000 }     // TEE OS
+};
+
 /**
   Return the Virtual Memory Map of your platform
 
@@ -45,8 +55,49 @@ ArmPlatformGetVirtualMemoryMap (
   )
 {
   ARM_MEMORY_REGION_ATTRIBUTES  CacheAttributes;
-  UINTN                         Index = 0;
+  UINTN                         Index = 0, Count, ReservedTop;
   ARM_MEMORY_REGION_DESCRIPTOR  *VirtualMemoryTable;
+  EFI_PEI_HOB_POINTERS          NextHob;
+  EFI_RESOURCE_ATTRIBUTE_TYPE   ResourceAttributes;
+  UINT64                        ResourceLength;
+  EFI_PHYSICAL_ADDRESS          ResourceTop;
+
+  NextHob.Raw = GetHobList ();
+  Count = sizeof (HiKeyReservedMemoryBuffer) / sizeof (struct HiKeyReservedMemory);
+  while ((NextHob.Raw = GetNextHob (EFI_HOB_TYPE_RESOURCE_DESCRIPTOR, NextHob.Raw)) != NULL)
+  {
+    if (Index >= Count)
+      break;
+    if ((NextHob.ResourceDescriptor->ResourceType == EFI_RESOURCE_SYSTEM_MEMORY) &&
+        (HiKeyReservedMemoryBuffer[Index].Offset >= NextHob.ResourceDescriptor->PhysicalStart) &&
+        ((HiKeyReservedMemoryBuffer[Index].Offset + HiKeyReservedMemoryBuffer[Index].Size) <=
+         NextHob.ResourceDescriptor->PhysicalStart + NextHob.ResourceDescriptor->ResourceLength))
+    {
+      ResourceAttributes = NextHob.ResourceDescriptor->ResourceAttribute;
+      ResourceLength = NextHob.ResourceDescriptor->ResourceLength;
+      ResourceTop = NextHob.ResourceDescriptor->PhysicalStart + ResourceLength;
+      ReservedTop = HiKeyReservedMemoryBuffer[Index].Offset + HiKeyReservedMemoryBuffer[Index].Size;
+
+      // Create the System Memory HOB for the reserved buffer
+      BuildResourceDescriptorHob (EFI_RESOURCE_MEMORY_RESERVED,
+                                  EFI_RESOURCE_ATTRIBUTE_PRESENT,
+                                  HiKeyReservedMemoryBuffer[Index].Offset,
+                                  HiKeyReservedMemoryBuffer[Index].Size);
+      // Update the HOB
+      NextHob.ResourceDescriptor->ResourceLength = HiKeyReservedMemoryBuffer[Index].Offset - NextHob.ResourceDescriptor->PhysicalStart;
+
+      // If there is some memory available on the top of the reserved memory then create a HOB
+      if (ReservedTop < ResourceTop)
+      {
+        BuildResourceDescriptorHob (EFI_RESOURCE_SYSTEM_MEMORY,
+                                    ResourceAttributes,
+                                    ReservedTop,
+                                    ResourceTop - ReservedTop);
+      }
+      Index++;
+    }
+    NextHob.Raw = GET_NEXT_HOB (NextHob);
+  }
 
   ASSERT (VirtualMemoryMap != NULL);
 
@@ -61,8 +112,10 @@ ArmPlatformGetVirtualMemoryMap (
       CacheAttributes = DDR_ATTRIBUTES_UNCACHED;
   }
 
+  Index = 0;
+
   // Hi6220 SOC peripherals
-  VirtualMemoryTable[Index].PhysicalBase  = HI6220_PERIPH_BASE;
+  VirtualMemoryTable[Index].PhysicalBase    = HI6220_PERIPH_BASE;
   VirtualMemoryTable[Index].VirtualBase     = HI6220_PERIPH_BASE;
   VirtualMemoryTable[Index].Length          = HI6220_PERIPH_SZ;
   VirtualMemoryTable[Index].Attributes      = ARM_MEMORY_REGION_ATTRIBUTE_DEVICE;
