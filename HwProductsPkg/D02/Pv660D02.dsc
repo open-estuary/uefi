@@ -368,7 +368,6 @@
   HwProductsPkg/D02/OemNicConfigD02/OemNicConfigD02.inf
 
   HwPkg/Drivers/SFC/SfcDxeDriver.inf
-  HwPkg/Drivers/SaveMemoryConfigDxe/SaveMemoryConfigDxe.inf
 
   MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
   MdeModulePkg/Universal/Variable/EmuRuntimeDxe/EmuVariableRuntimeDxe.inf
