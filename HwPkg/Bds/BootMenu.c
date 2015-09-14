@@ -1291,15 +1291,6 @@ ESLBOOT (
   return EFI_SUCCESS;
 }
 
-EFI_STATUS
-SRELOAD (
-  IN LIST_ENTRY *BootOptionsList
-  )
-{
-  FPGA_Start_SRE();
-  return EFI_SUCCESS;
-}
-
 
 EFI_STATUS
 FLASHBOOT (
@@ -1816,7 +1807,6 @@ struct BOOT_MAIN_ENTRY {
     { L"Boot Manager", BootMenuManager },
     { L"ESL Start OS", ESLBOOT },
     { L"FLASH Start OS", FLASHBOOT },
-    { L"FPGA Start SRE", SRELOAD },
     { L"Reboot", Reboot },
 };
 #else

@@ -345,11 +345,6 @@ ESL_Start_Kernel(
   VOID
   );
 
-VOID
-FPGA_Start_SRE(
-  VOID
-  );
-
 
 VOID
 Flash_Start_Kernel(

@@ -21,11 +21,6 @@ VOID ESL_Start_Kernel()
     return ;
 }
 
-VOID FPGA_Start_SRE()
-{
-    FPGA_LOAD_SRE();
-    return ;
-}
 
 VOID Flash_Start_Kernel()
 {

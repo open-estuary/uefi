@@ -291,47 +291,4 @@ Exit:
     return ;
 }
 
-VOID
-FPGA_LOAD_SRE (
-  )
-{
-    EFI_STATUS Status;
-    //ESL_LINUX LinuxKernel = (ESL_LINUX)(0x80000); 
-
-    DEBUG((EFI_D_ERROR, "[%a]:[%dL] Start to boot SRE\n", __FUNCTION__, __LINE__));
-
-    //asm ("b .");
-
-    Status = ShutdownUefiBootServices ();
-    if(EFI_ERROR(Status)) 
-    {
-        DEBUG((EFI_D_ERROR,"ERROR: Can not shutdown UEFI boot services. Status=0x%X\n", Status));
-        goto Exit;
-    }
-
-    //
-    // Switch off interrupts, caches, mmu, etc
-    //
-    Status = PreparePlatformHardware ();
-    ASSERT_EFI_ERROR(Status);
-
-    //asm ("b .");
-
-    *(volatile UINT32 *)(0xC0040000 + 0)   = 0x00000101;
-
-    DEBUG((EFI_D_ERROR, "[%a]:[%dL] Start to jump to SRE\n", __FUNCTION__, __LINE__));
-
-    //asm ("b .");
-
-    asm ("SMC #0");
-    
-    ASSERT(FALSE);
-
-Exit:
-    // Only be here if we fail to start Linux
-    Print (L"ERROR  : Can not start the kernel. Status=0x%X\n", Status);
-
-    // Free Runtimee Memory (kernel and FDT)
-    return ;
-}
 
