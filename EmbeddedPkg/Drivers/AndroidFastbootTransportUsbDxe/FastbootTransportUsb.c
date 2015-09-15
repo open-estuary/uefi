@@ -62,8 +62,8 @@ STATIC USB_DEVICE_DESCRIPTOR mDeviceDescriptor = {
   FixedPcdGet32 (PcdAndroidFastbootUsbVendorId),   //IdVendor
   FixedPcdGet32 (PcdAndroidFastbootUsbProductId),  //IdProduct
   0,                                               //BcdDevice
-  0,                                               //StrManufacturer
-  0,                                               //StrProduct
+  1,                                               //StrManufacturer
+  2,                                               //StrProduct
   3,                                               //StrSerialNumber
   1                                                //NumConfigurations
 };
