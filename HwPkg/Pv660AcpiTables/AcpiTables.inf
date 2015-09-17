@@ -31,6 +31,8 @@
   Srat.aslc
   Slit.aslc
   Iort.aslc
+  Spcr.asl
+  Dbg2.asl
   
 [Packages]
   ArmPkg/ArmPkg.dec
