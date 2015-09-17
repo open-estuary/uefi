@@ -629,7 +629,7 @@ HiKeyFastbootPlatformOemCommand (
   IN  CHAR8   *Command
   )
 {
-  CHAR16     CommandUnicode[65], SerialNo[SERIAL_NUMBER_LENGTH];
+  CHAR16     CommandUnicode[65];
   CHAR16     BootDevice[BOOT_DEVICE_LENGTH];
   UINTN      Index = 0, VariableSize;
   UINT16     AutoBoot, Data;
@@ -638,50 +638,6 @@ HiKeyFastbootPlatformOemCommand (
   if (AsciiStrCmp (Command, "Demonstrate") == 0) {
     DEBUG ((EFI_D_ERROR, "ARM OEM Fastboot command 'Demonstrate' received.\n"));
     return EFI_SUCCESS;
-  } else if (AsciiStrnCmp (Command, "serialno", AsciiStrLen ("serialno")) == 0) {
-    Index += sizeof ("serialno");
-    while (TRUE) {
-      if (Command[Index] == '\0')
-        goto out;
-      else if (Command[Index] == ' ')
-        Index++;
-      else
-        break;
-    }
-    AsciiStrToUnicodeStr (Command + Index, CommandUnicode);
-    for (Index = 0; Index < SERIAL_NUMBER_LENGTH; Index++) {
-      if (IS_HEXCHAR (CommandUnicode[Index]) == 0)
-        break;
-    }
-    if ((Index == 0) || (Index > SERIAL_NUMBER_LENGTH)) {
-      DEBUG ((EFI_D_ERROR,
-        "HiKey: Invalid Fastboot OEM serialno command: %s\n",
-        CommandUnicode
-        ));
-      return EFI_NOT_FOUND;
-    }
-
-    VariableSize = SERIAL_NUMBER_LENGTH * sizeof (UINT16);
-    Status = gRT->GetVariable (
-                    (CHAR16 *)L"SerialNo",
-                    &gArmGlobalVariableGuid,
-                    NULL,
-                    &VariableSize,
-                    &SerialNo
-                    );
-    if (EFI_ERROR (Status) == 0) {
-      Status = gRT->SetVariable (
-                      (CHAR16*)L"SerialNo",
-                      &gArmGlobalVariableGuid,
-                      EFI_VARIABLE_NON_VOLATILE       |
-                      EFI_VARIABLE_BOOTSERVICE_ACCESS |
-                      EFI_VARIABLE_RUNTIME_ACCESS,
-                      VariableSize,
-                      CommandUnicode
-                      );
-    }
-
-    return Status;
   } else if (AsciiStrnCmp (Command, "autoboot", AsciiStrLen ("autoboot")) == 0) {
     Index += sizeof ("autoboot");
     while (TRUE) {
