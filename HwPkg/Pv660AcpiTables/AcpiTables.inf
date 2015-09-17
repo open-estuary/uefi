@@ -49,6 +49,6 @@
 
   gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum
-#  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum
-#  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum
 

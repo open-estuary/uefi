@@ -81,9 +81,9 @@
       GTDT_GTIMER_FLAGS,                            // UINT32  SecurePL1TimerFlags
       FixedPcdGet32 (PcdArmArchTimerIntrNum),       // UINT32  NonSecurePL1TimerGSIV
       GTDT_GTIMER_FLAGS,                            // UINT32  NonSecurePL1TimerFlags
-      0, //FixedPcdGet32 (PcdArmArchTimerVirtIntrNum),   // UINT32  VirtualTimerGSIV
+      FixedPcdGet32 (PcdArmArchTimerVirtIntrNum),   // UINT32  VirtualTimerGSIV
       GTDT_GTIMER_FLAGS,                            // UINT32  VirtualTimerFlags
-      0, //FixedPcdGet32 (PcdArmArchTimerHypIntrNum),    // UINT32  NonSecurePL2TimerGSIV
+      FixedPcdGet32 (PcdArmArchTimerHypIntrNum),    // UINT32  NonSecurePL2TimerGSIV
       GTDT_GTIMER_FLAGS,                            // UINT32  NonSecurePL2TimerFlags
       0xFFFFFFFFFFFFFFFF,                           // UINT64  CntReadBasePhysicalAddress
       JUNO_WATCHDOG_COUNT,                          // UINT32  PlatformTimerCount
