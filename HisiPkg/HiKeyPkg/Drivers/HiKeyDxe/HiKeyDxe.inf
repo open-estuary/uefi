@@ -30,10 +30,12 @@
   ArmPlatformPkg/ArmPlatformPkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   MdePkg/MdePkg.dec
+  HisiPkg/HisiPlatformPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib
   BdsLib
+  CacheMaintenanceLib
   DebugLib
   DxeServicesTableLib
   FdtLib
@@ -65,6 +67,7 @@
   gArmTokenSpaceGuid.PcdSystemMemorySize
 
   gEmbeddedTokenSpaceGuid.PcdFdtDevicePaths
+  gHwTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath
 
 [Depex]
   TRUE
