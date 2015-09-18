@@ -20,6 +20,7 @@ DefinitionBlock("DsdtTable.aml", "DSDT", 1, "ARMLTD", "ARM-JUNO", EFI_ACPI_ARM_O
      include ("Com.asl")
      include ("Clk.asl")
      include ("I2c.asl")
+     include ("Usb.asl")
   Scope(_SB) {
    
     
