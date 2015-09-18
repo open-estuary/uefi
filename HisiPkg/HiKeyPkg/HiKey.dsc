@@ -344,8 +344,8 @@
 
   # Device path of block device on which Android Fastboot should flash partitions
   gHwTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|L"VenHw(b549f005-4bd4-4020-a0cb-06f42bda68c3)"
-  # Flash limit 500M/time, for memory concern
-  gHwTokenSpaceGuid.PcdArmFastbootFlashLimit|"524288000"
+  # Flash limit 256M/time, for memory concern
+  gHwTokenSpaceGuid.PcdArmFastbootFlashLimit|"268435456"
 
 ################################################################################
 #
