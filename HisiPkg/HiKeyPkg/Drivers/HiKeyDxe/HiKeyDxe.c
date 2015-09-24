@@ -175,6 +175,7 @@ HiKeyEntryPoint (
 
   HiKeyInitSerialNo ();
   HiKeyInitBootDevice ();
+  HiKeyInitPeripherals ();
 
   // Try to install the Flat Device Tree (FDT). This function actually installs the
   // UEFI Driver Binding Protocol.

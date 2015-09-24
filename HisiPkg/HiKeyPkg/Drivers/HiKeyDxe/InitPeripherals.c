@@ -13,30 +13,22 @@
 *
 **/
 
-#ifndef __HIKEY_DXE_INTERNAL_H__
-#define __HIKEY_DXE_INTERNAL_H__
+#include <Library/IoLib.h>
 
-#include <Uefi.h>
+#include "Hi6220RegsPeri.h"
 
-#include <Library/DebugLib.h>
-#include <Library/DxeServicesTableLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-
-#define BOOT_DEVICE_LENGTH       16
-
-EFI_STATUS
-HiKeyFdtInstall (
-  IN EFI_HANDLE                            ImageHandle
-  );
-
-EFI_STATUS
-HiKeyBootMenuInstall (
-  IN VOID
-  );
-
-EFI_STATUS
+VOID
+EFIAPI
 HiKeyInitPeripherals (
   IN VOID
-  );
+  )
+{
+  UINT32     Data;
 
-#endif // __HIKEY_DXE_INTERNAL_H__
+  /* make I2C2 out of reset */
+  MmioWrite32 (SC_PERIPH_RSTDIS3, PERIPH_RST3_I2C2);
+
+  do {
+    Data = MmioRead32 (SC_PERIPH_RSTSTAT3);
+  } while (Data & PERIPH_RST3_I2C2);
+}
