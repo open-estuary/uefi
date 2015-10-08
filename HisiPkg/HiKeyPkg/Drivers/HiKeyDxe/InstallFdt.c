@@ -30,7 +30,6 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <Guid/ArmGlobalVariableHob.h>
-#include <Guid/ArmPlatformEvents.h>
 #include <Guid/EventGroup.h>
 #include <Guid/Fdt.h>
 #include <Guid/FileInfo.h>
@@ -306,7 +305,6 @@ LoadFdtOnEvent (
   UINTN            VariableSize;
   CHAR16*          FdtDevicePathStr;
   EFI_DEVICE_PATH_FROM_TEXT_PROTOCOL  *EfiDevicePathFromTextProtocol;
-  EFI_EVENT        ArmPlatformUpdateFdtEvent;
 
   //
   // Read the 'FDT' UEFI Variable to know where we should we read the blob from.
@@ -331,7 +329,7 @@ LoadFdtOnEvent (
     }
   } else if (Status == EFI_NOT_FOUND) {
     // If the 'Fdt' variable does not exist then we get the FDT location from the PCD
-    FdtDevicePathStr = (CHAR16*)PcdGetPtr (PcdFdtDevicePath);
+    FdtDevicePathStr = (CHAR16*)PcdGetPtr (PcdFdtDevicePaths);
 
     Status = gBS->LocateProtocol (&gEfiDevicePathFromTextProtocolGuid, NULL, (VOID **)&EfiDevicePathFromTextProtocol);
     if (EFI_ERROR (Status)) {
@@ -399,17 +397,6 @@ LoadFdtOnEvent (
       ASSERT_EFI_ERROR (Status);
       return;
     }
-
-    // Register the event triggered when the 'Fdt' variable is updated.
-    Status = gBS->CreateEventEx (
-                    EVT_NOTIFY_SIGNAL,
-                    TPL_CALLBACK,
-                    LoadFdtOnEvent,
-                    NULL,
-                    &gArmPlatformUpdateFdtEventGuid,
-                    &ArmPlatformUpdateFdtEvent
-                    );
-    ASSERT_EFI_ERROR (Status);
   }
 
   //

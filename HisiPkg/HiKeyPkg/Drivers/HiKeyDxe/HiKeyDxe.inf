@@ -50,7 +50,6 @@
   gEfiEndOfDxeEventGroupGuid
   gEfiFileInfoGuid
   gFdtTableGuid
-  gArmPlatformUpdateFdtEventGuid
 
 [Protocols]
   gEfiBlockIoProtocolGuid
@@ -61,7 +60,7 @@
   gArmTokenSpaceGuid.PcdSystemMemoryBase
   gArmTokenSpaceGuid.PcdSystemMemorySize
 
-  gArmPlatformTokenSpaceGuid.PcdFdtDevicePath
+  gEmbeddedTokenSpaceGuid.PcdFdtDevicePaths
 
 [Depex]
   TRUE
