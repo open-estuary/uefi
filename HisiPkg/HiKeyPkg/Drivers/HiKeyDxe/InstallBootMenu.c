@@ -88,7 +88,7 @@ HiKeyVerifyBootEntry (
   EFI_DEVICE_PATH_TO_TEXT_PROTOCOL   *DevicePathToTextProtocol;
   CHAR16                             *DevicePathText;
   UINTN                               EfiLoadOptionSize;
-  EFI_LOAD_OPTION                     EfiLoadOption;
+  EFI_LOAD_OPTION                    *EfiLoadOption;
   BDS_LOAD_OPTION                    *LoadOption;
   EFI_STATUS                          Status;
   UINTN                               DescriptionLength;
