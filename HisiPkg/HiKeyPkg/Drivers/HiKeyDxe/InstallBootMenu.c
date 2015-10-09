@@ -91,10 +91,10 @@ HiKeyCreateBootEntry (
   StrCpy (BdsLoadOption->Description, BootDescription);
 
   BdsLoadOption->LoadOptionSize = sizeof(UINT32) + sizeof(UINT16) + DescriptionSize + BdsLoadOption->FilePathListLength + BdsLoadOption->OptionalDataSize;
-  BdsLoadOption->LoadOption = (EFI_LOAD_OPTION)AllocateZeroPool (BdsLoadOption->LoadOptionSize);
+  BdsLoadOption->LoadOption = (EFI_LOAD_OPTION *) AllocateZeroPool (BdsLoadOption->LoadOptionSize);
   ASSERT (BdsLoadOption->LoadOption != NULL);
 
-  EfiLoadOptionPtr = BdsLoadOption->LoadOption;
+  EfiLoadOptionPtr = (UINT8 *) BdsLoadOption->LoadOption;
 
   //
   // Populate the EFI Load Option and BDS Boot Option structures
