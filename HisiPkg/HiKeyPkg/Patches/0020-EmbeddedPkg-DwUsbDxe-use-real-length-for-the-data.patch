@@ -1,0 +1,175 @@
+From ee58f467f79bdb9f14837a57ea26e97099968d4b Mon Sep 17 00:00:00 2001
+From: Zhangfei Gao <zhangfei.gao@linaro.org>
+Date: Fri, 27 Mar 2015 15:19:23 +0800
+Subject: [PATCH 20/43] EmbeddedPkg: DwUsbDxe: use real length for the data
+
+When transfering data, we found real length may be required for the descriptor.
+Otherwise, the last package may not generate interrupt.
+
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c | 98 +++++++++++++++------------------
+ 1 file changed, 45 insertions(+), 53 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+index a4476cb..0935a27 100644
+--- a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
++++ b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+@@ -24,17 +24,19 @@
+ #include <IndustryStandard/Usb.h>
+ #include <Library/BaseMemoryLib.h>
+ #include <Protocol/UsbDevice.h>
+-
++#include <Library/BaseLib.h>
+ #include "DwUsbDxe.h"
+ 
+ STATIC dwc_otg_dev_dma_desc_t *g_dma_desc,*g_dma_desc_ep0,*g_dma_desc_in;
+ STATIC USB_DEVICE_REQUEST *p_ctrlreq;
+-STATIC VOID *cmdbuf;
+-UINT32 rx_desc_bytes = 0;
++STATIC VOID *rx_buf;
++STATIC UINT32 rx_desc_bytes = 0;
++STATIC UINTN mNumDataBytes;
+ 
+ #define USB_BLOCK_HIGH_SPEED_SIZE    512
+ #define DATA_SIZE 32768
+ #define CMD_SIZE 512
++#define MATCH_CMD_LITERAL(Cmd, Buf) !AsciiStrnCmp (Cmd, Buf, sizeof (Cmd) - 1)
+ 
+ STATIC USB_DEVICE_DESCRIPTOR    *mDeviceDescriptor;
+ 
+@@ -155,55 +157,34 @@ STATIC VOID ep_tx(IN UINT8 ep, CONST VOID *ptr, UINT32 len)
+     return;
+ }
+ 
+-STATIC VOID ep_rx(unsigned ep, void *buf, unsigned len)
++STATIC VOID ep_rx(unsigned ep, UINT32 len)
+ {
+-    UINT32 blocksize = 0;
+-    UINT32 packets;
+-
+     /* EPx UNSTALL */
+     WRITE_REG32(DOEPCTL(ep), ((READ_REG32(DOEPCTL(ep))) & (~0x00200000)));
+     /* EPx OUT ACTIVE */
+     WRITE_REG32(DOEPCTL(ep), (READ_REG32(DOEPCTL(ep)) | 0x8000));
+ 
+-    blocksize = usb_drv_port_speed() ? USB_BLOCK_HIGH_SPEED_SIZE : 64;
+-    packets = (len + blocksize - 1) / blocksize;
++    if (len >= DATA_SIZE)
++	    rx_desc_bytes = DATA_SIZE;
++    else
++	    rx_desc_bytes = len;
+ 
+-    /*Max recv packets is 1023*/
+-    ASSERT(packets <= 0x3ff);
++    rx_buf = AllocatePool (DATA_SIZE);
++    ASSERT (rx_buf != NULL);
+ 
+-    InvalidateDataCacheRange (buf, len);
++    InvalidateDataCacheRange (rx_buf, len);
+ 
+-    if (!len) {
+-        /* one empty packet */
+-        WRITE_REG32(DOEPTSIZ(ep), 1 << 19);
+-        g_dma_desc->status.b.bs = 0x3;
+-        g_dma_desc->status.b.mtrf = 0;
+-        g_dma_desc->status.b.sr = 0;
+-        g_dma_desc->status.b.l = 1;
+-        g_dma_desc->status.b.ioc = 1;
+-        g_dma_desc->status.b.sp = 0;
+-        g_dma_desc->status.b.bytes = 0;
+-        g_dma_desc->buf = 0;
+-        g_dma_desc->status.b.sts = 0;
+-        g_dma_desc->status.b.bs = 0x0;
+-    } else {
+-        if (len >= blocksize*64) {
+-            rx_desc_bytes = blocksize*64;
+-        } else {
+-            rx_desc_bytes = len;
+-        }
+-        g_dma_desc->status.b.bs = 0x3;
+-        g_dma_desc->status.b.mtrf = 0;
+-        g_dma_desc->status.b.sr = 0;
+-        g_dma_desc->status.b.l = 1;
+-        g_dma_desc->status.b.ioc = 1;
+-        g_dma_desc->status.b.sp = 0;
+-        g_dma_desc->status.b.bytes = rx_desc_bytes;
+-        g_dma_desc->buf = (UINT32)((UINTN)buf);
+-        g_dma_desc->status.b.sts = 0;
+-        g_dma_desc->status.b.bs = 0x0;
++    g_dma_desc->status.b.bs = 0x3;
++    g_dma_desc->status.b.mtrf = 0;
++    g_dma_desc->status.b.sr = 0;
++    g_dma_desc->status.b.l = 1;
++    g_dma_desc->status.b.ioc = 1;
++    g_dma_desc->status.b.sp = 0;
++    g_dma_desc->status.b.bytes = rx_desc_bytes;
++    g_dma_desc->buf = (UINT32)((UINTN)rx_buf);
++    g_dma_desc->status.b.sts = 0;
++    g_dma_desc->status.b.bs = 0x0;
+ 
+-    }
+     asm("dsb  sy");
+     asm("isb  sy");
+     WRITE_REG32(DOEPDMA(ep), (UINT32)((UINTN)g_dma_desc));
+@@ -312,8 +293,7 @@ HandleSetConfiguration (
+   /* Enable interrupts on all endpoints */
+   WRITE_REG32(DAINTMSK, 0xFFFFFFFF);
+ 
+-  cmdbuf = AllocatePool (CMD_SIZE);
+-  ep_rx(1, cmdbuf, CMD_SIZE);
++  ep_rx(1, CMD_SIZE);
+   ep_tx(0, 0, 0);
+   return EFI_SUCCESS;
+ }
+@@ -403,12 +383,8 @@ CheckInterrupts (
+ 
+ 	  epints = READ_REG32(DIEPINT1);
+ 	  WRITE_REG32(DIEPINT1, epints);
+-	  if (epints & 0x1) {
++	  if (epints & 0x1)
+ 		  DEBUG ((EFI_D_INFO, "ep1: IN TX completed\n"));
+-		  cmdbuf = AllocatePool (CMD_SIZE);
+-		  ep_rx(1, cmdbuf, CMD_SIZE);
+-
+-	  }
+   }
+ 
+   /*
+@@ -474,13 +450,29 @@ CheckInterrupts (
+ 		  WRITE_REG32(DOEPINT1, epints);
+ 		  /* Transfer Completed Interrupt (XferCompl);Transfer completed */
+ 		  if (epints & 0x1) {
++			  asm("dsb  sy");
++			  asm("isb  sy");
++
+ 			  UINT32 bytes = rx_desc_bytes - g_dma_desc->status.b.bytes;
++			  UINT32 len = 0;
+ 
+-			  mDataReceivedCallback (bytes, cmdbuf);
+-			  if (0 == g_dma_desc->status.b.bytes) {
+-				  cmdbuf = AllocatePool (DATA_SIZE);
+-				  ep_rx(1, cmdbuf, DATA_SIZE);
++			  if (MATCH_CMD_LITERAL ("download", rx_buf)) {
++				  mNumDataBytes = AsciiStrHexToUint64 (rx_buf + sizeof ("download"));
++			  } else {
++				if (mNumDataBytes != 0)
++					mNumDataBytes -= bytes;
+ 			  }
++
++			  mDataReceivedCallback (bytes, rx_buf);
++
++			  if (mNumDataBytes == 0)
++				  len = CMD_SIZE;
++			  else if (mNumDataBytes > DATA_SIZE)
++				  len = DATA_SIZE;
++			  else
++				  len = mNumDataBytes;
++
++			  ep_rx(1, len);
+ 		  }
+ 	  }
+   }
+-- 
+1.9.1
+

@@ -1,0 +1,894 @@
+From 3a2f58665b148492782e28f9f11f463785988808 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Mon, 16 Feb 2015 22:12:07 +0800
+Subject: [PATCH 10/43] EmbeddedPkg: add designware mmc driver
+
+Enable DesignWare MMC driver that could only support eMMC device now.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmc.h      | 128 ++++++
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c   | 656 ++++++++++++++++++++++++++++++
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf |  56 +++
+ EmbeddedPkg/EmbeddedPkg.dec               |   4 +
+ 4 files changed, 844 insertions(+)
+ create mode 100644 EmbeddedPkg/Drivers/DwMmcDxe/DwMmc.h
+ create mode 100644 EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+ create mode 100644 EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
+
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmc.h b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmc.h
+new file mode 100644
+index 0000000..d449bf2
+--- /dev/null
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmc.h
+@@ -0,0 +1,128 @@
++/** @file
++*
++*  Copyright (c) 2014, Linaro Limited. All rights reserved.
++*  Copyright (c) 2014, Hisilicon Limited. All rights reserved.
++*
++*  This program and the accompanying materials
++*  are licensed and made available under the terms and conditions of the BSD License
++*  which accompanies this distribution.  The full text of the license may be found at
++*  http://opensource.org/licenses/bsd-license.php
++*
++*  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
++*  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
++*
++**/
++
++
++#ifndef __DWMMC_H__
++#define __DWMMC_H__
++
++#include <Protocol/EmbeddedGpio.h>
++
++// DW MMC Registers
++#define DWMMC_CTRL		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x000)
++#define DWMMC_PWREN		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x004)
++#define DWMMC_CLKDIV		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x008)
++#define DWMMC_CLKSRC		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x00c)
++#define DWMMC_CLKENA		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x010)
++#define DWMMC_TMOUT		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x014)
++#define DWMMC_CTYPE		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x018)
++#define DWMMC_BLKSIZ		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x01c)
++#define DWMMC_BYTCNT		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x020)
++#define DWMMC_INTMASK		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x024)
++#define DWMMC_CMDARG		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x028)
++#define DWMMC_CMD		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x02c)
++#define DWMMC_RESP0		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x030)
++#define DWMMC_RESP1		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x034)
++#define DWMMC_RESP2		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x038)
++#define DWMMC_RESP3		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x03c)
++#define DWMMC_RINTSTS		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x044)
++#define DWMMC_STATUS		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x048)
++#define DWMMC_FIFOTH		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x04c)
++#define DWMMC_DEBNCE		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x064)
++#define DWMMC_UHSREG		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x074)
++#define DWMMC_BMOD		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x080)
++#define DWMMC_DBADDR		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x088)
++#define DWMMC_IDSTS		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x08c)
++#define DWMMC_IDINTEN		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x090)
++#define DWMMC_DSCADDR		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x094)
++#define DWMMC_BUFADDR		((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0x098)
++#define DWMMC_CARDTHRCTL	((UINT32)PcdGet32 (PcdDwMmcBaseAddress) + 0X100)
++
++#define CMD_UPDATE_CLK				0x80202000
++#define CMD_START_BIT				(1 << 31)
++
++#define MMC_8BIT_MODE				(1 << 16)
++
++#define BIT_CMD_RESPONSE_EXPECT			(1 << 6)
++#define BIT_CMD_LONG_RESPONSE			(1 << 7)
++#define BIT_CMD_CHECK_RESPONSE_CRC		(1 << 8)
++#define BIT_CMD_DATA_EXPECTED			(1 << 9)
++#define BIT_CMD_READ				(0 << 10)
++#define BIT_CMD_WRITE				(1 << 10)
++#define BIT_CMD_BLOCK_TRANSFER			(0 << 11)
++#define BIT_CMD_STREAM_TRANSFER			(1 << 11)
++#define BIT_CMD_SEND_AUTO_STOP			(1 << 12)
++#define BIT_CMD_WAIT_PRVDATA_COMPLETE		(1 << 13)
++#define BIT_CMD_STOP_ABORT_CMD			(1 << 14)
++#define BIT_CMD_SEND_INIT			(1 << 15)
++#define BIT_CMD_UPDATE_CLOCK_ONLY		(1 << 21)
++#define BIT_CMD_READ_CEATA_DEVICE		(1 << 22)
++#define BIT_CMD_CCS_EXPECTED			(1 << 23)
++#define BIT_CMD_ENABLE_BOOT			(1 << 24)
++#define BIT_CMD_EXPECT_BOOT_ACK			(1 << 25)
++#define BIT_CMD_DISABLE_BOOT			(1 << 26)
++#define BIT_CMD_MANDATORY_BOOT			(0 << 27)
++#define BIT_CMD_ALTERNATE_BOOT			(1 << 27)
++#define BIT_CMD_VOLT_SWITCH			(1 << 28)
++#define BIT_CMD_USE_HOLD_REG			(1 << 29)
++#define BIT_CMD_START				(1 << 31)
++
++#define DWMMC_INT_EBE			(1 << 15)	/* End-bit Err */
++#define DWMMC_INT_SBE			(1 << 13)	/* Start-bit  Err */
++#define DWMMC_INT_HLE			(1 << 12)	/* Hardware-lock Err */
++#define DWMMC_INT_FRUN			(1 << 11)	/* FIFO UN/OV RUN */
++#define DWMMC_INT_DRT			(1 << 9)	/* Data timeout */
++#define DWMMC_INT_RTO			(1 << 8)	/* Response timeout */
++#define DWMMC_INT_DCRC			(1 << 7)	/* Data CRC err */
++#define DWMMC_INT_RCRC			(1 << 6)	/* Response CRC err */
++#define DWMMC_INT_RXDR			(1 << 5)
++#define DWMMC_INT_TXDR			(1 << 4)
++#define DWMMC_INT_DTO			(1 << 3)	/* Data trans over */
++#define DWMMC_INT_CMD_DONE		(1 << 2)
++#define DWMMC_INT_RE			(1 << 1)
++
++#define DWMMC_IDMAC_DES0_DIC		(1 << 1)
++#define DWMMC_IDMAC_DES0_LD		(1 << 2)
++#define DWMMC_IDMAC_DES0_FS		(1 << 3)
++#define DWMMC_IDMAC_DES0_CH		(1 << 4)
++#define DWMMC_IDMAC_DES0_ER		(1 << 5)
++#define DWMMC_IDMAC_DES0_CES		(1 << 30)
++#define DWMMC_IDMAC_DES0_OWN		(1 << 31)
++#define DWMMC_IDMAC_DES1_BS1(x)		((x) & 0x1fff)
++#define DWMMC_IDMAC_DES2_BS2(x)		(((x) & 0x1fff) << 13)
++#define DWMMC_IDMAC_SWRESET		(1 << 0)
++#define DWMMC_IDMAC_FB			(1 << 1)
++#define DWMMC_IDMAC_ENABLE		(1 << 7)
++
++#define EMMC_FIX_RCA				6
++
++/* bits in MMC0_CTRL */
++#define DWMMC_CTRL_RESET		(1 << 0)
++#define DWMMC_CTRL_FIFO_RESET		(1 << 1)
++#define DWMMC_CTRL_DMA_RESET		(1 << 2)
++#define DWMMC_CTRL_INT_EN		(1 << 4)
++#define DWMMC_CTRL_DMA_EN		(1 << 5)
++#define DWMMC_CTRL_IDMAC_EN		(1 << 25)
++#define DWMMC_CTRL_RESET_ALL		(DWMMC_CTRL_RESET | DWMMC_CTRL_FIFO_RESET | DWMMC_CTRL_DMA_RESET)
++
++#define DWMMC_STS_DATA_BUSY		(1 << 9)
++
++#define DWMMC_FIFO_TWMARK(x)		(x & 0xfff)
++#define DWMMC_FIFO_RWMARK(x)		((x & 0x1ff) << 16)
++#define DWMMC_DMA_BURST_SIZE(x)		((x & 0x7) << 28)
++
++#define DWMMC_CARD_RD_THR(x)		((x & 0xfff) << 16)
++#define DWMMC_CARD_RD_THR_EN		(1 << 0)
++
++#endif  // __DWMMC_H__
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+new file mode 100644
+index 0000000..618852c
+--- /dev/null
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+@@ -0,0 +1,656 @@
++/** @file
++  This file implement the MMC Host Protocol for the DesignWare MMC.
++
++  Copyright (c) 2014, Linaro Limited. All rights reserved.
++  Copyright (c) 2014, Hisilicon Limited. All rights reserved.
++
++  This program and the accompanying materials
++  are licensed and made available under the terms and conditions of the BSD License
++  which accompanies this distribution.  The full text of the license may be found at
++  http://opensource.org/licenses/bsd-license.php
++
++  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
++  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
++
++**/
++
++#include <Library/BaseMemoryLib.h>
++#include <Library/CacheMaintenanceLib.h>
++#include <Library/DebugLib.h>
++#include <Library/DevicePathLib.h>
++#include <Library/IoLib.h>
++#include <Library/PcdLib.h>
++#include <Library/TimerLib.h>
++#include <Library/UefiBootServicesTableLib.h>
++#include <Library/UefiLib.h>
++#include <Library/UncachedMemoryAllocationLib.h>
++#include <Protocol/MmcHost.h>
++
++#include <Library/PrintLib.h>
++#include <Library/SerialPortLib.h>
++
++#include "DwMmc.h"
++
++#define DWMMC_DESC_PAGE		1
++#define DWMMC_BLOCK_SIZE	512
++#define DWMMC_DMA_BUF_SIZE	(512 * 8)
++
++//#define EARLY_DUMP
++//#define INIT_DUMP
++//#define HACK_CMD8_DUMP
++
++//#define EARLY_CMD8_DUMP
++//#define DUMP_BUF
++
++typedef struct {
++  UINT32		Des0;
++  UINT32		Des1;
++  UINT32		Des2;
++  UINT32		Des3;
++} DWMMC_IDMAC_DESCRIPTOR;
++
++EFI_MMC_HOST_PROTOCOL     *gpMmcHost;
++EFI_GUID mDwMmcDevicePathGuid = EFI_CALLER_ID_GUID;
++STATIC UINT32 mDwMmcCommand;
++STATIC UINT32 mDwMmcArgument;
++
++EFI_STATUS
++DwMmcReadBlockData (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN EFI_LBA                    Lba,
++  IN UINTN                      Length,
++  IN UINT32*                    Buffer
++  );
++
++BOOLEAN
++DwMmcIsPowerOn (
++  VOID
++  )
++{
++    return TRUE;
++}
++
++EFI_STATUS
++DwMmcInitialize (
++  VOID
++  )
++{
++    DEBUG ((EFI_D_BLKIO, "DwMmcInitialize()"));
++    return EFI_SUCCESS;
++}
++
++BOOLEAN
++DwMmcIsCardPresent (
++  IN EFI_MMC_HOST_PROTOCOL     *This
++  )
++{
++  return TRUE;
++}
++
++BOOLEAN
++DwMmcIsReadOnly (
++  IN EFI_MMC_HOST_PROTOCOL     *This
++  )
++{
++  /* FIXME */
++  return FALSE;
++}
++
++EFI_STATUS
++DwMmcBuildDevicePath (
++  IN EFI_MMC_HOST_PROTOCOL      *This,
++  IN EFI_DEVICE_PATH_PROTOCOL   **DevicePath
++  )
++{
++  EFI_DEVICE_PATH_PROTOCOL *NewDevicePathNode;
++
++  NewDevicePathNode = CreateDeviceNode (HARDWARE_DEVICE_PATH, HW_VENDOR_DP, sizeof (VENDOR_DEVICE_PATH));
++  CopyGuid (& ((VENDOR_DEVICE_PATH*)NewDevicePathNode)->Guid, &mDwMmcDevicePathGuid);
++
++  *DevicePath = NewDevicePathNode;
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++DwMmcUpdateClock (
++  VOID
++  )
++{
++  UINT32 Data;
++
++  /* CMD_UPDATE_CLK */
++  Data = BIT_CMD_WAIT_PRVDATA_COMPLETE | BIT_CMD_UPDATE_CLOCK_ONLY |
++	 BIT_CMD_START;
++  MmioWrite32 (DWMMC_CMD, Data);
++  while (1) {
++    Data = MmioRead32 (DWMMC_CMD);
++    if (!(Data & CMD_START_BIT))
++      break;
++    Data = MmioRead32 (DWMMC_RINTSTS);
++    if (Data & DWMMC_INT_HLE)
++    {
++      Print (L"failed to update mmc clock frequency\n");
++      return EFI_DEVICE_ERROR;
++    }
++  }
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++DwMmcSetClock (
++  IN UINTN                     ClockFreq
++  )
++{
++  UINT32 Divider, Rate, Data;
++  EFI_STATUS Status;
++  BOOLEAN Found = FALSE;
++
++  for (Divider = 1; Divider < 256; Divider++) {
++    Rate = PcdGet32 (PcdDwMmcClockFrequencyInHz);
++    if ((Rate / (2 * Divider)) <= ClockFreq) {
++      Found = TRUE;
++      break;
++    }
++  }
++  if (Found == FALSE)
++    return EFI_NOT_FOUND;
++
++  // Wait until MMC is idle
++  do {
++    Data = MmioRead32 (DWMMC_STATUS);
++  } while (Data & DWMMC_STS_DATA_BUSY);
++
++  // Disable MMC clock first
++  MmioWrite32 (DWMMC_CLKENA, 0);
++  Status = DwMmcUpdateClock ();
++  ASSERT (!EFI_ERROR (Status));
++
++  MmioWrite32 (DWMMC_CLKDIV, Divider);
++  Status = DwMmcUpdateClock ();
++  ASSERT (!EFI_ERROR (Status));
++
++  // Enable MMC clock
++  MmioWrite32 (DWMMC_CLKENA, 1);
++  MmioWrite32 (DWMMC_CLKSRC, 0);
++  Status = DwMmcUpdateClock ();
++  ASSERT (!EFI_ERROR (Status));
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++DwMmcNotifyState (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN MMC_STATE                 State
++  )
++{
++  UINT32      Data;
++  EFI_STATUS  Status;
++#ifdef INIT_DUMP
++  VOID*         Buffer;
++#endif
++
++  switch (State) {
++  case MmcInvalidState:
++    ASSERT (0);
++    break;
++  case MmcHwInitializationState:
++    MmioWrite32 (DWMMC_PWREN, 1);
++
++    // If device already turn on then restart it
++    Data = DWMMC_CTRL_RESET_ALL;
++    MmioWrite32 (DWMMC_CTRL, Data);
++    do {
++      // Wait until reset operation finished
++      Data = MmioRead32 (DWMMC_CTRL);
++    } while (Data & DWMMC_CTRL_RESET_ALL);
++
++    // Setup clock that could not be higher than 400KHz.
++    Status = DwMmcSetClock (400000);
++    ASSERT (!EFI_ERROR (Status));
++    MicroSecondDelay (100);
++
++    MmioWrite32 (DWMMC_RINTSTS, ~0);
++    MmioWrite32 (DWMMC_INTMASK, 0);
++    MmioWrite32 (DWMMC_TMOUT, ~0);
++    MmioWrite32 (DWMMC_IDINTEN, 0);
++    MmioWrite32 (DWMMC_BMOD, DWMMC_IDMAC_SWRESET);
++
++    MmioWrite32 (DWMMC_BLKSIZ, DWMMC_BLOCK_SIZE);
++    do {
++      Data = MmioRead32 (DWMMC_BMOD);
++    } while (Data & DWMMC_IDMAC_SWRESET);
++
++
++#if 0
++    Data = DWMMC_DMA_BURST_SIZE(2) | DWMMC_FIFO_TWMARK(8) | DWMMC_FIFO_RWMARK(7);
++    MmioWrite32 (DWMMC_FIFOTH, Data);
++    Data = DWMMC_CARD_RD_THR(512) | DWMMC_CARD_RD_THR_EN;
++    MmioWrite32 (DWMMC_CARDTHRCTL, Data);
++#endif
++
++    // Set Data Length & Data Timer
++//    MmioWrite32 (DWMMC_CTYPE, MMC_8BIT_MODE);
++//    MmioWrite32 (DWMMC_DEBNCE, 0x00ffffff);
++
++#ifdef INIT_DUMP
++  Buffer = UncachedAllocatePages (2);
++  if (Buffer == NULL)
++    return EFI_BUFFER_TOO_SMALL;
++  DwMmcReadBlockData (NULL, 0, 512, Buffer);
++#endif
++    break;
++  case MmcIdleState:
++    break;
++  case MmcReadyState:
++    break;
++  case MmcIdentificationState:
++    break;
++  case MmcStandByState:
++    break;
++  case MmcTransferState:
++    break;
++  case MmcSendingDataState:
++    break;
++  case MmcReceiveDataState:
++    break;
++  case MmcProgrammingState:
++    break;
++  case MmcDisconnectState:
++    break;
++  default:
++    ASSERT (0);
++  }
++  return EFI_SUCCESS;
++}
++
++// Need to prepare DMA buffer first before sending commands to MMC card
++BOOLEAN
++IsPendingReadCommand (
++  IN MMC_CMD                    MmcCmd
++  )
++{
++  UINTN  Mask;
++
++  Mask = BIT_CMD_DATA_EXPECTED | BIT_CMD_READ;
++  if ((MmcCmd & Mask) == Mask)
++    return TRUE;
++  return FALSE;
++}
++
++BOOLEAN
++IsPendingWriteCommand (
++  IN MMC_CMD                    MmcCmd
++  )
++{
++  UINTN  Mask;
++
++  Mask = BIT_CMD_DATA_EXPECTED | BIT_CMD_WRITE;
++  if ((MmcCmd & Mask) == Mask)
++    return TRUE;
++  return FALSE;
++}
++
++EFI_STATUS
++SendCommand (
++  IN MMC_CMD                    MmcCmd,
++  IN UINT32                     Argument
++  )
++{
++  UINT32      Data, ErrMask;
++
++  // Wait until MMC is idle
++  do {
++    Data = MmioRead32 (DWMMC_STATUS);
++  } while (Data & DWMMC_STS_DATA_BUSY);
++
++  MmioWrite32 (DWMMC_RINTSTS, ~0);
++  MmioWrite32 (DWMMC_CMDARG, Argument);
++  MmioWrite32 (DWMMC_CMD, MmcCmd);
++
++  ErrMask = DWMMC_INT_EBE | DWMMC_INT_HLE | DWMMC_INT_RTO |
++            DWMMC_INT_RCRC | DWMMC_INT_RE;
++  ErrMask |= DWMMC_INT_DCRC | DWMMC_INT_DRT | DWMMC_INT_SBE;
++  do {
++    MicroSecondDelay(500);
++    Data = MmioRead32 (DWMMC_RINTSTS);
++
++    if (Data & ErrMask)
++      return EFI_DEVICE_ERROR;
++    if (Data & DWMMC_INT_DTO)	// Transfer Done
++      break;
++  } while (!(Data & DWMMC_INT_CMD_DONE));
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++DwMmcSendCommand (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN MMC_CMD                    MmcCmd,
++  IN UINT32                     Argument
++  )
++{
++  UINT32       Cmd = 0;
++  EFI_STATUS   Status = EFI_SUCCESS;
++
++  switch (MMC_GET_INDX(MmcCmd)) {
++  case MMC_INDX(0):
++    Cmd = BIT_CMD_SEND_INIT;
++    break;
++  case MMC_INDX(1):
++    Cmd = BIT_CMD_RESPONSE_EXPECT;
++    break;
++  case MMC_INDX(2):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_LONG_RESPONSE |
++           BIT_CMD_CHECK_RESPONSE_CRC | BIT_CMD_SEND_INIT;
++    break;
++  case MMC_INDX(3):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_SEND_INIT;
++    break;
++  case MMC_INDX(7):
++    if (Argument)
++        Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC;
++    else
++        Cmd = 0;
++    break;
++  case MMC_INDX(8):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_DATA_EXPECTED | BIT_CMD_READ |
++           BIT_CMD_WAIT_PRVDATA_COMPLETE;
++    break;
++  case MMC_INDX(9):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_LONG_RESPONSE;
++    break;
++  case MMC_INDX(12):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_STOP_ABORT_CMD;
++    break;
++  case MMC_INDX(13):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_WAIT_PRVDATA_COMPLETE;
++    break;
++  case MMC_INDX(17):
++  case MMC_INDX(18):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_DATA_EXPECTED | BIT_CMD_READ |
++           BIT_CMD_WAIT_PRVDATA_COMPLETE;
++    break;
++  case MMC_INDX(24):
++  case MMC_INDX(25):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_DATA_EXPECTED | BIT_CMD_WRITE |
++           BIT_CMD_WAIT_PRVDATA_COMPLETE;
++    break;
++  case MMC_INDX(30):
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++           BIT_CMD_DATA_EXPECTED;
++    break;
++  default:
++    Cmd = BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC;
++    break;
++  }
++
++  Cmd |= MMC_GET_INDX(MmcCmd) | BIT_CMD_USE_HOLD_REG | BIT_CMD_START;
++  if (IsPendingReadCommand (Cmd) || IsPendingWriteCommand (Cmd)) {
++    mDwMmcCommand = Cmd;
++    mDwMmcArgument = Argument;
++  } else {
++    Status = SendCommand (Cmd, Argument);
++  }
++  return Status;
++}
++
++EFI_STATUS
++DwMmcReceiveResponse (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN MMC_RESPONSE_TYPE          Type,
++  IN UINT32*                    Buffer
++  )
++{
++  if (Buffer == NULL) {
++    return EFI_INVALID_PARAMETER;
++  }
++
++  if (   (Type == MMC_RESPONSE_TYPE_R1)
++      || (Type == MMC_RESPONSE_TYPE_R1b)
++      || (Type == MMC_RESPONSE_TYPE_R3)
++      || (Type == MMC_RESPONSE_TYPE_R6)
++      || (Type == MMC_RESPONSE_TYPE_R7))
++  {
++    Buffer[0] = MmioRead32 (DWMMC_RESP0);
++  } else if (Type == MMC_RESPONSE_TYPE_R2) {
++    Buffer[0] = MmioRead32 (DWMMC_RESP0);
++    Buffer[1] = MmioRead32 (DWMMC_RESP1);
++    Buffer[2] = MmioRead32 (DWMMC_RESP2);
++    Buffer[3] = MmioRead32 (DWMMC_RESP3);
++  }
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++PrepareDmaData (
++  IN DWMMC_IDMAC_DESCRIPTOR*    IdmacDesc,
++  IN UINTN                      Length,
++  IN UINT32*                    Buffer
++  )
++{
++  UINTN  Cnt, Blks, Idx, LastIdx;
++  UINT32 Data;
++
++  Cnt = (Length + DWMMC_DMA_BUF_SIZE - 1) / DWMMC_DMA_BUF_SIZE;
++  if (Cnt > EFI_PAGE_SIZE)
++    return EFI_BUFFER_TOO_SMALL;
++  Blks = (Length + DWMMC_BLOCK_SIZE - 1) / DWMMC_BLOCK_SIZE;
++  Length = DWMMC_BLOCK_SIZE * Blks;
++
++  for (Idx = 0; Idx < Cnt; Idx++) {
++    (IdmacDesc + Idx)->Des0 = DWMMC_IDMAC_DES0_OWN | DWMMC_IDMAC_DES0_CH;
++    (IdmacDesc + Idx)->Des1 = DWMMC_IDMAC_DES1_BS1(DWMMC_DMA_BUF_SIZE);
++    /* Buffer Address */
++    (IdmacDesc + Idx)->Des2 = (UINT32)((UINTN)Buffer + DWMMC_DMA_BUF_SIZE * Idx);
++    /* Next Descriptor Address */
++    (IdmacDesc + Idx)->Des3 = (UINT32)((UINTN)IdmacDesc +
++   	                               (sizeof(DWMMC_IDMAC_DESCRIPTOR) * (Idx + 1)));
++  }
++  /* First Descriptor */
++  IdmacDesc->Des0 |= DWMMC_IDMAC_DES0_FS;
++  /* Last Descriptor */
++  LastIdx = Cnt - 1;
++  (IdmacDesc + LastIdx)->Des0 |= DWMMC_IDMAC_DES0_LD;
++  if (LastIdx > 0) {
++    (IdmacDesc + LastIdx)->Des1 = DWMMC_IDMAC_DES1_BS1(Length -
++   		                  (LastIdx * DWMMC_DMA_BUF_SIZE));
++  } else {
++    (IdmacDesc + LastIdx)->Des1 = DWMMC_IDMAC_DES1_BS1(Length);
++  }
++  /* Set the Next field of Last Descriptor */
++  (IdmacDesc + LastIdx)->Des3 = 0;
++  MmioWrite32 (DWMMC_DBADDR, (UINT32)((UINTN)IdmacDesc));
++
++  Data = MmioRead32 (DWMMC_CTRL);
++  Data |= DWMMC_CTRL_INT_EN | DWMMC_CTRL_DMA_EN | DWMMC_CTRL_IDMAC_EN;
++  MmioWrite32 (DWMMC_CTRL, Data);
++  Data = MmioRead32 (DWMMC_BMOD);
++  Data |= DWMMC_IDMAC_ENABLE | DWMMC_IDMAC_FB;
++  MmioWrite32 (DWMMC_BMOD, Data);
++
++  MmioWrite32 (DWMMC_BLKSIZ, DWMMC_BLOCK_SIZE);
++  MmioWrite32 (DWMMC_BYTCNT, Length);
++
++  return EFI_SUCCESS;
++}
++
++EFI_STATUS
++DwMmcReadBlockData (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN EFI_LBA                    Lba,
++  IN UINTN                      Length,
++  IN UINT32*                    Buffer
++  )
++{
++  DWMMC_IDMAC_DESCRIPTOR*  IdmacDesc;
++  EFI_STATUS  Status;
++  UINT32      Rsp;
++#ifdef DUMP_BUF
++  CHAR8       CBuffer[100];
++  UINTN       CharCount, Idx;
++#endif
++
++  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DWMMC_DESC_PAGE);
++  if (IdmacDesc == NULL)
++    return EFI_BUFFER_TOO_SMALL;
++
++  InvalidateDataCacheRange (Buffer, Length);
++
++  Status = PrepareDmaData (IdmacDesc, Length, Buffer);
++  if (EFI_ERROR (Status))
++    goto out;
++
++#if defined(EARLY_DUMP) || defined(INIT_DUMP) || defined(HACK_CMD8_DUMP)
++  Status = SendCommand (17 | BIT_CMD_RESPONSE_EXPECT | BIT_CMD_CHECK_RESPONSE_CRC |
++		  BIT_CMD_DATA_EXPECTED | BIT_CMD_READ | BIT_CMD_WAIT_PRVDATA_COMPLETE |
++		  BIT_CMD_USE_HOLD_REG | BIT_CMD_START, Lba);
++#else
++  Status = SendCommand (mDwMmcCommand, mDwMmcArgument);
++  Status = DwMmcReceiveResponse (NULL, MMC_RESPONSE_TYPE_R1, (UINT32 *)&Rsp);
++#endif
++#ifdef DUMP_BUF
++  for (Idx = 0; Idx < Length; Idx += 8) {
++    CharCount = AsciiSPrint (CBuffer,sizeof (CBuffer),"#%4x: %x %x %x %x %x %x %x %x\n", Idx,
++	    *((UINT8 *)Buffer + Idx), *((UINT8 *)Buffer + Idx + 1), *((UINT8 *)Buffer + Idx + 2),
++	    *((UINT8 *)Buffer + Idx + 3), *((UINT8 *)Buffer + Idx + 4), *((UINT8 *)Buffer + Idx + 5),
++	    *((UINT8 *)Buffer + Idx + 6), *((UINT8 *)Buffer + Idx + 7));
++    SerialPortWrite ((UINT8 *) CBuffer, CharCount);
++  }
++#endif
++out:
++  UncachedFreePages (IdmacDesc, DWMMC_DESC_PAGE);
++  return Status;
++}
++
++EFI_STATUS
++DwMmcWriteBlockData (
++  IN EFI_MMC_HOST_PROTOCOL     *This,
++  IN EFI_LBA                    Lba,
++  IN UINTN                      Length,
++  IN UINT32*                    Buffer
++  )
++{
++  DWMMC_IDMAC_DESCRIPTOR*  IdmacDesc;
++  EFI_STATUS  Status;
++
++  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DWMMC_DESC_PAGE);
++  if (IdmacDesc == NULL)
++    return EFI_BUFFER_TOO_SMALL;
++
++  WriteBackDataCacheRange (Buffer, Length);
++
++  Status = PrepareDmaData (IdmacDesc, Length, Buffer);
++  if (EFI_ERROR (Status))
++    goto out;
++
++  Status = SendCommand (mDwMmcCommand, mDwMmcArgument);
++out:
++  UncachedFreePages (IdmacDesc, DWMMC_DESC_PAGE);
++  return Status;
++}
++
++EFI_STATUS
++DwMmcSetIos (
++  IN EFI_MMC_HOST_PROTOCOL      *This,
++  IN  UINT32                    BusClockFreq,
++  IN  UINT32                    BusWidth,
++  IN  UINT32                    TimingMode
++  )
++{
++  EFI_STATUS Status = EFI_SUCCESS;
++  UINT32    Data;
++
++  if (TimingMode != EMMCBACKWARD) {
++    Data = MmioRead32 (DWMMC_UHSREG);
++    switch (TimingMode) {
++    case EMMCHS52DDR1V2:
++    case EMMCHS52DDR1V8:
++      Data |= 1 << 16;
++      break;
++    case EMMCHS52:
++    case EMMCHS26:
++      Data &= ~(1 << 16);
++      break;
++    default:
++      return EFI_UNSUPPORTED;
++    }
++    MmioWrite32 (DWMMC_UHSREG, Data);
++  }
++
++  switch (BusWidth) {
++  case 1:
++    MmioWrite32 (DWMMC_CTYPE, 0);
++    break;
++  case 4:
++    MmioWrite32 (DWMMC_CTYPE, 1);
++    break;
++  case 8:
++    MmioWrite32 (DWMMC_CTYPE, 1 << 16);
++    break;
++  default:
++    return EFI_UNSUPPORTED;
++  }
++  if (BusClockFreq) {
++    Status = DwMmcSetClock (BusClockFreq);
++  }
++  return Status;
++}
++
++EFI_MMC_HOST_PROTOCOL gMciHost = {
++  MMC_HOST_PROTOCOL_REVISION,
++  DwMmcIsCardPresent,
++  DwMmcIsReadOnly,
++  DwMmcBuildDevicePath,
++  DwMmcNotifyState,
++  DwMmcSendCommand,
++  DwMmcReceiveResponse,
++  DwMmcReadBlockData,
++  DwMmcWriteBlockData,
++  DwMmcSetIos
++};
++
++EFI_STATUS
++DwMmcDxeInitialize (
++  IN EFI_HANDLE         ImageHandle,
++  IN EFI_SYSTEM_TABLE   *SystemTable
++  )
++{
++  EFI_STATUS    Status;
++  EFI_HANDLE    Handle;
++#if defined(EARLY_DUMP) || defined(EARLY_CMD8_DUMP)
++  VOID*         Buffer;
++#endif
++
++  Handle = NULL;
++
++#if defined(EARLY_DUMP) || defined(EARLY_CMD8_DUMP)
++  Buffer = UncachedAllocatePages (2);
++  if (Buffer == NULL)
++    return EFI_BUFFER_TOO_SMALL;
++#endif
++#ifdef EARLY_DUMP
++  DwMmcReadBlockData (NULL, 0, 512, Buffer);
++#endif
++#ifdef EARLY_CMD8_DUMP
++  DwMmcSendCommand (NULL, 8, 1 << 16);
++  DwMmcReadBlockData (NULL, 0, 512, Buffer);
++#endif
++  DEBUG ((EFI_D_BLKIO, "DwMmcDxeInitialize()\n"));
++
++  //Publish Component Name, BlockIO protocol interfaces
++  Status = gBS->InstallMultipleProtocolInterfaces (
++                  &Handle,
++                  &gEfiMmcHostProtocolGuid,         &gMciHost,
++                  NULL
++                  );
++  ASSERT_EFI_ERROR (Status);
++
++  return EFI_SUCCESS;
++}
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
+new file mode 100644
+index 0000000..6aafcf3
+--- /dev/null
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.inf
+@@ -0,0 +1,56 @@
++#/** @file
++#  INF file for the MMC Host Protocol implementation for the DesignWare MMC.
++#
++#  Copyright (c) 2014, Linaro Limited. All rights reserved.
++#  Copyright (c) 2014, Hisilicon Limited. All rights reserved.
++#
++#  This program and the accompanying materials
++#  are licensed and made available under the terms and conditions of the BSD License
++#  which accompanies this distribution.  The full text of the license may be found at
++#  http://opensource.org/licenses/bsd-license.php
++#
++#  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
++#  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
++#
++#**/
++
++[Defines]
++  INF_VERSION                    = 0x00010005
++  BASE_NAME                      = DwMmcDxe
++  FILE_GUID                      = b549f005-4bd4-4020-a0cb-06f42bda68c3
++  MODULE_TYPE                    = DXE_DRIVER
++  VERSION_STRING                 = 1.0
++
++  ENTRY_POINT                    = DwMmcDxeInitialize
++
++[Sources.common]
++  DwMmcDxe.c
++
++[Packages]
++  ArmPkg/ArmPkg.dec
++  EmbeddedPkg/EmbeddedPkg.dec
++  HisiPkg/HisiPlatformPkg.dec
++  MdePkg/MdePkg.dec
++
++[LibraryClasses]
++  ArmLib
++  BaseLib
++  BaseMemoryLib
++  CacheMaintenanceLib
++  IoLib
++  TimerLib
++  UefiDriverEntryPoint
++  UefiLib
++  UncachedMemoryAllocationLib
++
++[Protocols]
++  gEfiCpuArchProtocolGuid
++  gEfiDevicePathProtocolGuid
++  gEfiMmcHostProtocolGuid
++
++[Pcd]
++  gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress
++  gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz
++
++[Depex]
++  TRUE
+diff --git a/EmbeddedPkg/EmbeddedPkg.dec b/EmbeddedPkg/EmbeddedPkg.dec
+index f557527..c2a2e57 100644
+--- a/EmbeddedPkg/EmbeddedPkg.dec
++++ b/EmbeddedPkg/EmbeddedPkg.dec
+@@ -142,6 +142,10 @@
+   gEmbeddedTokenSpaceGuid.PcdGdbMaxPacketRetryCount|10000000|UINT32|0x0000004c
+   gEmbeddedTokenSpaceGuid.PcdGdbTimerPeriodMilliseconds|250|UINT32|0x0000004d
+ 
++  # DwMmc Driver PCDs
++  gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0x0|UINT32|0x00000050
++  gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|0x0|UINT32|0x00000051
++ 
+   # LAN9118 Ethernet Driver PCDs
+   gEmbeddedTokenSpaceGuid.PcdLan9118DxeBaseAddress|0x0|UINT32|0x00000025
+   gEmbeddedTokenSpaceGuid.PcdLan9118DefaultMacAddress|0x0|UINT64|0x00000026
+-- 
+1.9.1
+

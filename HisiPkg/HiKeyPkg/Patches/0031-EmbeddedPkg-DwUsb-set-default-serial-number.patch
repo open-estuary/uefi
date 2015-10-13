@@ -1,0 +1,45 @@
+From 670d5c392826de6773621cd8a8189c97113586c5 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 2 Jun 2015 18:15:45 +0800
+Subject: [PATCH 31/43] EmbeddedPkg: DwUsb: set default serial number
+
+Set default serial number as "0123456789ABCDEF".
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+index 0935a27..bc2205e 100644
+--- a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
++++ b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+@@ -51,6 +51,12 @@ STATIC USB_ENDPOINT_DESCRIPTOR  *mEndpointDescriptors;
+ STATIC USB_DEVICE_RX_CALLBACK   mDataReceivedCallback;
+ STATIC USB_DEVICE_TX_CALLBACK   mDataSentCallback;
+ 
++STATIC EFI_USB_STRING_DESCRIPTOR mSerialStringDescriptor = {
++  34,
++  USB_DESC_TYPE_STRING,
++  {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'}
++};
++
+ // The time between interrupt polls, in units of 100 nanoseconds
+ // 10 Microseconds
+ #define DW_INTERRUPT_POLL_PERIOD 10000
+@@ -223,6 +229,12 @@ HandleGetDescriptor (
+     break;
+   case USB_DESC_TYPE_STRING:
+     DEBUG ((EFI_D_INFO, "USB: Got a request for String descriptor %d\n", Request->Value & 0xFF));
++    switch (Request->Value & 0xff) {
++    case 3:
++      ResponseSize = mSerialStringDescriptor.Length;
++      ResponseData = &mSerialStringDescriptor;
++      break;
++    }
+     break;
+   default:
+     DEBUG ((EFI_D_INFO, "USB: Didn't understand request for descriptor 0x%04x\n", Request->Value));
+-- 
+1.9.1
+

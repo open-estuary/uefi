@@ -1,0 +1,34 @@
+From 635c90c3464c09fc94d8d992860c283dbaba0488 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 19 May 2015 21:14:52 +0800
+Subject: [PATCH 27/43] MmcDxe: avoid to use internal memory copy helper
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 47df9bc..ca5d9eb 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -13,6 +13,7 @@
+ **/
+ 
+ #include <Library/BaseMemoryLib/MemLibInternals.h>
++#include <Library/BaseMemoryLib.h>
+ 
+ #include "Mmc.h"
+ 
+@@ -391,7 +392,7 @@ InitializeSdMmcDevice (
+       DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): ReadBlockData Error and Status = %r\n", Status));
+       return Status;
+     }
+-    InternalMemCopyMem (&Scr, Buffer, 8);
++    CopyMem (&Scr, Buffer, 8);
+     if (Scr.SD_SPEC == 2) {
+       if (Scr.SD_SPEC3 == 1) {
+ 	if (Scr.SD_SPEC4 == 1) {
+-- 
+1.9.1
+

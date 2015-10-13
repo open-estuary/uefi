@@ -1,0 +1,68 @@
+From a74e4bceae248835a4b37161ffd499ae7ba9184f Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 15 Sep 2015 14:13:45 +0800
+Subject: [PATCH 42/43] Embeddedpkg: DwUsb: fix lang descriptor issue
+
+When fastboot is working, linux host will query lang string descriptor.
+Since it's not provided, it'll caused serial node not to be created in
+sysfs directory of linux host.
+
+Now add the support of lang descriptor. Add the support of manufacturer
+and product string descriptor too.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+index ea100ce..8fa75f2 100644
+--- a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
++++ b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+@@ -54,6 +54,24 @@ STATIC USB_ENDPOINT_DESCRIPTOR  *mEndpointDescriptors;
+ STATIC USB_DEVICE_RX_CALLBACK   mDataReceivedCallback;
+ STATIC USB_DEVICE_TX_CALLBACK   mDataSentCallback;
+ 
++STATIC EFI_USB_STRING_DESCRIPTOR mLangStringDescriptor = {
++  4,
++  USB_DESC_TYPE_STRING,
++  {0x409}
++};
++
++STATIC EFI_USB_STRING_DESCRIPTOR mManufacturerStringDescriptor = {
++  18,
++  USB_DESC_TYPE_STRING,
++  {'9', '6', 'B', 'o', 'a', 'r', 'd', 's'}
++};
++
++STATIC EFI_USB_STRING_DESCRIPTOR mProductStringDescriptor = {
++  12,
++  USB_DESC_TYPE_STRING,
++  {'H', 'i', 'K', 'e', 'y'}
++};
++
+ STATIC EFI_USB_STRING_DESCRIPTOR mSerialStringDescriptor = {
+   34,
+   USB_DESC_TYPE_STRING,
+@@ -236,6 +254,18 @@ HandleGetDescriptor (
+   case USB_DESC_TYPE_STRING:
+     DEBUG ((EFI_D_INFO, "USB: Got a request for String descriptor %d\n", Request->Value & 0xFF));
+     switch (Request->Value & 0xff) {
++    case 0:
++      ResponseSize = mLangStringDescriptor.Length;
++      ResponseData = &mLangStringDescriptor;
++      break;
++    case 1:
++      ResponseSize = mManufacturerStringDescriptor.Length;
++      ResponseData = &mManufacturerStringDescriptor;
++      break;
++    case 2:
++      ResponseSize = mProductStringDescriptor.Length;
++      ResponseData = &mProductStringDescriptor;
++      break;
+     case 3:
+       Status = gRT->GetVariable (
+                       (CHAR16*)L"SerialNo",
+-- 
+1.9.1
+

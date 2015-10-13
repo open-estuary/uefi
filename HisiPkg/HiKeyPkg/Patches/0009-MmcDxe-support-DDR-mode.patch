@@ -1,0 +1,51 @@
+From b515014e83ab7d3692711fb3a0739071bd2aa855 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Sun, 25 Jan 2015 10:31:05 +0800
+Subject: [PATCH 09/43] MmcDxe: support DDR mode
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 31e9190..4144d20 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -245,7 +245,7 @@ InitializeEmmcDevice (
+   EFI_STATUS Status;
+   ECSD       *ECSDData;
+   BOOLEAN    Found = FALSE;
+-  UINT32     BusClockFreq, Idx;
++  UINT32     BusClockFreq, Idx, Width;
+   UINT32     TimingMode[4] = {EMMCHS52DDR1V2, EMMCHS52DDR1V8, EMMCHS52, EMMCHS26};
+ 
+   Host  = MmcHostInstance->MmcHost;
+@@ -265,10 +265,15 @@ InitializeEmmcDevice (
+     switch (TimingMode[Idx]) {
+     case EMMCHS52DDR1V2:
+     case EMMCHS52DDR1V8:
++      Width = EMMC_BUS_WIDTH_DDR_8BIT;
++      BusClockFreq = 52000000;
++      break;
+     case EMMCHS52:
++      Width = EMMC_BUS_WIDTH_8BIT;
+       BusClockFreq = 52000000;
+       break;
+     case EMMCHS26:
++      Width = EMMC_BUS_WIDTH_8BIT;
+       BusClockFreq = 26000000;
+       break;
+     default:
+@@ -281,7 +286,7 @@ InitializeEmmcDevice (
+     }
+   }
+   if (Found) {
+-    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, EMMC_BUS_WIDTH_8BIT);
++    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, Width);
+     if (EFI_ERROR (Status))
+       DEBUG ((DEBUG_ERROR, "InitializeEmmcDevice(): Failed to set EXTCSD bus width, Status:%r\n", Status));
+   }
+-- 
+1.9.1
+

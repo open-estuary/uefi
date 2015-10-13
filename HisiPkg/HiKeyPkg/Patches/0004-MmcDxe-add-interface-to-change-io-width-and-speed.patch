@@ -1,0 +1,44 @@
+From 5c7b571914e96ff66107e87a9f40366b1dc6e6c5 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Fri, 23 Jan 2015 15:46:11 +0800
+Subject: [PATCH 04/43] MmcDxe: add interface to change io width and speed
+
+By default, MMC is initialized with 1-bit mode and less than 400KHz bus
+clock. It causes MMC working inefficiently.
+
+Add the interface to change the bus width and speed.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Include/Protocol/MmcHost.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/EmbeddedPkg/Include/Protocol/MmcHost.h b/EmbeddedPkg/Include/Protocol/MmcHost.h
+index 7f8a4d3..c119c59 100644
+--- a/EmbeddedPkg/Include/Protocol/MmcHost.h
++++ b/EmbeddedPkg/Include/Protocol/MmcHost.h
+@@ -132,6 +132,12 @@ typedef EFI_STATUS (EFIAPI *MMC_WRITEBLOCKDATA) (
+   IN  UINT32                    *Buffer
+   );
+ 
++typedef EFI_STATUS (EFIAPI *MMC_SETIOS) (
++  IN  EFI_MMC_HOST_PROTOCOL     *This,
++  IN  UINT32                    BusClockRate,
++  IN  UINT32                    BusWidth
++  );
++
+ 
+ struct _EFI_MMC_HOST_PROTOCOL {
+ 
+@@ -148,6 +154,8 @@ struct _EFI_MMC_HOST_PROTOCOL {
+   MMC_READBLOCKDATA       ReadBlockData;
+   MMC_WRITEBLOCKDATA      WriteBlockData;
+ 
++  MMC_SETIOS              SetIos;
++
+ };
+ 
+ #define MMC_HOST_PROTOCOL_REVISION    0x00010001    // 1.1
+-- 
+1.9.1
+

@@ -1,0 +1,47 @@
+From bcca63c37211e09b10a503d039ec0222a64be389 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 19 May 2015 22:25:58 +0800
+Subject: [PATCH 28/43] MmcDxe: remove CMD23
+
+Use CMD12 to stop data transfer since CMD23 isn't valid for all SD cards.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c b/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
+index 0e3b0da..5cffe0c 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
+@@ -306,15 +306,6 @@ MmcIoBlocks (
+       } else { // Transfer
+         CmdArg = (BlockCount & 0xffff) | (1 << 24);
+       } 
+-      Timeout = 20;
+-      while (Timeout > 0) {
+-        Status = MmcHost->SendCommand (MmcHost, MMC_CMD23, CmdArg);
+-        if (!EFI_ERROR (Status)) {
+-	  break;
+-        }
+-	MmcStopTransmission (MmcHost);
+-	Timeout--;
+-      }
+       Response[0] = 0;
+       Timeout = 20;
+       while(   (!(Response[0] & MMC_R0_READY_FOR_DATA))
+@@ -345,6 +336,11 @@ MmcIoBlocks (
+ 	DEBUG ((EFI_D_ERROR, "Failed to transfer data with dma\n"));
+ 	return EFI_NOT_READY;
+       }
++      Status = MmcHost->SendCommand (MmcHost, MMC_CMD12, 0);
++      if (EFI_ERROR (Status)) {
++        DEBUG ((EFI_D_ERROR, "%a(MMC_CMD12): Error and Status = %r\n", Status));
++        return Status;
++      }
+       BytesRemainingToBeTransfered -= BlockCount * This->Media->BlockSize;
+     } else { // IsDmaSupported
+       BlockCount = 1;
+-- 
+1.9.1
+

@@ -1,0 +1,28 @@
+From d8218389320304f4041bdd56a7965210e1539671 Mon Sep 17 00:00:00 2001
+From: Zhangfei Gao <zhangfei.gao@linaro.org>
+Date: Thu, 26 Mar 2015 13:33:19 +0800
+Subject: [PATCH 16/43] DwMmc: Remove desc cnt limit
+
+The limit is not needed and 16M is too small
+
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+index 1753fa4..9287a4b 100644
+--- a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+@@ -447,8 +447,6 @@ PrepareDmaData (
+   UINT32 Data;
+ 
+   Cnt = (Length + DWMMC_DMA_BUF_SIZE - 1) / DWMMC_DMA_BUF_SIZE;
+-  if (Cnt > EFI_PAGE_SIZE)
+-    return EFI_BUFFER_TOO_SMALL;
+   Blks = (Length + DWMMC_BLOCK_SIZE - 1) / DWMMC_BLOCK_SIZE;
+   Length = DWMMC_BLOCK_SIZE * Blks;
+ 
+-- 
+1.9.1
+

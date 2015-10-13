@@ -1,0 +1,96 @@
+From 3b66908b82feb7d5ba131f67d9ba8761b7d8dc5e Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 19 May 2015 17:49:04 +0800
+Subject: [PATCH 26/43] MmcDxe: avoid to use SCR pointer
+
+Copy memory into SCR buffer instead.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 27 ++++++++++--------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index ceb7cca..47df9bc 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -12,6 +12,8 @@
+ *
+ **/
+ 
++#include <Library/BaseMemoryLib/MemLibInternals.h>
++
+ #include "Mmc.h"
+ 
+ typedef union {
+@@ -314,12 +316,11 @@ InitializeSdMmcDevice (
+   UINT32        CmdArg;
+   UINT32        Response[4];
+   UINT32        Buffer[128];
+-  UINT32        Index;
+   UINTN         BlockSize;
+   UINTN         CardSize;
+   UINTN         NumBlocks;
+   BOOLEAN       CccSwitch;
+-  SCR           *Scr;
++  SCR           Scr;
+   EFI_STATUS    Status;
+   EFI_MMC_HOST_PROTOCOL     *MmcHost;
+ 
+@@ -390,24 +391,24 @@ InitializeSdMmcDevice (
+       DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): ReadBlockData Error and Status = %r\n", Status));
+       return Status;
+     }
+-    Scr = (SCR *)Buffer;
+-    if (Scr->SD_SPEC == 2) {
+-      if (Scr->SD_SPEC3 == 1) {
+-	if (Scr->SD_SPEC4 == 1) {
++    InternalMemCopyMem (&Scr, Buffer, 8);
++    if (Scr.SD_SPEC == 2) {
++      if (Scr.SD_SPEC3 == 1) {
++	if (Scr.SD_SPEC4 == 1) {
+           DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 4.xx\n"));
+ 	} else {
+           DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 3.0x\n"));
+ 	}
+       } else {
+-	if (Scr->SD_SPEC4 == 0) {
++	if (Scr.SD_SPEC4 == 0) {
+           DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 2.0\n"));
+ 	} else {
+ 	  DEBUG ((EFI_D_ERROR, "Found invalid SD Card\n"));
+ 	}
+       }
+     } else {
+-      if ((Scr->SD_SPEC3 == 0) && (Scr->SD_SPEC4 == 0)) {
+-        if (Scr->SD_SPEC == 1) {
++      if ((Scr.SD_SPEC3 == 0) && (Scr.SD_SPEC4 == 0)) {
++        if (Scr.SD_SPEC == 1) {
+ 	  DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 1.10\n"));
+ 	} else {
+ 	  DEBUG ((EFI_D_INFO, "Found SD Card for Spec Version 1.0\n"));
+@@ -427,20 +428,14 @@ InitializeSdMmcDevice (
+       DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): Error and Status = %r\n", Status));
+        return Status;
+     } else {
+-      for (Index = 0; Index < 64; Index++)
+-        Buffer[Index] = 0;
+       Status = MmcHost->ReadBlockData (MmcHost, 0, 64, Buffer);
+       if (EFI_ERROR (Status)) {
+         DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): ReadBlockData Error and Status = %r\n", Status));
+         return Status;
+       }
+-      /*
+-      for (Index = 0; Index < 16; Index += 4)
+-        DEBUG ((EFI_D_ERROR, "%x %x %x %x\n", Buffer[Index], Buffer[Index + 1], Buffer[Index + 2], Buffer[Index + 3]));
+-        */
+     }
+   }
+-  if (Scr->SD_BUS_WIDTHS & SD_BUS_WIDTH_4BIT) {
++  if (Scr.SD_BUS_WIDTHS & SD_BUS_WIDTH_4BIT) {
+     CmdArg = MmcHostInstance->CardInfo.RCA << 16;
+     Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
+     if (EFI_ERROR (Status)) {
+-- 
+1.9.1
+

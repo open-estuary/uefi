@@ -1,0 +1,143 @@
+From 66b84b0c979b9393dd683177aa648cd3d0ad0484 Mon Sep 17 00:00:00 2001
+From: Riku Voipio <riku.voipio@linaro.org>
+Date: Thu, 23 Apr 2015 14:14:49 +0300
+Subject: [PATCH 21/43] ArmVExpressFastBoot: Add support for sparse Images
+
+Add support for current Fastboot Sparse images. Tested to be able
+to flash both a a small image (60MB) And a large 1.5GB image. The
+code in it's current form doesn't do many checks, so no defences
+against corrupt images.
+
+ArmVExpressFastBoot is obviously the wrong place to implement this,
+Implementing it correctly in AndroidFastbootApp requires changing
+FASTBOOT_PLATFORM_FLASH with a "offset" parameter.
+
+Cc: Zhangfei Gao <zhangfei.gao@linaro.org>
+Cc: Olivier Martin <olivier.martin@arm.com>
+Signed-off-by: Riku Voipio <riku.voipio@linaro.org>
+---
+ .../ArmVExpressFastBootDxe/ArmVExpressFastBoot.c   | 58 ++++++++++++++++++++--
+ .../Include/Protocol/AndroidFastbootPlatform.h     | 26 ++++++++++
+ 2 files changed, 81 insertions(+), 3 deletions(-)
+
+diff --git a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
+index d35ddab..8888dcd 100644
+--- a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
++++ b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
+@@ -319,6 +319,11 @@ ArmFastbootPlatformFlashPartition (
+   FASTBOOT_PARTITION_LIST *Entry;
+   CHAR16                   PartitionNameUnicode[60];
+   BOOLEAN                  PartitionFound;
++  SPARSE_HEADER           *SparseHeader;
++  CHUNK_HEADER            *ChunkHeader;
++  UINTN                    Offset = 0;
++  UINT32                   Chunk;
++
+ 
+   AsciiStrToUnicodeStr (PartitionName, PartitionNameUnicode);
+ 
+@@ -350,6 +355,22 @@ ArmFastbootPlatformFlashPartition (
+     return EFI_NOT_FOUND;
+   }
+ 
++  SparseHeader=(SPARSE_HEADER *)Image;
++
++  if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
++    DEBUG ((EFI_D_INFO, "Sparse Magic: 0x%x Major: %d Minor: %d fhs: %d chs: %d bs: %d tbs: %d tcs: %d checksum: %d \n",
++                SparseHeader->Magic, SparseHeader->MajorVersion, SparseHeader->MinorVersion,  SparseHeader->FileHeaderSize,
++                SparseHeader->ChunkHeaderSize, SparseHeader->BlockSize, SparseHeader->TotalBlocks,
++                SparseHeader->TotalChunks, SparseHeader->ImageChecksum));
++    if (SparseHeader->MajorVersion != 1) {
++        DEBUG ((EFI_D_ERROR, "Sparse image version %d.%d not supported.\n",
++                    SparseHeader->MajorVersion, SparseHeader->MinorVersion));
++        return EFI_INVALID_PARAMETER;
++    }
++
++    Size = SparseHeader->BlockSize * SparseHeader->TotalBlocks;
++  }
++
+   // Check image will fit on device
+   PartitionSize = (BlockIo->Media->LastBlock + 1) * BlockIo->Media->BlockSize;
+   if (PartitionSize < Size) {
+@@ -371,9 +392,40 @@ ArmFastbootPlatformFlashPartition (
+                   );
+   ASSERT_EFI_ERROR (Status);
+ 
+-  Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
+-  if (EFI_ERROR (Status)) {
+-    return Status;
++  if (SparseHeader->Magic == SPARSE_HEADER_MAGIC) {
++    Image += SparseHeader->FileHeaderSize;
++    for (Chunk = 0; Chunk < SparseHeader->TotalChunks; Chunk++) {
++      UINTN WriteSize;
++      ChunkHeader = (CHUNK_HEADER *)Image;
++      DEBUG ((EFI_D_INFO, "Chunk #%d - Type: 0x%x Size: %d TotalSize: %d Offset %d\n",
++                  (Chunk+1), ChunkHeader->ChunkType, ChunkHeader->ChunkSize,
++                  ChunkHeader->TotalSize, Offset));
++      Image += sizeof(CHUNK_HEADER);
++      WriteSize=(SparseHeader->BlockSize) * ChunkHeader->ChunkSize;
++      switch (ChunkHeader->ChunkType) {
++        case CHUNK_TYPE_RAW:
++          DEBUG ((EFI_D_INFO, "Writing %d at Offset %d\n", WriteSize, Offset));
++          Status = DiskIo->WriteDisk (DiskIo, MediaId, Offset, WriteSize, Image);
++          if (EFI_ERROR (Status)) {
++            return Status;
++          }
++          Image+=WriteSize;
++          break;
++        case CHUNK_TYPE_DONT_CARE:
++          break;
++        case CHUNK_TYPE_CRC32:
++          break;
++        default:
++          DEBUG ((EFI_D_ERROR, "Unknown Chunk Type: 0x%x"));
++          return EFI_PROTOCOL_ERROR;
++      }
++      Offset += WriteSize;
++    }
++  } else {
++    Status = DiskIo->WriteDisk (DiskIo, MediaId, 0, Size, Image);
++    if (EFI_ERROR (Status)) {
++      return Status;
++    }
+   }
+ 
+   BlockIo->FlushBlocks(BlockIo);
+diff --git a/EmbeddedPkg/Include/Protocol/AndroidFastbootPlatform.h b/EmbeddedPkg/Include/Protocol/AndroidFastbootPlatform.h
+index a9b4aac..d0693c1 100644
+--- a/EmbeddedPkg/Include/Protocol/AndroidFastbootPlatform.h
++++ b/EmbeddedPkg/Include/Protocol/AndroidFastbootPlatform.h
+@@ -142,4 +142,30 @@ typedef struct _FASTBOOT_PLATFORM_PROTOCOL {
+   FASTBOOT_PLATFORM_OEM_COMMAND   DoOemCommand;
+ } FASTBOOT_PLATFORM_PROTOCOL;
+ 
++/* See sparse_format.h in AOSP  */
++#define SPARSE_HEADER_MAGIC 0xed26ff3a
++#define CHUNK_TYPE_RAW      0xCAC1
++#define CHUNK_TYPE_FILL     0xCAC2
++#define CHUNK_TYPE_DONT_CARE    0xCAC3
++#define CHUNK_TYPE_CRC32    0xCAC4
++
++typedef struct _SPARSE_HEADER {
++  UINT32    Magic;
++  UINT16    MajorVersion;
++  UINT16    MinorVersion;
++  UINT16    FileHeaderSize;
++  UINT16    ChunkHeaderSize;
++  UINT32    BlockSize;
++  UINT32    TotalBlocks;
++  UINT32    TotalChunks;
++  UINT32    ImageChecksum;
++} SPARSE_HEADER;
++
++typedef struct _CHUNK_HEADER {
++  UINT16    ChunkType;
++  UINT16    Reserved1;
++  UINT32    ChunkSize;
++  UINT32    TotalSize;
++} CHUNK_HEADER;
++
+ #endif
+-- 
+1.9.1
+

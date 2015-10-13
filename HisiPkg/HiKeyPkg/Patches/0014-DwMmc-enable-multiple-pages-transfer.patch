@@ -1,0 +1,138 @@
+From 7b9b579b7971b2642ea03c8108473c434f93eb33 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Thu, 26 Feb 2015 14:38:35 +0800
+Subject: [PATCH 14/43] DwMmc: enable multiple pages transfer
+
+Fix the DMA operation issue. And add the support on IsDmaSupport().
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c | 46 +++++++++++++++++++++++----------
+ 1 file changed, 32 insertions(+), 14 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+index 618852c..1753fa4 100644
+--- a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+@@ -96,6 +96,14 @@ DwMmcIsReadOnly (
+   return FALSE;
+ }
+ 
++BOOLEAN
++DwMmcIsDmaSupported (
++  IN EFI_MMC_HOST_PROTOCOL     *This
++  )
++{
++  return TRUE;
++}
++
+ EFI_STATUS
+ DwMmcBuildDevicePath (
+   IN EFI_MMC_HOST_PROTOCOL      *This,
+@@ -445,7 +453,8 @@ PrepareDmaData (
+   Length = DWMMC_BLOCK_SIZE * Blks;
+ 
+   for (Idx = 0; Idx < Cnt; Idx++) {
+-    (IdmacDesc + Idx)->Des0 = DWMMC_IDMAC_DES0_OWN | DWMMC_IDMAC_DES0_CH;
++    (IdmacDesc + Idx)->Des0 = DWMMC_IDMAC_DES0_OWN | DWMMC_IDMAC_DES0_CH |
++	    		      DWMMC_IDMAC_DES0_DIC;
+     (IdmacDesc + Idx)->Des1 = DWMMC_IDMAC_DES1_BS1(DWMMC_DMA_BUF_SIZE);
+     /* Buffer Address */
+     (IdmacDesc + Idx)->Des2 = (UINT32)((UINTN)Buffer + DWMMC_DMA_BUF_SIZE * Idx);
+@@ -458,12 +467,9 @@ PrepareDmaData (
+   /* Last Descriptor */
+   LastIdx = Cnt - 1;
+   (IdmacDesc + LastIdx)->Des0 |= DWMMC_IDMAC_DES0_LD;
+-  if (LastIdx > 0) {
+-    (IdmacDesc + LastIdx)->Des1 = DWMMC_IDMAC_DES1_BS1(Length -
+-   		                  (LastIdx * DWMMC_DMA_BUF_SIZE));
+-  } else {
+-    (IdmacDesc + LastIdx)->Des1 = DWMMC_IDMAC_DES1_BS1(Length);
+-  }
++  (IdmacDesc + LastIdx)->Des0 &= ~(DWMMC_IDMAC_DES0_DIC | DWMMC_IDMAC_DES0_CH);
++  (IdmacDesc + LastIdx)->Des1 = DWMMC_IDMAC_DES1_BS1(Length -
++   		                (LastIdx * DWMMC_DMA_BUF_SIZE));
+   /* Set the Next field of Last Descriptor */
+   (IdmacDesc + LastIdx)->Des3 = 0;
+   MmioWrite32 (DWMMC_DBADDR, (UINT32)((UINTN)IdmacDesc));
+@@ -486,18 +492,22 @@ DwMmcReadBlockData (
+   IN EFI_MMC_HOST_PROTOCOL     *This,
+   IN EFI_LBA                    Lba,
+   IN UINTN                      Length,
+-  IN UINT32*                    Buffer
++  IN UINT32*                   Buffer
+   )
+ {
+   DWMMC_IDMAC_DESCRIPTOR*  IdmacDesc;
+   EFI_STATUS  Status;
+-  UINT32      Rsp;
++  UINT32      DescPages, CountPerPage, Count;
+ #ifdef DUMP_BUF
+   CHAR8       CBuffer[100];
+   UINTN       CharCount, Idx;
+ #endif
+ 
+-  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DWMMC_DESC_PAGE);
++  CountPerPage = EFI_PAGE_SIZE / 16;
++  Count = (Length + DWMMC_DMA_BUF_SIZE - 1) / DWMMC_DMA_BUF_SIZE;
++  DescPages = (Count + CountPerPage - 1) / CountPerPage;
++
++  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DescPages);
+   if (IdmacDesc == NULL)
+     return EFI_BUFFER_TOO_SMALL;
+ 
+@@ -513,7 +523,10 @@ DwMmcReadBlockData (
+ 		  BIT_CMD_USE_HOLD_REG | BIT_CMD_START, Lba);
+ #else
+   Status = SendCommand (mDwMmcCommand, mDwMmcArgument);
+-  Status = DwMmcReceiveResponse (NULL, MMC_RESPONSE_TYPE_R1, (UINT32 *)&Rsp);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "Failed to read data, mDwMmcCommand:%x, mDwMmcArgument:%x, Status:%r\n", mDwMmcCommand, mDwMmcArgument, Status));
++    return Status;
++  }
+ #endif
+ #ifdef DUMP_BUF
+   for (Idx = 0; Idx < Length; Idx += 8) {
+@@ -525,7 +538,7 @@ DwMmcReadBlockData (
+   }
+ #endif
+ out:
+-  UncachedFreePages (IdmacDesc, DWMMC_DESC_PAGE);
++  UncachedFreePages (IdmacDesc, DescPages);
+   return Status;
+ }
+ 
+@@ -539,8 +552,12 @@ DwMmcWriteBlockData (
+ {
+   DWMMC_IDMAC_DESCRIPTOR*  IdmacDesc;
+   EFI_STATUS  Status;
++  UINT32      DescPages, CountPerPage, Count;
+ 
+-  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DWMMC_DESC_PAGE);
++  CountPerPage = EFI_PAGE_SIZE / 16;
++  Count = (Length + DWMMC_DMA_BUF_SIZE - 1) / DWMMC_DMA_BUF_SIZE;
++  DescPages = (Count + CountPerPage - 1) / CountPerPage;
++  IdmacDesc = (DWMMC_IDMAC_DESCRIPTOR *)UncachedAllocatePages (DescPages);
+   if (IdmacDesc == NULL)
+     return EFI_BUFFER_TOO_SMALL;
+ 
+@@ -552,7 +569,7 @@ DwMmcWriteBlockData (
+ 
+   Status = SendCommand (mDwMmcCommand, mDwMmcArgument);
+ out:
+-  UncachedFreePages (IdmacDesc, DWMMC_DESC_PAGE);
++  UncachedFreePages (IdmacDesc, DescPages);
+   return Status;
+ }
+ 
+@@ -607,6 +624,7 @@ EFI_MMC_HOST_PROTOCOL gMciHost = {
+   MMC_HOST_PROTOCOL_REVISION,
+   DwMmcIsCardPresent,
+   DwMmcIsReadOnly,
++  DwMmcIsDmaSupported,
+   DwMmcBuildDevicePath,
+   DwMmcNotifyState,
+   DwMmcSendCommand,
+-- 
+1.9.1
+

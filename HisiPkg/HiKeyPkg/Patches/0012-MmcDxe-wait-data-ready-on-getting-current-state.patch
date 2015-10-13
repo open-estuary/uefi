@@ -1,0 +1,66 @@
+From ceaa3863afef13849cce38ed0873f0698a1a15c8 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Thu, 26 Feb 2015 14:28:10 +0800
+Subject: [PATCH 12/43] MmcDxe: wait data ready on getting current state
+
+Poll on data ready when try to get current state from ECSD EXT.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 34 +++++++++++++-----------
+ 1 file changed, 18 insertions(+), 16 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 4144d20..9d15b31 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -68,28 +68,30 @@ EmmcGetDeviceState (
+ {
+   EFI_MMC_HOST_PROTOCOL *Host;
+   EFI_STATUS Status;
+-  UINT32     Data, RCA;
++  UINT32     Rsp[4], RCA;
+ 
+   if (State == NULL)
+     return EFI_INVALID_PARAMETER;
+ 
+   Host  = MmcHostInstance->MmcHost;
+   RCA = MmcHostInstance->CardInfo.RCA << RCA_SHIFT_OFFSET;
+-  Status = Host->SendCommand (Host, MMC_CMD13, RCA);
+-  if (EFI_ERROR (Status)) {
+-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get card status, Status=%r.\n", Status));
+-    return Status;
+-  }
+-  Status = Host->ReceiveResponse (Host, MMC_RESPONSE_TYPE_R1, &Data);
+-  if (EFI_ERROR (Status)) {
+-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get response of CMD13, Status=%r.\n", Status));
+-    return Status;
+-  }
+-  if (Data & EMMC_SWITCH_ERROR) {
+-    DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to switch expected mode, Status=%r.\n", Status));
+-    return EFI_DEVICE_ERROR;
+-  }
+-  *State = DEVICE_STATE(Data);
++  do {
++    Status = Host->SendCommand (Host, MMC_CMD13, RCA);
++    if (EFI_ERROR (Status)) {
++      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get card status, Status=%r.\n", Status));
++      return Status;
++    }
++    Status = Host->ReceiveResponse (Host, MMC_RESPONSE_TYPE_R1, (UINT32 *)&Rsp);
++    if (EFI_ERROR (Status)) {
++      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to get response of CMD13, Status=%r.\n", Status));
++      return Status;
++    }
++    if (Rsp[0] & EMMC_SWITCH_ERROR) {
++      DEBUG ((EFI_D_ERROR, "EmmcGetDeviceState(): Failed to switch expected mode, Status=%r.\n", Status));
++      return EFI_DEVICE_ERROR;
++    }
++  } while (!(Rsp[0] & MMC_R0_READY_FOR_DATA));
++  *State = MMC_R0_CURRENTSTATE(Rsp);
+   return EFI_SUCCESS;
+ }
+ 
+-- 
+1.9.1
+

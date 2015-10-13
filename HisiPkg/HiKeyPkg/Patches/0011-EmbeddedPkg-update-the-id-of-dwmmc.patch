@@ -1,0 +1,31 @@
+From 37d9a37367aa9460cbadd7f9336d2034242569ef Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Thu, 8 Oct 2015 11:33:22 +0800
+Subject: [PATCH 11/43] EmbeddedPkg: update the id of dwmmc
+
+Since edk2 codebase is updated, change the id of dwmmc in
+EmbeddedPkg.dec.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/EmbeddedPkg.dec | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/EmbeddedPkg/EmbeddedPkg.dec b/EmbeddedPkg/EmbeddedPkg.dec
+index c2a2e57..2e8e7ab 100644
+--- a/EmbeddedPkg/EmbeddedPkg.dec
++++ b/EmbeddedPkg/EmbeddedPkg.dec
+@@ -143,8 +143,8 @@
+   gEmbeddedTokenSpaceGuid.PcdGdbTimerPeriodMilliseconds|250|UINT32|0x0000004d
+ 
+   # DwMmc Driver PCDs
+-  gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0x0|UINT32|0x00000050
+-  gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|0x0|UINT32|0x00000051
++  gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0x0|UINT32|0x00000057
++  gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|0x0|UINT32|0x00000058
+  
+   # LAN9118 Ethernet Driver PCDs
+   gEmbeddedTokenSpaceGuid.PcdLan9118DxeBaseAddress|0x0|UINT32|0x00000025
+-- 
+1.9.1
+

@@ -1,0 +1,124 @@
+From 6d3464ed3a29114ac624fb483fcbbc7f2db57453 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Thu, 30 Apr 2015 10:39:38 +0800
+Subject: [PATCH 23/43] MmcDxe: set iospeed and bus width in SD stack
+
+Add more SD commands to support 4-bit bus width & iospeed. It's not
+formal code. And it needs to be updated later.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Include/Protocol/MmcHost.h           |  1 +
+ EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c        |  2 +-
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 63 ++++++++++++++++++++++++
+ 3 files changed, 65 insertions(+), 1 deletion(-)
+
+diff --git a/EmbeddedPkg/Include/Protocol/MmcHost.h b/EmbeddedPkg/Include/Protocol/MmcHost.h
+index ad6f9fd..89f2e51 100644
+--- a/EmbeddedPkg/Include/Protocol/MmcHost.h
++++ b/EmbeddedPkg/Include/Protocol/MmcHost.h
+@@ -63,6 +63,7 @@ typedef UINT32 MMC_CMD;
+ #define MMC_CMD23             (MMC_INDX(23) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD24             (MMC_INDX(24) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD25             (MMC_INDX(25) | MMC_CMD_WAIT_RESPONSE)
++#define MMC_CMD51             (MMC_INDX(51) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD55             (MMC_INDX(55) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_ACMD41            (MMC_INDX(41) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_NO_CRC_RESPONSE)
+ 
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c b/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
+index b36d331..0e3b0da 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcBlockIo.c
+@@ -158,7 +158,7 @@ MmcTransferBlock (
+ 
+   Status = MmcHost->SendCommand (MmcHost, Cmd, CmdArg);
+   if (EFI_ERROR (Status)) {
+-    DEBUG ((EFI_D_ERROR, "MmcIoBlocks(MMC_CMD%d): Error %r\n", Cmd, Status));
++    DEBUG ((EFI_D_ERROR, "MmcIoBlocks(MMC_CMD%d): Error %r\n", Cmd & 0x3F, Status));
+     return Status;
+   }
+ 
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index e89ebb3..964b691 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -308,6 +308,8 @@ InitializeSdMmcDevice (
+ {
+   UINT32        CmdArg;
+   UINT32        Response[4];
++  UINT32        Buffer[64];
++  UINT32        Index;
+   UINTN         BlockSize;
+   UINTN         CardSize;
+   UINTN         NumBlocks;
+@@ -361,6 +363,67 @@ InitializeSdMmcDevice (
+     return Status;
+   }
+ 
++#if 0
++  /* not used in fastboot */
++  Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD55): Error and Status = %r\n", Status));
++    return Status;
++  }
++  /* SCR */
++  Status = MmcHost->SendCommand (MmcHost, MMC_CMD51, 0);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): Error and Status = %r\n", Status));
++    return Status;
++  } else {
++    Buffer[0] = 0;
++    Buffer[1] = 0;
++    Status = MmcHost->ReadBlockData (MmcHost, 0, 64, Buffer);
++    if (EFI_ERROR (Status)) {
++      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD51): ReadBlockData Error and Status = %r\n", Status));
++      return Status;
++    }
++    DEBUG ((EFI_D_ERROR, "%x %x\n", Buffer[0], Buffer[1]));
++  }
++#endif
++#if 1
++  /* SD Switch, Mode:1, Group:0, Value:1 */
++  CmdArg = 1 << 31 | 0x00FFFFFF;
++  CmdArg &= ~(0xF << (0 * 4));
++  CmdArg |= 1 << (0 * 4);
++  Status = MmcHost->SendCommand (MmcHost, MMC_CMD6, CmdArg);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): Error and Status = %r\n", Status));
++     return Status;
++  } else {
++    for (Index = 0; Index < 64; Index++)
++      Buffer[Index] = 0;
++    Status = MmcHost->ReadBlockData (MmcHost, 0, 64, Buffer);
++    if (EFI_ERROR (Status)) {
++      DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): ReadBlockData Error and Status = %r\n", Status));
++      return Status;
++    }
++    for (Index = 0; Index < 16; Index += 4)
++      DEBUG ((EFI_D_ERROR, "%x %x %x %x\n", Buffer[Index], Buffer[Index + 1], Buffer[Index + 2], Buffer[Index + 3]));
++  }
++#endif
++  CmdArg = MmcHostInstance->CardInfo.RCA << 16;
++  Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD55): Error and Status = %r\n", Status));
++    return Status;
++  }
++  /* Width: 4 */
++  Status = MmcHost->SendCommand (MmcHost, MMC_CMD6, 2);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): Error and Status = %r\n", Status));
++    return Status;
++  }
++  Status = MmcHost->SetIos (MmcHost, 24 * 1000 * 1000, 4, EMMCBACKWARD);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((EFI_D_ERROR, "%a(SetIos): Error and Status = %r\n", Status));
++    return Status;
++  }
+   return EFI_SUCCESS;
+ }
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,32 @@
+From 6c0e7dcc67c5d85ef3a7c085befa19392f7624fc Mon Sep 17 00:00:00 2001
+From: Zhangfei Gao <zhangfei.gao@linaro.org>
+Date: Thu, 26 Mar 2015 14:10:10 +0800
+Subject: [PATCH 15/43] EmbeddedPkg/AndroidFastboot: change type accordingly
+
+mNumDataBytes and mBytesReceivedSoFar should be change to UINTN.
+Otherwise process is wrong when downloading big files.
+
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+---
+ EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.c b/EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.c
+index f380817..91de365 100644
+--- a/EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.c
++++ b/EmbeddedPkg/Application/AndroidFastboot/AndroidFastbootApp.c
+@@ -45,9 +45,9 @@ typedef enum {
+ STATIC ANDROID_FASTBOOT_STATE mState = ExpectCmdState;
+ 
+ // When in ExpectDataState, the number of bytes of data to expect:
+-STATIC UINT32 mNumDataBytes;
++STATIC UINTN mNumDataBytes;
+ // .. and the number of bytes so far received this data phase
+-STATIC UINT32 mBytesReceivedSoFar;
++STATIC UINTN mBytesReceivedSoFar;
+ // .. and the buffer to save data into
+ STATIC UINT8 *mDataBuffer = NULL;
+ 
+-- 
+1.9.1
+

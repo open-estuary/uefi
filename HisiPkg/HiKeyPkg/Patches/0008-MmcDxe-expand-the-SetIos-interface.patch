@@ -1,0 +1,169 @@
+From d7f3691462685ae9f347955cce8930c7ba641aff Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Sat, 24 Jan 2015 15:36:45 +0800
+Subject: [PATCH 08/43] MmcDxe: expand the SetIos interface
+
+Support timing mode. It's used to support high speed, HS200 & HS400
+mode.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Include/Protocol/MmcHost.h           | 15 ++++-
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 79 ++++++++++++++++++++++--
+ 2 files changed, 86 insertions(+), 8 deletions(-)
+
+diff --git a/EmbeddedPkg/Include/Protocol/MmcHost.h b/EmbeddedPkg/Include/Protocol/MmcHost.h
+index 5bfbb05..8744685 100644
+--- a/EmbeddedPkg/Include/Protocol/MmcHost.h
++++ b/EmbeddedPkg/Include/Protocol/MmcHost.h
+@@ -84,6 +84,16 @@ typedef enum _MMC_STATE {
+     MmcDisconnectState,
+ } MMC_STATE;
+ 
++#define EMMCBACKWARD         (0)
++#define EMMCHS26             (1 << 0)      // High-Speed @26MHz at rated device voltages
++#define EMMCHS52             (1 << 1)      // High-Speed @52MHz at rated device voltages
++#define EMMCHS52DDR1V8       (1 << 2)      // High-Speed Dual Data Rate @52MHz 1.8V or 3V I/O
++#define EMMCHS52DDR1V2       (1 << 3)      // High-Speed Dual Data Rate @52MHz 1.2V I/O
++#define EMMCHS200SDR1V8      (1 << 4)      // HS200 Single Data Rate @200MHz 1.8V I/O
++#define EMMCHS200SDR1V2      (1 << 5)      // HS200 Single Data Rate @200MHz 1.2V I/O
++#define EMMCHS400DDR1V8      (1 << 6)      // HS400 Dual Data Rate @400MHz 1.8V I/O
++#define EMMCHS400DDR1V2      (1 << 7)      // HS400 Dual Data Rate @400MHz 1.2V I/O
++
+ ///
+ /// Forward declaration for EFI_MMC_HOST_PROTOCOL
+ ///
+@@ -135,8 +145,9 @@ typedef EFI_STATUS (EFIAPI *MMC_WRITEBLOCKDATA) (
+ 
+ typedef EFI_STATUS (EFIAPI *MMC_SETIOS) (
+   IN  EFI_MMC_HOST_PROTOCOL     *This,
+-  IN  UINT32                    BusClockRate,
+-  IN  UINT32                    BusWidth
++  IN  UINT32                    BusClockFreq,
++  IN  UINT32                    BusWidth,
++  IN  UINT32                    TimingMode
+   );
+ 
+ 
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 318777d..31e9190 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -26,6 +26,18 @@ typedef union {
+ #define EMMC_ECSD_SIZE_OFFSET   53
+ 
+ #define EXTCSD_BUS_WIDTH        183
++#define EXTCSD_HS_TIMING        185
++
++#define EMMC_TIMING_BACKWARD    0
++#define EMMC_TIMING_HS          1
++#define EMMC_TIMING_HS200       2
++#define EMMC_TIMING_HS400       3
++
++#define EMMC_BUS_WIDTH_1BIT     0
++#define EMMC_BUS_WIDTH_4BIT     1
++#define EMMC_BUS_WIDTH_8BIT     2
++#define EMMC_BUS_WIDTH_DDR_4BIT 5
++#define EMMC_BUS_WIDTH_DDR_8BIT 6
+ 
+ #define EMMC_SWITCH_ERROR       (1 << 7)
+ 
+@@ -172,7 +184,7 @@ EmmcIdentificationMode (
+   }
+ 
+   // Set 1-bit bus width
+-  Status = Host->SetIos (Host, 0, 0);
++  Status = Host->SetIos (Host, 0, 1, EMMCBACKWARD);
+   if (EFI_ERROR (Status)) {
+     DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Set 1-bit bus width error, Status=%r.\n", Status));
+     return Status;
+@@ -181,7 +193,7 @@ EmmcIdentificationMode (
+   // MMC v4 specific
+   if (MmcHostInstance->CardInfo.CSDData.SPEC_VERS == 4) {
+     // Set 1-bit bus width for EXTCSD
+-    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, 0);
++    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, EMMC_BUS_WIDTH_1BIT);
+     if (EFI_ERROR (Status)) {
+       DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): Set extcsd bus width error, Status=%r.\n", Status));
+       return Status;
+@@ -225,6 +237,59 @@ EmmcIdentificationMode (
+ 
+ STATIC
+ EFI_STATUS
++InitializeEmmcDevice (
++  IN  MMC_HOST_INSTANCE   *MmcHostInstance
++  )
++{
++  EFI_MMC_HOST_PROTOCOL *Host;
++  EFI_STATUS Status;
++  ECSD       *ECSDData;
++  BOOLEAN    Found = FALSE;
++  UINT32     BusClockFreq, Idx;
++  UINT32     TimingMode[4] = {EMMCHS52DDR1V2, EMMCHS52DDR1V8, EMMCHS52, EMMCHS26};
++
++  Host  = MmcHostInstance->MmcHost;
++  if (MmcHostInstance->CardInfo.CSDData.SPEC_VERS < 4)
++    return EFI_SUCCESS;
++  ECSDData = &MmcHostInstance->CardInfo.ECSDData;
++  if (ECSDData->DEVICE_TYPE == EMMCBACKWARD)
++    return EFI_SUCCESS;
++
++  Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_HS_TIMING, EMMC_TIMING_HS);
++  if (EFI_ERROR (Status)) {
++    DEBUG ((DEBUG_ERROR, "InitializeEmmcDevice(): Failed to switch high speed mode, Status:%r.\n", Status));
++    return Status;
++  }
++
++  for (Idx = 0; Idx < 4; Idx++) {
++    switch (TimingMode[Idx]) {
++    case EMMCHS52DDR1V2:
++    case EMMCHS52DDR1V8:
++    case EMMCHS52:
++      BusClockFreq = 52000000;
++      break;
++    case EMMCHS26:
++      BusClockFreq = 26000000;
++      break;
++    default:
++      return EFI_UNSUPPORTED;
++    }
++    Status = Host->SetIos (Host, BusClockFreq, 8, TimingMode[Idx]);
++    if (!EFI_ERROR (Status)) {
++      Found = TRUE;
++      break;
++    }
++  }
++  if (Found) {
++    Status = EmmcSetEXTCSD (MmcHostInstance, EXTCSD_BUS_WIDTH, EMMC_BUS_WIDTH_8BIT);
++    if (EFI_ERROR (Status))
++      DEBUG ((DEBUG_ERROR, "InitializeEmmcDevice(): Failed to set EXTCSD bus width, Status:%r\n", Status));
++  }
++  return Status;
++}
++
++STATIC
++EFI_STATUS
+ InitializeSdMmcDevice (
+   IN  MMC_HOST_INSTANCE   *MmcHostInstance
+   )
+@@ -541,11 +606,13 @@ InitializeMmcDevice (
+     return Status;
+   }
+ 
+-  if (MmcHostInstance->CardInfo.CardType != EMMC_CARD) {
++  if (MmcHostInstance->CardInfo.CardType == EMMC_CARD) {
++    Status = InitializeEmmcDevice (MmcHostInstance);
++  } else {
+     Status = InitializeSdMmcDevice (MmcHostInstance);
+-    if (EFI_ERROR (Status)) {
+-      return Status;
+-    }
++  }
++  if (EFI_ERROR (Status)) {
++    return Status;
+   }
+ 
+   // Set Block Length
+-- 
+1.9.1
+

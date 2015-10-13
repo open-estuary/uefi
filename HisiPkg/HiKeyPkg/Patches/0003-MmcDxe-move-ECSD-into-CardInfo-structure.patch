@@ -1,0 +1,59 @@
+From e168b511d39606ef43f93e5a0622c917a9bb12f3 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Fri, 23 Jan 2015 11:13:54 +0800
+Subject: [PATCH 03/43] MmcDxe: move ECSD into CardInfo structure
+
+Since ECSD also describes the information of card, move it into
+structure CardInfo.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/Mmc.h               | 1 +
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 5 ++---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/Mmc.h b/EmbeddedPkg/Universal/MmcDxe/Mmc.h
+index 46a156c..f4e0aa0 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/Mmc.h
++++ b/EmbeddedPkg/Universal/MmcDxe/Mmc.h
+@@ -138,6 +138,7 @@ typedef struct  {
+   OCR       OCRData;
+   CID       CIDData;
+   CSD       CSDData;
++  UINT32    ECSD[128];      // MMC V4 extended card specific
+ } CARD_INFO;
+ 
+ typedef struct _MMC_HOST_INSTANCE {
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 0b0a044..3531fb4 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -39,7 +39,6 @@ EmmcIdentificationMode (
+   EFI_BLOCK_IO_MEDIA    *Media;
+   EFI_STATUS Status;
+   UINT32     RCA;
+-  UINT32     ECSD[128];
+ 
+   Host  = MmcHostInstance->MmcHost;
+   Media = MmcHostInstance->BlockIo.Media;
+@@ -91,7 +90,7 @@ EmmcIdentificationMode (
+     DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD fetch error, Status=%r.\n", Status));
+   }
+ 
+-  Status = Host->ReadBlockData (Host, 0, 512, ECSD);
++  Status = Host->ReadBlockData (Host, 0, 512, (UINT32 *)&(MmcHostInstance->CardInfo.ECSD));
+   if (EFI_ERROR (Status)) {
+     DEBUG ((EFI_D_ERROR, "EmmcIdentificationMode(): ECSD read error, Status=%r.\n", Status));
+     return Status;
+@@ -104,7 +103,7 @@ EmmcIdentificationMode (
+   Media->LogicalBlocksPerPhysicalBlock = 1;
+   Media->IoAlign = 4;
+   // Compute last block using bits [215:212] of the ECSD
+-  Media->LastBlock = ECSD[EMMC_ECSD_SIZE_OFFSET] - 1; // eMMC isn't supposed to report this for
++  Media->LastBlock = MmcHostInstance->CardInfo.ECSD[EMMC_ECSD_SIZE_OFFSET] - 1; // eMMC isn't supposed to report this for
+   // Cards <2GB in size, but the model does.
+ 
+   // Setup card type
+-- 
+1.9.1
+

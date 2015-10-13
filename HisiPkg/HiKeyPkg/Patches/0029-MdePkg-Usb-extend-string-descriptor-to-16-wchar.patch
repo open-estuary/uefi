@@ -1,0 +1,28 @@
+From dcd76c316e181080e82e2bddbeef9ac796444045 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 2 Jun 2015 18:07:15 +0800
+Subject: [PATCH 29/43] MdePkg: Usb: extend string descriptor to 16 wchar
+
+The characters should be 16 widechars, not 1.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ MdePkg/Include/IndustryStandard/Usb.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/MdePkg/Include/IndustryStandard/Usb.h b/MdePkg/Include/IndustryStandard/Usb.h
+index c27ea15..b43e836 100644
+--- a/MdePkg/Include/IndustryStandard/Usb.h
++++ b/MdePkg/Include/IndustryStandard/Usb.h
+@@ -174,7 +174,7 @@ typedef struct {
+ typedef struct {
+   UINT8           Length;
+   UINT8           DescriptorType;
+-  CHAR16          String[1];
++  CHAR16          String[16];
+ } EFI_USB_STRING_DESCRIPTOR;
+ 
+ #pragma pack()
+-- 
+1.9.1
+

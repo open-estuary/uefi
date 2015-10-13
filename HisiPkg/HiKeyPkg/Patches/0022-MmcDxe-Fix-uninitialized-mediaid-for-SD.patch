@@ -1,0 +1,48 @@
+From 3f5c5b18eec08f7d7164f74f8917ac07a45a93fa Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Fri, 24 Apr 2015 15:21:56 +0800
+Subject: [PATCH 22/43] MmcDxe: Fix uninitialized mediaid for SD
+
+When SD card is used, mediaid is not initialized and used directly. So
+fix it.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 9d15b31..e89ebb3 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -57,6 +57,7 @@ typedef enum _EMMC_DEVICE_STATE {
+ } EMMC_DEVICE_STATE;
+ 
+ UINT32 mEmmcRcaCount = 0;
++UINT32 CurrentMediaId = 0;
+ 
+ STATIC
+ EFI_STATUS
+@@ -231,6 +232,10 @@ EmmcIdentificationMode (
+   // Set up media
+   Media->BlockSize = EMMC_CARD_SIZE; // 512-byte support is mandatory for eMMC cards
+   Media->MediaId = MmcHostInstance->CardInfo.CIDData.PSN;
++  if (CurrentMediaId > Media->MediaId)
++    Media->MediaId = ++CurrentMediaId;
++  else
++    CurrentMediaId = Media->MediaId;
+   Media->ReadOnly = MmcHostInstance->CardInfo.CSDData.PERM_WRITE_PROTECT;
+   Media->LogicalBlocksPerPhysicalBlock = 1;
+   Media->IoAlign = 4;
+@@ -347,7 +352,7 @@ InitializeSdMmcDevice (
+   MmcHostInstance->BlockIo.Media->BlockSize    = BlockSize;
+   MmcHostInstance->BlockIo.Media->ReadOnly     = MmcHost->IsReadOnly (MmcHost);
+   MmcHostInstance->BlockIo.Media->MediaPresent = TRUE;
+-  MmcHostInstance->BlockIo.Media->MediaId++;
++  MmcHostInstance->BlockIo.Media->MediaId      = ++CurrentMediaId;
+ 
+   CmdArg = MmcHostInstance->CardInfo.RCA << 16;
+   Status = MmcHost->SendCommand (MmcHost, MMC_CMD7, CmdArg);
+-- 
+1.9.1
+
