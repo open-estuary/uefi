@@ -47,6 +47,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
 #include <IndustryStandard/Pci.h>
 
+#include <Library/PlatformSysCtrlLib.h>
 typedef struct _USB2_HC_DEV  USB2_HC_DEV;
 
 #include "UsbHcMem.h"
@@ -184,6 +185,8 @@ struct _USB2_HC_DEV {
   UINT16                    DebugPortOffset; // The offset of debug port mmio register
   UINT8                     DebugPortBarNum; // The bar number of debug port mmio register
   UINT8                     DebugPortNum;    // The port number of usb debug port
+
+  UINT32                    UsbMemBase;		 // The memory base address
 };
 
 

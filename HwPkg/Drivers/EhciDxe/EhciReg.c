@@ -35,7 +35,7 @@ EhcReadCapRegister (
 {  
   UINT32                  Data;
 
-  Data = MmioRead32((UINTN)(EHCI_BASE_ADDRESS + Offset));
+  Data = MmioRead32(Ehc->UsbMemBase + Offset);
 
   return Data;
 }
@@ -58,7 +58,7 @@ EhcReadDbgRegister (
 {
   UINT32                  Data;
 
-  Data = MmioRead32((UINTN)(EHCI_BASE_ADDRESS + Ehc->DebugPortOffset + Offset));
+  Data = MmioRead32(Ehc->UsbMemBase + Ehc->DebugPortOffset + Offset);
 
   return Data;
 }
@@ -82,7 +82,7 @@ EhcReadOpReg (
 {
   UINT32                  Data;
 
-  Data = MmioRead32((UINTN)(EHCI_BASE_ADDRESS + Ehc->CapLen + Offset));
+  Data = MmioRead32(Ehc->UsbMemBase + Ehc->CapLen + Offset);
 
   return Data;
 }
@@ -103,7 +103,7 @@ EhcWriteOpReg (
   IN UINT32               Data
   )
 {
-  MmioWrite32((UINTN)(EHCI_BASE_ADDRESS + Ehc->CapLen + Offset), Data);
+  MmioWrite32(Ehc->UsbMemBase + Ehc->CapLen + Offset, Data);
 }
 
 

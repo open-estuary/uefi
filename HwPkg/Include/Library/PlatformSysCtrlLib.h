@@ -77,4 +77,6 @@ UINTN PlatformGetCpuFreq (UINT8 Socket);
 
 UINTN PlatformGetCoreCount (VOID);
 UINTN PlatformGetDdrChannel (VOID);
+VOID DResetUsb ();
+UINT32 PlatformGetEhciBase ();
 #endif

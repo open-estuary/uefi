@@ -1523,8 +1523,7 @@ EhcDriverEntryPoint (
   EFI_DEV_PATH              Node;
   EFI_DEVICE_PATH_PROTOCOL  *DevicePath = NULL;  
 
-  MmioWrite32(0xA0000A8C, 0x1F);
-  MmioWrite32(0xA0040000, 0x00150101);
+  DResetUsb ();
   MicroSecondDelay(1000);
 
   // Get the Cpu protocol for later use
@@ -1709,6 +1708,7 @@ EhcCreateUsb2Hc (
   Ehc->PciIo                 = PciIo;
   Ehc->DevicePath            = DevicePath;
   Ehc->OriginalPciAttributes = OriginalPciAttributes;
+  Ehc->UsbMemBase            = PlatformGetEhciBase ();
 
   InitializeListHead (&Ehc->AsyncIntTransfers);
 
@@ -1963,6 +1963,8 @@ EhcDriverBindingStop (
   EFI_STATUS            Status;
   EFI_USB2_HC_PROTOCOL  *Usb2Hc;
   USB2_HC_DEV           *Ehc;
+
+  gEhciAleadyInit = FALSE;
 
   //
   // Test whether the Controller handler passed in is a valid

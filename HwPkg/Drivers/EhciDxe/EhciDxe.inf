@@ -84,6 +84,7 @@
   TimerLib
   CacheMaintenanceLib
   HwSafeOperationLib
+  PlatformSysCtrlLib
 
 [Guids]
   gEfiEventExitBootServicesGuid                 ## SOMETIMES_CONSUMES ## Event 
