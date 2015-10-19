@@ -1,0 +1,51 @@
+##################################################
+#
+#Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
+#
+#File name: BootLinuxConfigPeim.inf
+#
+#Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.11.26
+#
+#Description: 
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BootLinuxConfigPeim
+  FILE_GUID                      = A181AD33-E64A-4084-A54A-A69DF1FB0ABF
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = BootLinuxConfig
+
+[Sources.common]
+  BootLinuxConfig.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+  HwPkg/HwPkg.dec
+  ArmPkg/ArmPkg.dec
+
+[LibraryClasses]
+  PeimEntryPoint
+  PcdLib
+  DebugLib
+  IoLib
+  CacheMaintenanceLib
+
+  PlatformSysCtrlLib
+  ArmLib
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdMailBoxAddress
+  gHwTokenSpaceGuid.PcdIsMPBoot
+  gHwTokenSpaceGuid.PcdTrustedFirmwareEnable
+
+[Depex]
+## As we will clean mailbox in this module, need to wait memory init complete
+  gEfiPeiMemoryDiscoveredPpiGuid
+ 
+[BuildOptions]
+

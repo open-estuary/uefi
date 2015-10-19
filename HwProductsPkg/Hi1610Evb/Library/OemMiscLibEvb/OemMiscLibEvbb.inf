@@ -1,0 +1,45 @@
+##################################################
+#
+#Copyright (C), 1988-2020, Huawei Tech. Co., Ltd.
+#
+#File name: OemMiscLibEvb.inf
+#
+#Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.10.10
+#
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OemMiscLibEvb
+  FILE_GUID                      = B9CE7465-21A2-4ecd-B347-BBDDBD098CEE
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = OemMiscLib
+
+[Sources.common]
+  BoardFeatureEvbb.c
+  OemMiscLibEvb.c
+
+[Sources.AARCH64.GCC]
+  AArch64/OemPostStartIndicatorEvb.s
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+  HwPkg/HwPkg.dec
+  HwProductsPkg/Hi1610Evb/Hi1610EvbPkg.dec
+
+[LibraryClasses]
+  PcdLib
+  CpldDriverLib
+
+[BuildOptions]
+
+[Pcd]
+  gPv660EvbTokenSpaceGuid.PcdOemGpioLed0
+  gPv660EvbTokenSpaceGuid.PcdOemGpioLed1
+  gHwTokenSpaceGuid.PcdTrustedFirmwareEnable
+

@@ -15,6 +15,7 @@ Description:
 #include <PlatformArch.h>
 #include <Library/HwMemInitLib.h>
 #include <BootLine.h>
+#include <Library/OemDevicePath.h>
 
 #define I2C_PORT0   0
 #define I2C_PORT1   1

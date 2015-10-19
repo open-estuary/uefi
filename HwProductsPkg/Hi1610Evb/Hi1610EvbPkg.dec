@@ -1,0 +1,31 @@
+#
+# PV660 EVB Package
+#
+# Copyright (c) 2011 - 2020, Huawei Corporation.
+#
+#
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = Hi1610EvbPkg
+  PACKAGE_GUID                   = 54392E0D-972B-459f-8CBE-DB381E7D1B96
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+
+[Ppis]
+
+[Protocols]
+
+[Guids]
+  gPv660EvbTokenSpaceGuid = { 0x43fbf5a2, 0x4a44, 0x4923, { 0x91, 0xad, 0xfa, 0x5f, 0xf5, 0xae, 0x57, 0xd8 } }
+
+[LibraryClasses]
+
+[PcdsFixedAtBuild]
+  gPv660EvbTokenSpaceGuid.PcdOemGpioLed0|0x0|UINT32|0x01000000
+  gPv660EvbTokenSpaceGuid.PcdOemGpioLed1|0x0|UINT32|0x01000001
+
+[PcdsFeatureFlag]
+
+

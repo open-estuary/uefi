@@ -238,7 +238,6 @@
   NULL|ArmPkg/Library/CompilerIntrinsicsLib/CompilerIntrinsicsLib.inf
   ArmGenericTimerCounterLib|ArmPkg/Library/ArmGenericTimerPhyCounterLib/ArmGenericTimerPhyCounterLib.inf
 
-  PlatformSysCtrlLib|HwPkg/Library/PlatformSysCtrlLib/PlatformSysCtrlLibPv660/PlatformSysCtrlLibPv660.inf
   HwArmLib|HwPkg/Library/HwArmLib/HwArmLib.inf
 
 [BuildOptions]
@@ -384,9 +383,4 @@
   # Set timer interrupt to be triggerred in 1ms to avoid missing
   # serial terminal input characters.
   gEmbeddedTokenSpaceGuid.PcdTimerPeriod|10000
-
-  gHwTokenSpaceGuid.PcdM3SmmuBaseAddress|0xA0040000
-  gHwTokenSpaceGuid.PcdPcieSmmuBaseAddress|0xB0040000
-  gHwTokenSpaceGuid.PcdDsaSmmuBaseAddress|0xC0040000
-  gHwTokenSpaceGuid.PcdAlgSmmuBaseAddress|0xD0040000
 

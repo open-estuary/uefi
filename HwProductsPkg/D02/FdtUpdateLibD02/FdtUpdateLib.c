@@ -115,9 +115,9 @@ DelPhyhandleUpdateMacAddress(IN VOID* Fdt)
         {
             (VOID) GetMacAddress(port);
             ethernetnode=fdt_subnode_offset(Fdt, node,EthName[port]);
-            if (node < 0) 
+            if (ethernetnode < 0) 
             {
-                DEBUG ((EFI_D_ERROR, "can not find ethernet@1 node\n"));
+                DEBUG ((EFI_D_ERROR, "can not find ethernet@ %d node\n",port));
             }
             m_prop = fdt_get_property_w(Fdt, ethernetnode, "local-mac-address", &m_oldlen);
             if(m_prop)
@@ -193,7 +193,7 @@ EFI_STATUS UpdateMemoryNode(VOID* Fdt)
     {
         // The UEFI specification advises to allocate more memory for the MemoryMap buffer between successive
         // calls to GetMemoryMap(), since allocation of the new buffer may potentially increase memory map size.
-        DEBUG ((EFI_D_ERROR, "MemoryMapsize: 0x%lx\n",MemoryMapSize));
+        //DEBUG ((EFI_D_ERROR, "MemoryMapsize: 0x%lx\n",MemoryMapSize));
         Pages0 = EFI_SIZE_TO_PAGES (MemoryMapSize) + 1;
         MemoryMap = AllocatePages (Pages0);
         if (MemoryMap == NULL)

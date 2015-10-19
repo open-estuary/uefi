@@ -25,8 +25,8 @@
 # existing system flash.
 #
 ################################################################################
-
-[FD.PV660D02]
+#DTS2015050902612 【iWare V200R002C00B980 BIOS】盘古C02编译文件分开
+[FD.HI1610Evbb]
 BaseAddress   = 0xA4800000|gArmTokenSpaceGuid.PcdFdBaseAddress  # The base address of the Firmware in NOR Flash.
 
 Size          = 0x00300000|gArmTokenSpaceGuid.PcdFdSize         # The size in bytes of the FLASH Device
@@ -54,61 +54,20 @@ NumBlocks     = 0x30
 
 0x00000000|0x00040000
 gArmTokenSpaceGuid.PcdSecureFvBaseAddress|gArmTokenSpaceGuid.PcdSecureFvSize
-FILE = HwProductsPkg/D02/Sec/FVMAIN_SEC.Fv
+FILE = HwProductsPkg/Hi1610Evb/Hi1610Evbb/Sec/FVMAIN_SEC.Fv
 
-0x00040000|0x00190000
+0x00040000|0x001C0000
 gArmTokenSpaceGuid.PcdFvBaseAddress|gArmTokenSpaceGuid.PcdFvSize
 FV = FVMAIN_COMPACT
 
-0x001e0000|0x0000e000
-gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
-DATA = {
-  ## This is the EFI_FIRMWARE_VOLUME_HEADER
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  # FileSystemGuid: gEfiSystemNvDataFvGuid         =
-  0x8D, 0x2B, 0xF1, 0xFF, 0x96, 0x76, 0x8B, 0x4C,
-  0xA9, 0x85, 0x27, 0x47, 0x07, 0x5B, 0x4F, 0x50,
-  # FvLength: 0x20000
-  0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00,
-  #Signature "_FVH"       #Attributes
-  0x5f, 0x46, 0x56, 0x48, 0xff, 0xfe, 0x04, 0x00,
-  #HeaderLength #CheckSum #ExtHeaderOffset #Reserved #Revision
-  0x48, 0x00, 0x36, 0x09, 0x00, 0x00, 0x00, 0x02,
-  #Blockmap[0]: 2 Blocks * 0x10000 Bytes / Block
-  0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00,
-  #Blockmap[1]: End
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  ## This is the VARIABLE_STORE_HEADER gEfiVariableGuid
-  0x16, 0x36, 0xcf, 0xdd, 0x75, 0x32, 0x64, 0x41,
-  0x98, 0xb6, 0xfe, 0x85, 0x70, 0x7f, 0xfe, 0x7d,
-  #Size: 0xe000 (gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize) - 0x48 (size of EFI_FIRMWARE_VOLUME_HEADER) = 0xdFB8
-  0xB8, 0xdF, 0x00, 0x00,
-  #FORMATTED: 0x5A #HEALTHY: 0xFE #Reserved: UINT16 #Reserved1: UINT32
-  0x5A, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-}
-
-0x001ee000|0x00002000
-gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
-#NV_FTW_WORKING
-DATA = {
-  # EFI_FAULT_TOLERANT_WORKING_BLOCK_HEADER->Signature = gEdkiiWorkingBlockSignatureGuid          =
-  0x2B, 0x29, 0x58, 0x9E, 0x68, 0x7C, 0x7D, 0x49,
-  0xA0, 0xCE, 0x65, 0x0 , 0xFD, 0x9F, 0x1B, 0x95,
-  # Crc:UINT32            #WorkingBlockValid:1, WorkingBlockInvalid:1, Reserved
-  0xE2, 0x33, 0xF2, 0x03, 0xFE, 0xFF, 0xFF, 0xFF,
-  # WriteQueueSize: UINT64 #Size: 0x2000 - 0x20 (FTW_WORKING_HEADER) = 0x1FE0
-  0xE0, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-}
-
-0x001f0000|0x00010000
-gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
-
+# uniBIOS_y00216284_092_start DTS2015090800843 2015-9-8 >>>
+# Description:将编译的TrustedFirmware文件直接放到BIOS二进制文件中
 ## Place for Trusted Firmware
 0x00200000|0x00020000
-FILE = HwProductsPkg/D02/bl1.bin
+FILE = HwProductsPkg/Hi1610Evb/Hi1610Evbb/bl1.bin
 0x00220000|0x000e0000
-FILE = HwProductsPkg/D02/fip.bin
+FILE = HwProductsPkg/Hi1610Evb/Hi1610Evbb/fip.bin
+# uniBIOS_y00216284_092_end 2015-9-8 <<<
 
 ################################################################################
 #
@@ -150,32 +109,26 @@ READ_LOCK_STATUS   = TRUE
   #
   INF ArmPkg/Drivers/CpuDxe/CpuDxe.inf
   INF MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
-
   INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
-  ##  NOR flash on D02 board s00296804 2015-1-20
   INF HwPkg/Drivers/NorFlashDxe/NorFlashDxe.inf
 
   ## 板级网口配置驱动
-  INF HwProductsPkg/D02/OemNicConfigD02/OemNicConfigD02.inf
-  #INF HwProductsPkg/Pv660Evb/OemNicConfigEvb/OemNicConfigEvb.inf
+  INF HwProductsPkg/Hi1610Evb/OemNicConfigEvb/OemNicConfigEvb.inf
 
+  #
+  # DTS2014021204581  z00201473 2013.10.22  新增SFC驱动
+  #
   #INF HwPkg/Drivers/SFC/SfcDxeDriver.inf
-  INF HwProductsPkg/D02/Drivers/SFC/SfcDxeDriver.inf
+  INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/Drivers/SFC/SfcDxeDriver.inf
 
-  # PCI Express
-  #INF HwPkg/Override/UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  INF HwProductsPkg/D02/Drivers/CpuIo2Dxe/CpuIo2Dxe.inf
-  #INF HwPkg/Drivers/PcieInitDxe/PcieInitDxe.inf
-  INF HwProductsPkg/D02/Drivers/PcieInitDxe/PcieInitDxe.inf
-  # Right now only PCI enumeration is not needed
-  #INF HwPkg/Drivers/PciHostBridge/PciHostBridge.inf
-  #INF MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf 
-
-
+  #uniBIOS_c00213799_start 2015-1-13 17:02:02
+  #Issue ID:DTS2015011302934
+  #Description:【iWare V200R002C00B970】合入变量区读写功能
   #INF HwPkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   #INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   #INF MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
   INF MdeModulePkg/Universal/Variable/EmuRuntimeDxe/EmuVariableRuntimeDxe.inf
+  #uniBIOS_c00213799_end 2015-1-13 17:02:02
 
   INF MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
   #INF MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
@@ -207,8 +160,6 @@ READ_LOCK_STATUS   = TRUE
 
   INF HwPkg/Override/ArmPlatformPkg/Drivers/SP805WatchdogDxe/SP805WatchdogDxe.inf
 
-  #INF HwProductsPkg/D02/CpuSelfTestDxe/CpuSelfTestDxe.inf
-
   #
   # Semi-hosting filesystem
   #
@@ -223,14 +174,32 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
   INF FatBinPkg/EnhancedFatDxe/Fat.inf
   INF MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
-  INF IntelFrameworkModulePkg/Universal/StatusCode/RuntimeDxe/StatusCodeRuntimeDxe.inf
+  INF IntelFrameworkModulePkg/Universal/StatusCode/RuntimeDxe/StatusCodeRuntimeDxe.inf  #DTS:DTS2014021101224  z00201473  2014.2.11
 
 
+  #
+  # Usb Support
+  #
+  INF HwPkg/Drivers/EhciDxe/EhciDxe.inf
+  INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
+  INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+  #
+  # uniBIOS-y00216284 DTS2014071901841 2014-7-19
+  #【HRD ARM PV660 V100R001C00B010 BIOS】提供PCIe初始化功能
+  #INF HwPkg/Pcie/PcieInitDxe.inf
+
+  # uniBIOS-y00216284  2014-10-20
+  # 【HRD ARM PV660 V100R001C00B010 BIOS】Smbiso模块
   INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
   INF HwPkg/Drivers/SmbiosMiscDxe/SmbiosMiscDxe.inf
 
+  # uniBIOS-y00216284-002  2014-10-31
+  # 【HRD ARM PV660 V100R001C00B010 BIOS】Memory Subclass Driver模块
   INF HwPkg/Drivers/MemorySubClassDxe/MemorySubClassDxe.inf
   
+  # uniBIOS_y00216284_009_start 2014-12-13 14:37:09
+  # Issue ID:DTS2014121301222 
+  # Description:【iWare V2R2C00B930 BIOS】Processor Subclass Driver模块
   INF HwPkg/Drivers/ProcessorSubClassDxe/ProcessorSubClassDxe.inf
 
   #
@@ -245,14 +214,21 @@ READ_LOCK_STATUS   = TRUE
   #
   #Network
   #
-  #D02只有GE4,GE5,目前只初始化GE5用做调试网口
-  #INF HwPkg/Drivers/Network/SnpPV600DxeD02Service_GE5/SnpPV600Dxe.inf
-  #INF HwPkg/Drivers/Network/SnpPV600DxeDebug_GE6/SnpPV600Dxe.inf
-  #INF HwPkg/Drivers/Network/SnpPV600DxeDebug/SnpPV600Dxe.inf
-  #INF HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/SnpPV600DxeMac4.inf
-  #INF HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/SnpPV600DxeMac5.inf
-  INF HwProductsPkg/D02/Drivers/SnpPV600Dxe_PLAT/SnpPV600DxeMac5.inf
+## uniBIOS-g00179230 DTS2013102904527 2013-10-29
+## 【HRD ARM PV660 V100R001C00B010 BIOS】提供FPGA上调试网口下载功能
+  # uniBIOS_y00216284_042_start DTS2015051309327 2015-5-13 >>>
+  # Description: 网卡驱动归一，删除多余代码
+  # DTS2015101008148 二进制整改，删除无用二进制驱动。
+  #FILE FREEFORM = 347DB881-B9DB-4258-ACD0-3C444B861306 {
+  #      SECTION RAW = HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/bin/firmware_KR_v1p10.bin
+  #      SECTION RAW = HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/bin/retimer10Gbaser_KR_v1p10.bin
+  #}
+  # uniBIOS_y00216284_042_end 2015-5-13 <<<
 
+  #INF HwPkg/Drivers/Network/SnpHi1610Dxe_PLAT/SnpPV600DxeMac6.inf
+  INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/Drivers/SnpPV600Dxe_PLAT/SnpPV600DxeMac6.inf
+
+  
   INF MdeModulePkg/Universal/Network/ArpDxe/ArpDxe.inf
   INF MdeModulePkg/Universal/Network/Dhcp4Dxe/Dhcp4Dxe.inf
   INF MdeModulePkg/Universal/Network/DpcDxe/DpcDxe.inf
@@ -265,8 +241,9 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Universal/Network/UefiPxeBcDxe/UefiPxeBcDxe.inf
   #INF MdeModulePkg/Universal/Network/VlanConfigDxe/VlanConfigDxe.inf
 
+  #s00296804 新增更新FDT并创建FDT Configuration Table 驱动
   INF HwPkg/Drivers/UpdateFdtDxe/UpdateFdtDxe.inf
-  
+
   #
   # Multimedia Card Interface
   #
@@ -277,21 +254,15 @@ READ_LOCK_STATUS   = TRUE
   #Sata
   #
   #INF HwPkg/Drivers/AtaAtapiPassThru/AtaAtapiPassThru.inf
-  INF HwProductsPkg/D02/Drivers/AtaAtapiPassThru/AtaAtapiPassThru.inf
-  INF MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
-
-  #
-  # USB Support
-  #
-  INF HwPkg/Drivers/EhciDxe/EhciDxe.inf
-  INF MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
-  INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+  #INF MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
+  #INF HwPkg/Drivers/SasDxe/SasDxeDriver.inf
+  INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/Drivers/SasDxe/SasDxeDriver.inf
 
   #
   # UEFI application (Shell Embedded Boot Loader)
   #
   #INF HwPkg/Override/EmbeddedPkg/Ebl/Ebl.inf
-  INF HwProductsPkg/D02/Ebl/Ebl.inf
+  INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/Ebl/Ebl.inf
   INF ShellBinPkg/UefiShell/UefiShell.inf
 
   #
@@ -328,14 +299,14 @@ READ_LOCK_STATUS   = TRUE
   INF ArmPlatformPkg/PlatformPei/PlatformPeim.inf
   #INF ArmPlatformPkg/MemoryInitPei/MemoryInitPeim.inf
   #INF HwPkg/Override/ArmPlatformPkg/MemoryInitPei/MemoryInitPeim.inf
-  INF HwProductsPkg/D02/MemoryInitPei/MemoryInitPeim.inf
+  INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/MemoryInitPei/MemoryInitPeim.inf
   INF ArmPkg/Drivers/CpuPei/CpuPei.inf
   INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
   INF IntelFrameworkModulePkg/Universal/StatusCode/Pei/StatusCodePei.inf
   #INF MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
   #INF MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
   
-  INF HwProductsPkg/D02/BootLinuxConfig/BootLinuxConfigPeim.inf
+  INF HwProductsPkg/Hi1610Evb/BootLinuxConfig/BootLinuxConfigPeim.inf
 
   INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 !endif

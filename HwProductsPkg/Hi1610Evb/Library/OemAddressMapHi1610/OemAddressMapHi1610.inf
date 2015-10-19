@@ -1,0 +1,40 @@
+##################################################
+#
+#Copyright (C), 1988-2020, Huawei Tech. Co., Ltd.
+#
+#File name: OemAddressMapLibPv660.inf
+#
+
+#Description:
+#
+##################################################
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = OemAddressMapHi1610
+  FILE_GUID                      = 32BC48E3-5428-4556-A383-25A23EA816A7
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = OemAddressMapLib
+
+[Sources.common]
+
+[Sources.AARCH64.GCC]
+
+[Binaries.AARCH64]
+  LIB|OemAddressMapHi1610.lib|*
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
+
+  HwPkg/HwPkg.dec
+
+[LibraryClasses]
+
+[BuildOptions]
+
+[Pcd]
+  gHwTokenSpaceGuid.PcdNORFlashBase
+
