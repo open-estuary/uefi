@@ -440,7 +440,7 @@
   MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
 
-  HwPkg/Pv660AcpiTables/AcpiTables.inf
+  HwPkg/Pv660AcpiTables/AcpiTablesHi1610.inf
 
 
   #

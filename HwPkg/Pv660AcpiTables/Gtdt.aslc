@@ -86,6 +86,7 @@
       FixedPcdGet32 (PcdArmArchTimerHypIntrNum),    // UINT32  NonSecurePL2TimerGSIV
       GTDT_GTIMER_FLAGS,                            // UINT32  NonSecurePL2TimerFlags
       0xFFFFFFFFFFFFFFFF,                           // UINT64  CntReadBasePhysicalAddress
+#ifdef notyet
       JUNO_WATCHDOG_COUNT,                          // UINT32  PlatformTimerCount
       sizeof (EFI_ACPI_5_1_GENERIC_TIMER_DESCRIPTION_TABLE) // UINT32 PlatfromTimerOffset
     },
@@ -97,6 +98,10 @@
           //FixedPcdGet32 (PcdGenericWatchdogRefreshBase), FixedPcdGet32 (PcdGenericWatchdogControlBase), 94, EFI_ACPI_5_1_GTDT_SBSA_GENERIC_WATCHDOG_FLAG_SECURE_TIMER)
           0, 0, 0, 0)
     }
+#else /* !notyet */
+    0, 0
+    }
+#endif
   };
 #endif
 
