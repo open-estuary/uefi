@@ -67,6 +67,32 @@ InstallFdtIntoConfigurationTable (
 }
 
 EFI_STATUS
+SetNvramSpace (VOID)
+{
+    EFI_STATUS          Status;
+    EFI_GCD_MEMORY_SPACE_DESCRIPTOR desp = {0};
+
+    if (PcdGet64(PcdReservedNvramSize) == 0) {
+      return EFI_SUCCESS;
+    } 
+
+    Status = gDS->GetMemorySpaceDescriptor(PcdGet64(PcdReservedNvramBase),&desp);
+    if(EFI_ERROR(Status)){
+         DEBUG ((EFI_D_ERROR,"get memory space error:--------- \n"));
+        return Status;
+    } 
+    desp.Attributes |= EFI_MEMORY_RUNTIME | EFI_MEMORY_WB;
+    Status = gDS->SetMemorySpaceAttributes(PcdGet64(PcdReservedNvramBase),PcdGet64(PcdReservedNvramSize), desp.Attributes);
+    if(EFI_ERROR(Status)){
+        DEBUG ((EFI_D_ERROR,"set memory space error:--------- \n"));
+        return Status;
+    } 
+
+    return EFI_SUCCESS; 
+}
+
+
+EFI_STATUS
 EFIAPI UpdateFdt (
   IN EFI_HANDLE         ImageHandle,
   IN EFI_SYSTEM_TABLE  *SystemTable)
@@ -80,23 +106,11 @@ EFIAPI UpdateFdt (
     UINT32              Index = 0;
     UINTN               FDTConfigTable;
     VOID*               dMem=NULL;
-    EFI_GCD_MEMORY_SPACE_DESCRIPTOR desp = {0};
     
+    (VOID) SetNvramSpace ();
+
     Fdt = (VOID*)(PcdGet64(FdtFileAddress));
     
-    //给OS报一段空间base: 0x6B000000, size: 0x4000000,NVRAM 用    
-    Status = gDS->GetMemorySpaceDescriptor(PcdGet64(PcdReservedNvramBase),&desp);
-    if(EFI_ERROR(Status)){
-         DEBUG ((EFI_D_ERROR,"get memory space error:--------- \n"));
-        return Status;
-    } 
-    desp.Attributes |= EFI_MEMORY_RUNTIME | EFI_MEMORY_WB;
-    Status = gDS->SetMemorySpaceAttributes(PcdGet64(PcdReservedNvramBase),PcdGet64(PcdReservedNvramSize), desp.Attributes);
-    if(EFI_ERROR(Status)){
-        DEBUG ((EFI_D_ERROR,"set memory space error:--------- \n"));
-        return Status;
-    } 
-
     //查找FTD tree
     Error = fdt_check_header ((VOID*)(PcdGet64(FdtFileAddress)));
     DEBUG ((EFI_D_ERROR,"fdtfileaddress:--------- 0x%lx\n",PcdGet64(FdtFileAddress)));
