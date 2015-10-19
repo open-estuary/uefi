@@ -1,0 +1,56 @@
+From 5c3f6823b22780055b2a6a2b6706a3f1e4ca27f4 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 18 Aug 2015 10:36:50 +0800
+Subject: [PATCH 40/43] EmbeddedPkg: enhance for multiple gpio controllers
+
+EmbeddedGpio only supports one gpio controller in one platform. Now create
+PLATFORM_GPIO_CONTROLLER to support multiple gpio controllers in one platform.
+
+Contributed-under: TianoCore Contribution Agreement 1.0
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/EmbeddedPkg.dec                 |  1 +
+ EmbeddedPkg/Include/Protocol/EmbeddedGpio.h | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+)
+
+diff --git a/EmbeddedPkg/EmbeddedPkg.dec b/EmbeddedPkg/EmbeddedPkg.dec
+index 8deeed5..f69d5fd 100644
+--- a/EmbeddedPkg/EmbeddedPkg.dec
++++ b/EmbeddedPkg/EmbeddedPkg.dec
+@@ -68,6 +68,7 @@
+   gAndroidFastbootTransportProtocolGuid = { 0x74bd9fe0, 0x8902, 0x11e3, {0xb9, 0xd3, 0xf7, 0x22, 0x38, 0xfc, 0x9a, 0x31}}
+   gAndroidFastbootPlatformProtocolGuid =  { 0x524685a0, 0x89a0, 0x11e3, {0x9d, 0x4d, 0xbf, 0xa9, 0xf6, 0xa4, 0x03, 0x08}}
+   gUsbDeviceProtocolGuid =  { 0x021bd2ca, 0x51d2, 0x11e3, {0x8e, 0x56, 0xb7, 0x54, 0x17, 0xc7,  0x0b, 0x44 }}
++  gPlatformGpioProtocolGuid = { 0x52ce9845, 0x5af4, 0x43e2, {0xba, 0xfd, 0x23, 0x08, 0x12, 0x54, 0x7a, 0xc2 }}
+ 
+ [PcdsFeatureFlag.common]
+   gEmbeddedTokenSpaceGuid.PcdEmbeddedMacBoot|FALSE|BOOLEAN|0x00000001
+diff --git a/EmbeddedPkg/Include/Protocol/EmbeddedGpio.h b/EmbeddedPkg/Include/Protocol/EmbeddedGpio.h
+index 4e7c8db..b8bc929 100644
+--- a/EmbeddedPkg/Include/Protocol/EmbeddedGpio.h
++++ b/EmbeddedPkg/Include/Protocol/EmbeddedGpio.h
+@@ -164,4 +164,21 @@ struct _EMBEDDED_GPIO {
+ 
+ extern EFI_GUID gEmbeddedGpioProtocolGuid;
+ 
++typedef struct _GPIO_CONTROLLER              GPIO_CONTROLLER;
++typedef struct _PLATFORM_GPIO_CONTROLLER     PLATFORM_GPIO_CONTROLLER;
++
++struct _GPIO_CONTROLLER {
++  UINTN                   RegisterBase;
++  UINTN                   GpioIndex;
++  UINTN                   InternalGpioCount;
++};
++
++struct _PLATFORM_GPIO_CONTROLLER {
++  UINTN                   GpioCount;
++  UINTN                   GpioControllerCount;
++  GPIO_CONTROLLER         *GpioController;
++};
++
++extern EFI_GUID gPlatformGpioProtocolGuid;
++
+ #endif
+-- 
+1.9.1
+

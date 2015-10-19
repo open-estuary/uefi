@@ -1,0 +1,51 @@
+From 4d642fadf8d23c0fac9b7601ac4d9048b622077b Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 12 May 2015 09:35:17 +0800
+Subject: [PATCH 24/43] MmcDxe: read data as block size for ACMD6
+
+Although ACMD6 only needs to read 64 bytes, we still need to read 512
+bytes data if we wants to enable DMA mode in designware SD driver.
+Otherwise, data will overflow.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+index 964b691..cd00439 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
++++ b/EmbeddedPkg/Universal/MmcDxe/MmcIdentification.c
+@@ -308,7 +308,7 @@ InitializeSdMmcDevice (
+ {
+   UINT32        CmdArg;
+   UINT32        Response[4];
+-  UINT32        Buffer[64];
++  UINT32        Buffer[128];
+   UINT32        Index;
+   UINTN         BlockSize;
+   UINTN         CardSize;
+@@ -386,7 +386,6 @@ InitializeSdMmcDevice (
+     DEBUG ((EFI_D_ERROR, "%x %x\n", Buffer[0], Buffer[1]));
+   }
+ #endif
+-#if 1
+   /* SD Switch, Mode:1, Group:0, Value:1 */
+   CmdArg = 1 << 31 | 0x00FFFFFF;
+   CmdArg &= ~(0xF << (0 * 4));
+@@ -403,10 +402,11 @@ InitializeSdMmcDevice (
+       DEBUG ((EFI_D_ERROR, "%a(MMC_CMD6): ReadBlockData Error and Status = %r\n", Status));
+       return Status;
+     }
++    /*
+     for (Index = 0; Index < 16; Index += 4)
+       DEBUG ((EFI_D_ERROR, "%x %x %x %x\n", Buffer[Index], Buffer[Index + 1], Buffer[Index + 2], Buffer[Index + 3]));
++      */
+   }
+-#endif
+   CmdArg = MmcHostInstance->CardInfo.RCA << 16;
+   Status = MmcHost->SendCommand (MmcHost, MMC_CMD55, CmdArg);
+   if (EFI_ERROR (Status)) {
+-- 
+1.9.1
+

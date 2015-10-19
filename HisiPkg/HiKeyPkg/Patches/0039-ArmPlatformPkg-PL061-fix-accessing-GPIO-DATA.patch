@@ -1,0 +1,101 @@
+From 8e9c6f0dae9d777306b33b8ed537489827649a22 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 18 Aug 2015 11:20:44 +0800
+Subject: [PATCH 39/43] ArmPlatformPkg: PL061: fix accessing GPIO DATA
+
+// All bits low except one bit high, restricted to 8 bits
+// (i.e. ensures zeros above 8bits)
+
+But '&&' is wrong at here. It'll only return 1 or 0 as the result
+of GPIO_PIN_MASK_HIGH_8BIT(Pin).
+
+Since PL061 spec said in below.
+
+In order to write to GPIODATA, the corresponding bits in the mask,
+resulting from the address bus, PADDR[9:2], must be HIGH. Otherwise
+the bit values remain unchanged by the write.
+Similarly, the values read from this register are determined for
+each bit, by the mask bit derived from the address used to access
+the data register, PADDR[9:2]. Bits that are 1 in the address mask
+cause the corresponding bits in GPIODATA to be read, and bits that
+are 0 in the address mask cause the corresponding bits in GPIODATA
+to be read as 0, regardless of their value.
+
+Now simplify the way to read/write bit of GPIO_DATA register.
+
+Contributed-under: TianoCore Contribution Agreement 1.0
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c | 16 ++++++++--------
+ ArmPlatformPkg/Include/Drivers/PL061Gpio.h      |  4 ----
+ 2 files changed, 8 insertions(+), 12 deletions(-)
+
+diff --git a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+index ff05662..042fc76 100644
+--- a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
++++ b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+@@ -125,7 +125,7 @@ Get (
+     }
+   }
+ 
+-  if (MmioRead8 (PL061_GPIO_DATA_REG) & GPIO_PIN_MASK_HIGH_8BIT(Gpio)) {
++  if (MmioRead8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK(Gpio) << 2))) {
+     *Value = 1;
+   } else {
+     *Value = 0;
+@@ -181,21 +181,21 @@ Set (
+   {
+     case GPIO_MODE_INPUT:
+       // Set the corresponding direction bit to LOW for input
+-      MmioAnd8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_LOW_8BIT(Gpio));
++      MmioAnd8 (PL061_GPIO_DIR_REG, ~GPIO_PIN_MASK(Gpio));
+       break;
+ 
+     case GPIO_MODE_OUTPUT_0:
+       // Set the corresponding data bit to LOW for 0
+-      MmioAnd8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_LOW_8BIT(Gpio));
++      MmioWrite8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK(Gpio) << 2), 0);
+       // Set the corresponding direction bit to HIGH for output
+-      MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
++      MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK(Gpio));
+       break;
+ 
+     case GPIO_MODE_OUTPUT_1:
+       // Set the corresponding data bit to HIGH for 1
+-      MmioOr8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
++      MmioWrite8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK(Gpio) << 2), 0xff);
+       // Set the corresponding direction bit to HIGH for output
+-      MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
++      MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK(Gpio));
+       break;
+ 
+     default:
+@@ -250,9 +250,9 @@ GetMode (
+   }
+ 
+   // Check if it is input or output
+-  if (MmioRead8 (PL061_GPIO_DIR_REG) & GPIO_PIN_MASK_HIGH_8BIT(Gpio)) {
++  if (MmioRead8 (PL061_GPIO_DIR_REG) & GPIO_PIN_MASK(Gpio)) {
+     // Pin set to output
+-    if (MmioRead8 (PL061_GPIO_DATA_REG) & GPIO_PIN_MASK_HIGH_8BIT(Gpio)) {
++    if (MmioRead8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK(Gpio) << 2))) {
+       *Mode = GPIO_MODE_OUTPUT_1;
+     } else {
+       *Mode = GPIO_MODE_OUTPUT_0;
+diff --git a/ArmPlatformPkg/Include/Drivers/PL061Gpio.h b/ArmPlatformPkg/Include/Drivers/PL061Gpio.h
+index 38458f4..d436fd4 100644
+--- a/ArmPlatformPkg/Include/Drivers/PL061Gpio.h
++++ b/ArmPlatformPkg/Include/Drivers/PL061Gpio.h
+@@ -46,9 +46,5 @@
+ 
+ // All bits low except one bit high, native bit length
+ #define GPIO_PIN_MASK(Pin)              (1UL << ((UINTN)(Pin)))
+-// All bits low except one bit high, restricted to 8 bits (i.e. ensures zeros above 8bits)
+-#define GPIO_PIN_MASK_HIGH_8BIT(Pin)    (GPIO_PIN_MASK(Pin) && 0xFF)
+-// All bits high except one bit low, restricted to 8 bits (i.e. ensures zeros above 8bits)
+-#define GPIO_PIN_MASK_LOW_8BIT(Pin)     ((~GPIO_PIN_MASK(Pin)) && 0xFF)
+ 
+ #endif  // __PL061_GPIO_H__
+-- 
+1.9.1
+

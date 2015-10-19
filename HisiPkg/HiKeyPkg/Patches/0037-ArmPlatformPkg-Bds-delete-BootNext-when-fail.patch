@@ -1,0 +1,40 @@
+From 11aff899d572396e341acfd1671210abe21ddeba Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 11 Aug 2015 10:55:17 +0800
+Subject: [PATCH 37/43] ArmPlatformPkg: Bds: delete BootNext when fail
+
+If Bds launches BootNext with failure, delete it. Otherwise, we'll
+create BootNext variable by BdsStartOption() & delete it in BdsEntry().
+The loop will continue for each reboot. It's meaningless to update
+this variable in non-volatile variable area for each reboot.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ ArmPlatformPkg/Bds/Bds.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/ArmPlatformPkg/Bds/Bds.c b/ArmPlatformPkg/Bds/Bds.c
+index f3c3ca5..26f3578 100644
+--- a/ArmPlatformPkg/Bds/Bds.c
++++ b/ArmPlatformPkg/Bds/Bds.c
+@@ -530,12 +530,12 @@ BdsEntry (
+       // BootNext has not been succeeded launched
+       if (EFI_ERROR(Status)) {
+         Print(L"Fail to start BootNext.\n");
+-      }
+ 
+-      // Delete the BootNext environment variable
+-      gRT->SetVariable (L"BootNext", &gEfiGlobalVariableGuid,
+-          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+-          0, NULL);
++        // Delete the BootNext environment variable
++        gRT->SetVariable (L"BootNext", &gEfiGlobalVariableGuid,
++            EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
++            0, NULL);
++      }
+     }
+ 
+     // Clear BootCurrent variable
+-- 
+1.9.1
+

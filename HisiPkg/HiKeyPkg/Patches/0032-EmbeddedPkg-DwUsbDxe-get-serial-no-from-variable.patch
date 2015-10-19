@@ -1,0 +1,93 @@
+From 03a0c00a0e4950086b5f552918d1ed626d06c3a2 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Thu, 4 Jun 2015 14:11:05 +0800
+Subject: [PATCH 32/43] EmbeddedPkg: DwUsbDxe: get serial no from variable
+
+Load "SerialNo" variable and use it as default serial number
+for fastboot protocol.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c   | 20 ++++++++++++++++++--
+ EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.inf |  4 ++++
+ 2 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+index bc2205e..ea100ce 100644
+--- a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
++++ b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.c
+@@ -13,18 +13,21 @@
+ 
+ **/
+ 
++#include <IndustryStandard/Usb.h>
+ #include <Library/TimerLib.h>
+ #include <Library/DebugLib.h>
+ #include <Library/UefiBootServicesTableLib.h>
+ #include <Library/UefiDriverEntryPoint.h>
++#include <Library/UefiRuntimeServicesTableLib.h>
+ #include <Library/IoLib.h>
+ #include <Library/MemoryAllocationLib.h>
+ #include <Library/UncachedMemoryAllocationLib.h>
+ #include <Library/CacheMaintenanceLib.h>
+-#include <IndustryStandard/Usb.h>
+ #include <Library/BaseMemoryLib.h>
+-#include <Protocol/UsbDevice.h>
+ #include <Library/BaseLib.h>
++#include <Protocol/UsbDevice.h>
++#include <Guid/ArmGlobalVariableHob.h>
++
+ #include "DwUsbDxe.h"
+ 
+ STATIC dwc_otg_dev_dma_desc_t *g_dma_desc,*g_dma_desc_ep0,*g_dma_desc_in;
+@@ -207,6 +210,9 @@ HandleGetDescriptor (
+   UINT8       DescriptorType;
+   UINTN       ResponseSize;
+   VOID       *ResponseData;
++  CHAR16      SerialNo[16];
++  UINTN       SerialNoLen;
++  EFI_STATUS  Status;
+ 
+   ResponseSize = 0;
+   ResponseData = NULL;
+@@ -231,6 +237,16 @@ HandleGetDescriptor (
+     DEBUG ((EFI_D_INFO, "USB: Got a request for String descriptor %d\n", Request->Value & 0xFF));
+     switch (Request->Value & 0xff) {
+     case 3:
++      Status = gRT->GetVariable (
++                      (CHAR16*)L"SerialNo",
++                      &gArmGlobalVariableGuid,
++                      NULL,
++                      &SerialNoLen,
++                      SerialNo
++                      );
++      if (EFI_ERROR (Status) == 0) {
++        CopyMem (mSerialStringDescriptor.String, SerialNo, SerialNoLen);
++      }
+       ResponseSize = mSerialStringDescriptor.Length;
+       ResponseData = &mSerialStringDescriptor;
+       break;
+diff --git a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.inf b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.inf
+index a9d5555..dce6932 100644
+--- a/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.inf
++++ b/EmbeddedPkg/Drivers/DwUsbDxe/DwUsbDxe.inf
+@@ -34,12 +34,16 @@
+   UncachedMemoryAllocationLib
+   CacheMaintenanceLib
+ 
++[Guids]
++  gArmGlobalVariableGuid
++
+ [Protocols]
+   gEfiDriverBindingProtocolGuid
+   gUsbDeviceProtocolGuid
+ 
+ [Packages]
+   ArmPkg/ArmPkg.dec
++  ArmPlatformPkg/ArmPlatformPkg.dec
+   MdePkg/MdePkg.dec
+   MdeModulePkg/MdeModulePkg.dec
+   EmbeddedPkg/EmbeddedPkg.dec
+-- 
+1.9.1
+

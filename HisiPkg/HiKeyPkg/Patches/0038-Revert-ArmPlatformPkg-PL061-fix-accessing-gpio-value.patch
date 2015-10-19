@@ -1,0 +1,44 @@
+From 4bfc66d6e52e0c36de658558b7f3695ba358f5ce Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 11 Aug 2015 16:45:05 +0800
+Subject: [PATCH 38/43] Revert "ArmPlatformPkg: PL061: fix accessing gpio
+ value"
+
+This reverts commit 070b684775535e1815006fc32e0f071fa5e59c85.
+---
+ ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+index 35418c9..ff05662 100644
+--- a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
++++ b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+@@ -125,7 +125,7 @@ Get (
+     }
+   }
+ 
+-  if (MmioRead8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2))) {
++  if (MmioRead8 (PL061_GPIO_DATA_REG) & GPIO_PIN_MASK_HIGH_8BIT(Gpio)) {
+     *Value = 1;
+   } else {
+     *Value = 0;
+@@ -186,14 +186,14 @@ Set (
+ 
+     case GPIO_MODE_OUTPUT_0:
+       // Set the corresponding data bit to LOW for 0
+-      MmioAnd8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2), GPIO_PIN_MASK_LOW_8BIT(Gpio));
++      MmioAnd8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_LOW_8BIT(Gpio));
+       // Set the corresponding direction bit to HIGH for output
+       MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       break;
+ 
+     case GPIO_MODE_OUTPUT_1:
+       // Set the corresponding data bit to HIGH for 1
+-      MmioOr8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2), GPIO_PIN_MASK_HIGH_8BIT(Gpio));
++      MmioOr8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       // Set the corresponding direction bit to HIGH for output
+       MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       break;
+-- 
+1.9.1
+

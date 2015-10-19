@@ -1,0 +1,29 @@
+From eb6d475dc1245e1ec9404b5e536ba5681e01ce6a Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 2 Jun 2015 18:08:39 +0800
+Subject: [PATCH 30/43] EmbeddedPkg: FastbootUsb: set serial number as 3
+
+Set serial number as 3. If the serial number is 0, fastboot won't
+load real serial number from descriptor at all.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ .../Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c       | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c b/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
+index e7da1fa..a3eddda 100644
+--- a/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
++++ b/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
+@@ -64,7 +64,7 @@ STATIC USB_DEVICE_DESCRIPTOR mDeviceDescriptor = {
+   0,                                               //BcdDevice
+   0,                                               //StrManufacturer
+   0,                                               //StrProduct
+-  0,                                               //StrSerialNumber
++  3,                                               //StrSerialNumber
+   1                                                //NumConfigurations
+ };
+ 
+-- 
+1.9.1
+

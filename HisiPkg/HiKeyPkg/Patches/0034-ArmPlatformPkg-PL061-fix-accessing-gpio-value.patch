@@ -1,0 +1,57 @@
+From a5747e42144eda5d9dd983f243f3ba978e7e189c Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 16 Jun 2015 14:54:51 +0800
+Subject: [PATCH 34/43] ArmPlatformPkg: PL061: fix accessing gpio value
+
+The way of accessing PL061 GPIODATA register is totally wrong.
+
+The spec said in below.
+
+In order to write to GPIODATA, the corresponding bits in the mask,
+resulting from the address bus, PADDR[9:2], must be HIGH. Otherwise
+the bit values remain unchanged by the write.
+Similarly, the values read from this register are determined for
+each bit, by the mask bit derived from the address used to access
+the data register, PADDR[9:2]. Bits that are 1 in the address mask
+cause the corresponding bits in GPIODATA to be read, and bits that
+are 0 in the address mask cause the corresponding bits in GPIODATA
+to be read as 0, regardless of their value.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+index ff05662..35418c9 100644
+--- a/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
++++ b/ArmPlatformPkg/Drivers/PL061GpioDxe/PL061Gpio.c
+@@ -125,7 +125,7 @@ Get (
+     }
+   }
+ 
+-  if (MmioRead8 (PL061_GPIO_DATA_REG) & GPIO_PIN_MASK_HIGH_8BIT(Gpio)) {
++  if (MmioRead8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2))) {
+     *Value = 1;
+   } else {
+     *Value = 0;
+@@ -186,14 +186,14 @@ Set (
+ 
+     case GPIO_MODE_OUTPUT_0:
+       // Set the corresponding data bit to LOW for 0
+-      MmioAnd8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_LOW_8BIT(Gpio));
++      MmioAnd8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2), GPIO_PIN_MASK_LOW_8BIT(Gpio));
+       // Set the corresponding direction bit to HIGH for output
+       MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       break;
+ 
+     case GPIO_MODE_OUTPUT_1:
+       // Set the corresponding data bit to HIGH for 1
+-      MmioOr8 (PL061_GPIO_DATA_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
++      MmioOr8 (PL061_GPIO_DATA_REG + (GPIO_PIN_MASK_HIGH_8BIT(Gpio) << 2), GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       // Set the corresponding direction bit to HIGH for output
+       MmioOr8 (PL061_GPIO_DIR_REG, GPIO_PIN_MASK_HIGH_8BIT(Gpio));
+       break;
+-- 
+1.9.1
+

@@ -1,0 +1,43 @@
+From e13dd4d0ffd43c039664ff686a6f1ffb3d982b08 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 4 Aug 2015 16:36:10 +0800
+Subject: [PATCH 36/43] Revert "EmbeddedPkg: DwMmc: remove delay for sending
+ cmd"
+
+This reverts commit bfec04f8de3fee34bb259ceae94f99766edb7bfc.
+---
+ EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+index 3b8c1d1..9287a4b 100644
+--- a/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
++++ b/EmbeddedPkg/Drivers/DwMmcDxe/DwMmcDxe.c
+@@ -14,7 +14,6 @@
+ 
+ **/
+ 
+-#include <Library/ArmLib.h>
+ #include <Library/BaseMemoryLib.h>
+ #include <Library/CacheMaintenanceLib.h>
+ #include <Library/DebugLib.h>
+@@ -320,14 +319,11 @@ SendCommand (
+             DWMMC_INT_RCRC | DWMMC_INT_RE;
+   ErrMask |= DWMMC_INT_DCRC | DWMMC_INT_DRT | DWMMC_INT_SBE;
+   do {
+-    ArmInstructionSynchronizationBarrier ();
+-    ArmDataSyncronizationBarrier ();
++    MicroSecondDelay(500);
+     Data = MmioRead32 (DWMMC_RINTSTS);
+ 
+-    if (Data & ErrMask) {
+-      DEBUG ((EFI_D_ERROR, "%a, Error RINTSTS value:0x%x\n", __func__, Data));
++    if (Data & ErrMask)
+       return EFI_DEVICE_ERROR;
+-    }
+     if (Data & DWMMC_INT_DTO)	// Transfer Done
+       break;
+   } while (!(Data & DWMMC_INT_CMD_DONE));
+-- 
+1.9.1
+

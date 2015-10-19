@@ -1,0 +1,32 @@
+From 2a9cd6ef8e348bf5052c94964cae725995e93357 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 15 Sep 2015 14:20:46 +0800
+Subject: [PATCH 43/43] EmbeddedPkg: FastbootUsb: add string descriptors
+
+Support both manufacturer and product string descriptors. Otherwise,
+the manufacturer and product sub nodes won't be created in sysfs
+directory of linux host.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ .../Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c     | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c b/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
+index a3eddda..06d7974 100644
+--- a/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
++++ b/EmbeddedPkg/Drivers/AndroidFastbootTransportUsbDxe/FastbootTransportUsb.c
+@@ -62,8 +62,8 @@ STATIC USB_DEVICE_DESCRIPTOR mDeviceDescriptor = {
+   FixedPcdGet32 (PcdAndroidFastbootUsbVendorId),   //IdVendor
+   FixedPcdGet32 (PcdAndroidFastbootUsbProductId),  //IdProduct
+   0,                                               //BcdDevice
+-  0,                                               //StrManufacturer
+-  0,                                               //StrProduct
++  1,                                               //StrManufacturer
++  2,                                               //StrProduct
+   3,                                               //StrSerialNumber
+   1                                                //NumConfigurations
+ };
+-- 
+1.9.1
+

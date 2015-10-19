@@ -1,0 +1,27 @@
+From e1fc19827a2629369b73eca85b240a375f2bd0c9 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Fri, 23 Jan 2015 18:52:46 +0800
+Subject: [PATCH 06/43] MmcDxe: add SPEC_VERS field in CSD structure
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Universal/MmcDxe/Mmc.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/EmbeddedPkg/Universal/MmcDxe/Mmc.h b/EmbeddedPkg/Universal/MmcDxe/Mmc.h
+index f4e0aa0..b1c5153 100644
+--- a/EmbeddedPkg/Universal/MmcDxe/Mmc.h
++++ b/EmbeddedPkg/Universal/MmcDxe/Mmc.h
+@@ -128,7 +128,8 @@ typedef struct {
+   UINT8   NSAC                ;  // Data read access-time 2 in CLK cycles (NSAC*100) [111:104]
+   UINT8   TAAC                ;  // Data read access-time 1 [119:112]
+ 
+-  UINT8   RESERVED_5:         6; // Reserved [125:120]
++  UINT8   RESERVED_5:         2; // Reserved [121:120]
++  UINT8   SPEC_VERS:          4; // System specification version [125:122]
+   UINT8   CSD_STRUCTURE:      2; // CSD structure [127:126]
+ } CSD;
+ 
+-- 
+1.9.1
+

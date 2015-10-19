@@ -1,0 +1,55 @@
+From 12c1a6f71d5cbbfd6112207b3e77c3f1a6ce20f9 Mon Sep 17 00:00:00 2001
+From: Zhangfei Gao <zhangfei.gao@linaro.org>
+Date: Thu, 26 Mar 2015 14:11:20 +0800
+Subject: [PATCH 17/43] ArmPlatformPkg: ArmVExpressFastBoot add
+ PcdArmFastbootFlashLimit
+
+Adding PcdArmFastbootFlashLimit to split big pacakge accoringly.
+Otherwise memory may not enough for downloading file like 1G
+
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+---
+ ArmPlatformPkg/ArmPlatformPkg.dec                                     | 1 +
+ .../ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c       | 4 +++-
+ .../ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf  | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/ArmPlatformPkg/ArmPlatformPkg.dec b/ArmPlatformPkg/ArmPlatformPkg.dec
+index 5832834..3b391e2 100644
+--- a/ArmPlatformPkg/ArmPlatformPkg.dec
++++ b/ArmPlatformPkg/ArmPlatformPkg.dec
+@@ -134,6 +134,7 @@
+   gArmPlatformTokenSpaceGuid.PcdDefaultBootDevicePath|L""|VOID*|0x0000000D
+   gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath|L""|VOID*|0x0000000E
+   gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument|L""|VOID*|0x000000F
++  gArmPlatformTokenSpaceGuid.PcdArmFastbootFlashLimit|L""|VOID*|0x0000004E
+   # PcdDefaultBootType define the type of the binary pointed by PcdDefaultBootDevicePath:
+   #  - 0 = an EFI application
+   #  - 1 = a Linux kernel with ATAG support
+diff --git a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
+index 4d0811c..d35ddab 100644
+--- a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
++++ b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBoot.c
+@@ -395,7 +395,9 @@ ArmFastbootPlatformGetVar (
+   OUT CHAR8   *Value
+   )
+ {
+-  if (AsciiStrCmp (Name, "product")) {
++  if (!AsciiStrCmp (Name, "max-download-size")) {
++    AsciiStrCpy (Value, FixedPcdGetPtr (PcdArmFastbootFlashLimit));
++  } else if (AsciiStrCmp (Name, "product")) {
+     AsciiStrCpy (Value, FixedPcdGetPtr (PcdFirmwareVendor));
+   } else {
+     *Value = '\0';
+diff --git a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf
+index 468f5a4..f5bae8a 100644
+--- a/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf
++++ b/ArmPlatformPkg/ArmVExpressPkg/ArmVExpressFastBootDxe/ArmVExpressFastBootDxe.inf
+@@ -52,3 +52,4 @@
+ [Pcd]
+   gArmVExpressTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath
+   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor
++  gArmPlatformTokenSpaceGuid.PcdArmFastbootFlashLimit
+-- 
+1.9.1
+

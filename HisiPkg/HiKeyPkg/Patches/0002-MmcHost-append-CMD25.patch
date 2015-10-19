@@ -1,0 +1,27 @@
+From 53a0edf273b2b1d82697189c85a47d0e829aa3cb Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Wed, 7 Jan 2015 17:43:34 +0800
+Subject: [PATCH 02/43] MmcHost: append CMD25
+
+Add the definition of CMD25 in MMC.
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/Include/Protocol/MmcHost.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/EmbeddedPkg/Include/Protocol/MmcHost.h b/EmbeddedPkg/Include/Protocol/MmcHost.h
+index 89f2e80..7f8a4d3 100644
+--- a/EmbeddedPkg/Include/Protocol/MmcHost.h
++++ b/EmbeddedPkg/Include/Protocol/MmcHost.h
+@@ -61,6 +61,7 @@ typedef UINT32 MMC_CMD;
+ #define MMC_CMD20             (MMC_INDX(20) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD23             (MMC_INDX(23) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD24             (MMC_INDX(24) | MMC_CMD_WAIT_RESPONSE)
++#define MMC_CMD25             (MMC_INDX(25) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_CMD55             (MMC_INDX(55) | MMC_CMD_WAIT_RESPONSE)
+ #define MMC_ACMD41            (MMC_INDX(41) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_NO_CRC_RESPONSE)
+ 
+-- 
+1.9.1
+

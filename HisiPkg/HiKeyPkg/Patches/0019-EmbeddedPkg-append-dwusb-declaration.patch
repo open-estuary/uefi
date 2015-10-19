@@ -1,0 +1,28 @@
+From 75abebd639943ef36d9138dd2a330d935c547460 Mon Sep 17 00:00:00 2001
+From: Haojian Zhuang <haojian.zhuang@linaro.org>
+Date: Tue, 13 Oct 2015 09:05:47 +0800
+Subject: [PATCH 19/43] EmbeddedPkg: append dwusb declaration
+
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+---
+ EmbeddedPkg/EmbeddedPkg.dec | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/EmbeddedPkg/EmbeddedPkg.dec b/EmbeddedPkg/EmbeddedPkg.dec
+index 2e8e7ab..8deeed5 100644
+--- a/EmbeddedPkg/EmbeddedPkg.dec
++++ b/EmbeddedPkg/EmbeddedPkg.dec
+@@ -142,6 +142,10 @@
+   gEmbeddedTokenSpaceGuid.PcdGdbMaxPacketRetryCount|10000000|UINT32|0x0000004c
+   gEmbeddedTokenSpaceGuid.PcdGdbTimerPeriodMilliseconds|250|UINT32|0x0000004d
+ 
++  # DwUsb Driver PCDs
++  gEmbeddedTokenSpaceGuid.PcdDwUsbBaseAddress|0x0|UINT32|0x00000064
++  gEmbeddedTokenSpaceGuid.PcdSysCtrlBaseAddress|0x0|UINT32|0x00000065
++
+   # DwMmc Driver PCDs
+   gEmbeddedTokenSpaceGuid.PcdDwMmcBaseAddress|0x0|UINT32|0x00000057
+   gEmbeddedTokenSpaceGuid.PcdDwMmcClockFrequencyInHz|0x0|UINT32|0x00000058
+-- 
+1.9.1
+
