@@ -241,6 +241,14 @@ Flash_Start_OS (
         
         gBS->CopyMem((void *)0x7000000,(void *)0x92000000,0x4000000);
         MicroSecondDelay(200000);
+
+        DEBUG((EFI_D_ERROR,"Update FDT\n"));
+        Status = EFIFdtUpdate(0x06000000);
+        if(EFI_ERROR(Status))
+        {
+            DEBUG((EFI_D_ERROR,"EFIFdtUpdate ERROR\n"));
+            goto Exit;
+        }
     }
     else
     {
@@ -255,16 +263,6 @@ Flash_Start_OS (
 
         gBS->CopyMem((void *)0x7000000, (void *)0xA4000000, 0x7C0000);
         MicroSecondDelay(200000);
-        if(!PcdGet32(PcdIsMPBoot))
-        {
-            DEBUG((EFI_D_ERROR,"Update FDT\n"));
-            Status = EFIFdtUpdate(0x06000000);
-            if(EFI_ERROR(Status))
-            {
-                DEBUG((EFI_D_ERROR,"EFIFdtUpdate ERROR\n"));
-                goto Exit;
-            }
-        }
     }
 
     Status = ShutdownUefiBootServices ();
