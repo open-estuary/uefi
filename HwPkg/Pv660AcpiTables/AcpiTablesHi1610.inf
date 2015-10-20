@@ -22,7 +22,7 @@
   VERSION_STRING                 = 1.0
 
 [Sources]
-  Dsdt/Dsdt.asl
+  Dsdt/DsdtHi1610.asl
   Facs.aslc
   Fadt.aslc
   Gtdt.aslc
