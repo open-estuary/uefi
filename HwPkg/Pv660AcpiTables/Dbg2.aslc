@@ -1,0 +1,97 @@
+/** @file
+*  Debug Port Table 2 (DBG2)
+*
+*  Copyright (c) 2012 - 2014, Linaro Limited. All rights reserved.
+*
+*  This program and the accompanying materials
+*  are licensed and made available under the terms and conditions of the BSD License
+*  which accompanies this distribution.  The full text of the license may be found at
+*  http://opensource.org/licenses/bsd-license.php
+*
+*  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+*
+**/
+
+//#include "ArmPlatform.h"
+#include "Pv660Platform.h"
+
+#include <Library/AcpiLib.h>
+#include <Library/PcdLib.h>
+#include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/DebugPort2Table.h>
+
+#define NUMBER_DEBUG_DEVICE_INFO    1
+#define NUMBER_OF_GENERIC_ADDRESS   1
+#define NAMESPACE_STRING_SIZE       8
+
+#pragma pack(1)
+
+typedef struct {
+  EFI_ACPI_DBG2_DEBUG_DEVICE_INFORMATION_STRUCT DdiHeader;
+  EFI_ACPI_6_0_GENERIC_ADDRESS_STRUCTURE Address[NUMBER_OF_GENERIC_ADDRESS];
+  UINT32 AddressSize[NUMBER_OF_GENERIC_ADDRESS];
+  CHAR8  NamespaceString[NAMESPACE_STRING_SIZE];
+} EFI_ACPI_DBG2_DDI_STRUCT; 
+
+typedef struct {
+  EFI_ACPI_DEBUG_PORT_2_DESCRIPTION_TABLE Desc;
+  EFI_ACPI_DBG2_DDI_STRUCT Ddi[NUMBER_DEBUG_DEVICE_INFO];
+} EFI_ACPI_DEBUG_PORT_2_TABLE;
+
+#pragma pack()
+
+EFI_ACPI_DEBUG_PORT_2_TABLE Dbg2 = {
+  {
+    ARM_ACPI_HEADER(
+      EFI_ACPI_5_1_DEBUG_PORT_2_TABLE_SIGNATURE,
+      EFI_ACPI_DEBUG_PORT_2_TABLE,
+      EFI_ACPI_DEBUG_PORT_2_TABLE_REVISION
+      ),
+    OFFSET_OF(EFI_ACPI_DEBUG_PORT_2_TABLE, Ddi),
+    NUMBER_DEBUG_DEVICE_INFO
+  },
+  {
+    {
+      {
+        EFI_ACPI_DBG2_DEBUG_DEVICE_INFORMATION_STRUCT_REVISION,
+        sizeof(EFI_ACPI_DBG2_DDI_STRUCT),
+        NUMBER_OF_GENERIC_ADDRESS,
+        NAMESPACE_STRING_SIZE,
+        OFFSET_OF(EFI_ACPI_DBG2_DDI_STRUCT, NamespaceString),
+        0,  //OemDataLength
+        0,  //OemDataOffset
+        EFI_ACPI_DBG2_PORT_TYPE_SERIAL,
+        EFI_ACPI_DBG2_PORT_SUBTYPE_SERIAL_FULL_16550,
+        {EFI_ACPI_RESERVED_BYTE, EFI_ACPI_RESERVED_BYTE},
+        OFFSET_OF(EFI_ACPI_DBG2_DDI_STRUCT, Address),
+        OFFSET_OF(EFI_ACPI_DBG2_DDI_STRUCT, AddressSize),
+      },
+      {
+        {
+          EFI_ACPI_6_0_SYSTEM_MEMORY,
+          8,
+          0,
+          EFI_ACPI_6_0_DWORD,
+          FixedPcdGet64(PcdSerialRegisterBase)
+        }
+      },
+      {
+        0x1000
+      },
+      "COM0"
+    }
+  }
+};
+
+VOID*
+ReferenceAcpiTable (
+  VOID
+  )
+{
+  //
+  // Reference the table being generated to prevent the optimizer from removing the
+  // data structure from the exeutable
+  //
+  return (VOID*)&Dbg2;
+}

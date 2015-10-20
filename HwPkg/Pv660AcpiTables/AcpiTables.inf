@@ -32,7 +32,7 @@
   Slit.aslc
   Iort.aslc
   Spcr.asl
-  Dbg2.asl
+  Dbg2.aslc
   
 [Packages]
   ArmPkg/ArmPkg.dec
@@ -53,4 +53,5 @@
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum
   gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum
   gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
 
