@@ -8,11 +8,21 @@
 #include <Library/I2CLib.h>
 #include <Library/TimerLib.h>
 
-#include <PlatformArch.h>
 #include <Library/PlatformSysCtrlLib.h>
 
+#include "I2CLibInternal.h"
 #include "I2CHw.h"
 
+UINTN gI2cBase[MAX_SOCKET][I2C_PORT_MAX];
+
+UINTN GetI2cBase (UINT32 Socket, UINT8 Port)
+{
+  if (gI2cBase[Socket][Port] == 0) {
+    gI2cBase[Socket][Port] = PlatformGetI2cBase(Socket, Port);
+  }
+
+  return gI2cBase[Socket][Port];
+}
 
 VOID I2C_Delay(UINT32 ulCount)
 {
@@ -30,7 +40,7 @@ I2C_Disable(UINT32 Socket,UINT8 Port)
     I2C0_ENABLE_U           I2cEnableReg;
     I2C0_ENABLE_STATUS_U    I2cEnableStatusReg;
 
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
     
     I2C_REG_READ((Base + I2C_STATUS_OFFSET), I2cStatusReg.Val32);
     
@@ -70,7 +80,7 @@ I2C_Enable(UINT32 Socket,UINT8 Port)
     I2C0_ENABLE_U           I2cEnableReg;
     I2C0_ENABLE_STATUS_U    I2cEnableStatusReg;
     
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
     
    
     I2C_REG_READ(Base + I2C_ENABLE_OFFSET, I2cEnableReg.Val32);
@@ -92,7 +102,7 @@ I2C_Enable(UINT32 Socket,UINT8 Port)
 void I2C_SetTarget(UINT32 Socket,UINT8 Port,UINT32 I2cDeviceAddr)
 {
     I2C0_TAR_U    I2cTargetReg;
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
 
    
     I2C_REG_READ(Base + I2C_TAR_OFFSET, I2cTargetReg.Val32);
@@ -115,7 +125,7 @@ I2CInit(UINT32 Socket, UINT32 Port, SPEED_MODE SpeedMode)
     I2C0_INTR_MASK_U        I2cIntrMask;
     EFI_STATUS              Status;
 
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
 
     if((Socket >= MAX_SOCKET) || (Port >= I2C_PORT_MAX) || (SpeedMode >= SPEED_MODE_MAX)){
         return EFI_INVALID_PARAMETER;
@@ -176,7 +186,7 @@ I2CInit(UINT32 Socket, UINT32 Port, SPEED_MODE SpeedMode)
         return EFI_DEVICE_ERROR;
     }
 
-    return EFI_SUCCESS;
+    return I2cLibRuntimeSetup (Socket, Port);
 }
 
 EFI_STATUS
@@ -184,7 +194,7 @@ EFIAPI
 I2CSdaConfig(UINT32 Socket, UINT32 Port)
 {
     
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
 
     if((Socket >= MAX_SOCKET) || (Port >= I2C_PORT_MAX)){
         return EFI_INVALID_PARAMETER;
@@ -200,7 +210,7 @@ I2CSdaConfig(UINT32 Socket, UINT32 Port)
 UINT32 I2C_GetTxStatus(UINT32 Socket,UINT8 Port)
 {
     I2C0_TXFLR_U ulFifo;
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
 
     I2C_REG_READ(Base + I2C_TXFLR_OFFSET, ulFifo.Val32);
     return ulFifo.bits.txflr;
@@ -210,7 +220,7 @@ UINT32
 I2C_GetRxStatus(UINT32 Socket,UINT8 Port)
 {
     I2C0_RXFLR_U ulFifo;
-    UINTN Base = PlatformGetI2cBase(Socket, Port);
+    UINTN Base = GetI2cBase(Socket, Port);
 
     I2C_REG_READ(Base + I2C_RXFLR_OFFSET, ulFifo.Val32);
     return ulFifo.bits.rxflr;
@@ -224,7 +234,7 @@ WriteBeforeRead(I2C_DEVICE *I2cInfo, UINT32 ulLength, UINT8 *pBuf)
     UINT32 ulCnt;
     UINT32 ulTimes = 0;
 
-    UINTN  Base = PlatformGetI2cBase(I2cInfo->Socket, I2cInfo->Port);
+    UINTN  Base = GetI2cBase(I2cInfo->Socket, I2cInfo->Port);
 
    
     I2C_SetTarget(I2cInfo->Socket,I2cInfo->Port,I2cInfo->SlaveDeviceAddress);
@@ -288,7 +298,7 @@ I2CWrite(I2C_DEVICE *I2cInfo, UINT16 InfoOffset, UINT32 ulLength, UINT8 *pBuf)
         return EFI_INVALID_PARAMETER;
     }
 
-    Base = PlatformGetI2cBase(I2cInfo->Socket, I2cInfo->Port);
+    Base = GetI2cBase(I2cInfo->Socket, I2cInfo->Port);
 
     (VOID)I2C_Enable(I2cInfo->Socket, I2cInfo->Port);
 
@@ -389,8 +399,7 @@ I2CRead(I2C_DEVICE *I2cInfo, UINT16 InfoOffset,UINT32 ulRxLen,UINT8 *pBuf)
     }
 
     (VOID)I2C_Enable(I2cInfo->Socket, I2cInfo->Port);
-    Base = PlatformGetI2cBase(I2cInfo->Socket, I2cInfo->Port);
-   
+    Base = GetI2cBase(I2cInfo->Socket, I2cInfo->Port);
     if(I2cInfo->DeviceType)
     {
         I2CWAddr[0] = (InfoOffset >> 8) & 0xff;
@@ -506,8 +515,7 @@ I2CReadMultiByte(I2C_DEVICE *I2cInfo, UINT32 InfoOffset,UINT32 ulRxLen,UINT8 *pB
     }
 
     (VOID)I2C_Enable(I2cInfo->Socket, I2cInfo->Port);
-    Base = PlatformGetI2cBase(I2cInfo->Socket, I2cInfo->Port);
-   
+    Base = GetI2cBase(I2cInfo->Socket, I2cInfo->Port);
     if(I2cInfo->DeviceType == DEVICE_TYPE_E2PROM)
     {
         I2CWAddr[0] = (InfoOffset >> 8) & 0xff;
@@ -646,7 +654,7 @@ I2CWriteMultiByte(I2C_DEVICE *I2cInfo, UINT32 InfoOffset, UINT32 ulLength, UINT8
         return EFI_INVALID_PARAMETER;
     }
 
-    Base = PlatformGetI2cBase(I2cInfo->Socket, I2cInfo->Port);
+    Base = GetI2cBase(I2cInfo->Socket, I2cInfo->Port);
 
     (VOID)I2C_Enable(I2cInfo->Socket, I2cInfo->Port);
 

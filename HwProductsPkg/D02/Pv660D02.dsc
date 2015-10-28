@@ -84,6 +84,7 @@
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
   #EfiResetSystemLib|HwProductsPkg/D02/Library/ResetSystemLibCpld/ResetSystemLib.inf
+  I2CLib|HwPkg/Library/I2CLib/I2CLibRuntime.inf
 
 [BuildOptions]
   GCC:*_*_AARCH64_ARCHCC_FLAGS  = -DARM_CPU_AARCH64 -mstrict-align
