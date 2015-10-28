@@ -200,7 +200,7 @@ LibGetTime (
     Status = EFI_DEVICE_ERROR;
     goto EXIT;
   }
-  if(Temp&0x80){
+  if((Temp&0x80) == 0){
     BaseYear = 2100;   //跨过了一个世纪
   }
   //获取年份
