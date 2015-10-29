@@ -69,9 +69,6 @@
   #RealTimeClockLib|ArmPlatformPkg/Library/PL031RealTimeClockLib/PL031RealTimeClockLib.inf
   RealTimeClockLib|HwPkg/Library/DS3231RealTimeClockLib/DS3231RealTimeClockLib.inf
 
-#EfiResetSystemLib|HwPkg/Library/ResetSystemLib/ResetSystemLib.inf
-  EfiResetSystemLib|HwProductsPkg/D02/Library/ResetSystemLibCpld/ResetSystemLibSec.inf
-
   OemMiscLib|HwProductsPkg/D02/Library/OemMiscLibD02/OemMiscLibD02.inf
   #OemMiscLib|HwProductsPkg/Pv660Evb/Library/OemMiscLibEvb/OemMiscLibEvbb.inf
   BootLineLib|HwProductsPkg/D02/Library/BootLineLibD02/BootLineLibD02.inf
@@ -83,9 +80,10 @@
   ArmLib|ArmPkg/Library/ArmLib/AArch64/AArch64LibSec.inf
   #ArmPlatformSecLib|HwProductsPkg/D02/Library/Pv660D02SecLib/ArmVExpressSecLib.inf
   ArmPlatformLib|HwPkg/Library/ArmPlatformLibPv660/ArmPlatformLibSec.inf
+  EfiResetSystemLib|HwProductsPkg/D02/Library/ResetSystemLibCpld/ResetSystemLibSec.inf
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
-  EfiResetSystemLib|HwProductsPkg/D02/Library/ResetSystemLibCpld/ResetSystemLib.inf
+  #EfiResetSystemLib|HwProductsPkg/D02/Library/ResetSystemLibCpld/ResetSystemLib.inf
 
 [BuildOptions]
   GCC:*_*_AARCH64_ARCHCC_FLAGS  = -DARM_CPU_AARCH64 -mstrict-align

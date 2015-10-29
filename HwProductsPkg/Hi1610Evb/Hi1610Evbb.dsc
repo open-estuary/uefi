@@ -71,9 +71,6 @@
   RealTimeClockLib|HwPkg/Library/VirtualRealTimeClockLib/RealTimeClockLib.inf
   #RealTimeClockLib|HwPkg/DS3231RealTimeClockLib/DS3231RealTimeClockLib.inf
 
-## 使用CPLD接口进行复位
-#EfiResetSystemLib|HwPkg/ResetSystemLib/ResetSystemLib.inf
-  EfiResetSystemLib|HwProductsPkg/Hi1610Evb/Library/ResetSystemLibCpld/ResetSystemLibSec.inf
   OemMiscLib|HwProductsPkg/Hi1610Evb/Library/OemMiscLibEvb/OemMiscLibEvbb.inf
   OemAddressMapLib|HwProductsPkg/Hi1610Evb/Library/OemAddressMapHi1610/OemAddressMapHi1610.inf
   BootLineLib|HwProductsPkg/D02/Library/BootLineLibD02/BootLineLibD02.inf
@@ -83,9 +80,10 @@
   ArmLib|ArmPkg/Library/ArmLib/AArch64/AArch64LibSec.inf
   #ArmPlatformLib|ArmPlatformPkg/ArmVExpressPkg/Library/ArmVExpressLibRTSM/ArmVExpressLibSec.inf
   ArmPlatformLib|HwPkg/Library/ArmPlatformLibPv660/ArmPlatformLibSec.inf
+  EfiResetSystemLib|HwProductsPkg/Hi1610Evb/Library/ResetSystemLibCpld/ResetSystemLibSec.inf
 
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
-  EfiResetSystemLib|HwProductsPkg/Hi1610Evb/Library/ResetSystemLibCpld/ResetSystemLib.inf
+  #EfiResetSystemLib|HwProductsPkg/Hi1610Evb/Library/ResetSystemLibCpld/ResetSystemLib.inf
 
 [BuildOptions]
   GCC:*_*_AARCH64_ARCHCC_FLAGS  = -DARM_CPU_AARCH64 -mstrict-align
