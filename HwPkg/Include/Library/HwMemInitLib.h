@@ -21,12 +21,6 @@
 #include <PlatformArch.h>
 #include <BootLine.h>
 
-//#define MAX_SOCKET      1    //目前只支持单片
-#define MAX_CHANNEL     4
-#define MAX_DIMM        3
-#define MAX_RANK_CH     12
-#define MAX_RANK_DIMM   4
-
 #define I2C_CHANNEL     2
 #define MAX_I2C_DEV     6
 
@@ -34,6 +28,36 @@
 #define SPD_MODULE_PART_DDR4    20
 
 #define NVRAM_ADDR      0x00D00000
+
+typedef enum {
+    DDR_FREQ_AUTO = 0,
+    DDR_FREQ_800,
+    DDR_FREQ_1000,
+    DDR_FREQ_1066,
+    DDR_FREQ_1200,
+    DDR_FREQ_1333,
+    DDR_FREQ_1400,
+    DDR_FREQ_1600,
+    DDR_FREQ_1800,
+    DDR_FREQ_1866,
+    DDR_FREQ_2000,
+    DDR_FREQ_2133,
+    DDR_FREQ_2200,
+    DDR_FREQ_2400,
+    DDR_FREQ_2600,
+    DDR_FREQ_2666,
+    DDR_FREQ_2800,
+    DDR_FREQ_2933,
+    DDR_FREQ_3000,
+    DDR_FREQ_3200,
+	DDR_FREQ_MAX
+} DDR_FREQUENCY_INDEX;
+
+typedef struct _DDR_FREQ_TCK
+{
+    UINT32      ddrFreq;
+    UINT32      ddrCk;
+}DDR_FREQ_TCK;
 
 typedef struct _GBL_CFG{
   //外部对内存初始化的配置数据
@@ -78,6 +102,7 @@ struct DDR_RANK {
 
 typedef struct _DDR_DIMM{
     BOOLEAN     Status;
+    UINT8       mapout;
     UINT8       DramType;           //Byte 2
     UINT8       ModuleType;         //Byte 3
     UINT8       SDRAMCapacity;      //Byte 4
@@ -95,6 +120,9 @@ typedef struct _DDR_DIMM{
     UINT32      minTck;
     UINT8       MtbDividend;
     UINT8       MtbDivsor;
+    UINT8       nCL;
+    UINT8       nRCD;
+    UINT8       nRP;
     UINT8       SPDftb;
     UINT8       SpdMinTCK;
     UINT8       SpdMinTCKFtb;
@@ -256,6 +284,7 @@ typedef struct _NVRAM_CHANNEL{
     UINT32          DDRC_CFG_DFI_LAT0;
     UINT32          DDRC_CFG_DFI_LAT1;
     UINT32          DDRC_CFG_DDRPHY;
+    UINT32          Config[24];
 }NVRAM_CHANNEL;
 
 typedef struct _NVRAM{
@@ -265,9 +294,12 @@ typedef struct _NVRAM{
     
 }NVRAM;
 
+typedef struct _MEMORY{
+    UINT8           Config[7];//根据setup配置决定全空间或者topoflowmemory范围的内存测试。
+    UINT32          Config1;
+}MEMORY;
 
 typedef struct _GBL_DATA
-
 {
     DDR_CHANNEL Channel[MAX_SOCKET][MAX_CHANNEL];
     UINT8       DramType;
@@ -284,6 +316,7 @@ typedef struct _GBL_DATA
     UINT32      EccEn;    
     
     BOOLEAN     SetupExist;
+    UINT8       warmReset; //DTS2015072007681-C00227771-D20150720 热复位的情况下保存该标志
     
     UINT8       cl;
     UINT8       cwl;
@@ -322,13 +355,14 @@ typedef struct _GBL_DATA
     UINT8       ddr3OdtEnable;
     double      fprd;
     NVRAM       nvram;
+    MEMORY      mem;
     SETUP_PARAMS Setup;
     
 }GBL_DATA, *pGBL_DATA;
 
 typedef union {
     struct {
-        UINT16  freq:4;         //Frequency Index;
+        UINT16  freqIndex:4;         //Frequency Index;
         UINT16  slot0:4;        //Channel slot0 for DIMM
         UINT16  slot1:4;        //Channel slot1 for DIMM
         UINT16  slot2:4;        //Channel slot2 for DIMM
@@ -423,7 +457,7 @@ struct ODT_ACTIVE_STRUCT {
 #define DDR_2933 16  // tCK(ns)=0.682
 #define DDR_3000 17  // tCK(ns)=0.667
 #define DDR_3200 18  // tCK(ns)=0.625
-#define DDR_MAX  19
+#define DDR_MAX  (DDR_3200)
 
 #define FREQUENCY_MTB_OFFSET            1000000
 #define FREQUENCY_FTB_OFFSET               1000
