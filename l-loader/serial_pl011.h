@@ -1,0 +1,10 @@
+#ifndef	ASM_ARM_SERIAL_PL011_H
+#define	ASM_ARM_SERIAL_PL011_H
+
+#define UART01x_DR		0x00
+#define UART01x_FR		0x18
+
+#define UART01x_FR_TXFF		0x020
+#define UART01x_FR_BUSY		0x008
+
+#endif	/* ASM_ARM_SERIAL_PL011_H */ 
