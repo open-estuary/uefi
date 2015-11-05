@@ -10,11 +10,9 @@ HwPkg and HwProductsPkg are for D02 specifically, while Hw stands for Huawei.
 
     git apply HwPkg/Patch/*.patch
 
-3. Use below commands to build D02 UEFI (Assuming we are using GCC 4.9; ARMLINUXGCC does not support building ACPI table sections):
+3. Use below commands to build D02 UEFI:
 
-    export LC_CTYPE=C<br>
-    export GCC49_AARCH64_PREFIX=aarch64-linux-gnu-<br>
-    make -C BaseTools<br>
-    source edksetup.sh<br>
-    build -a AARCH64 -b RELEASE -t GCC49 -p HwProductsPkg/D02/Pv660D02.dsc<br>
+    uefi-tools/uefi-build.sh d02<br>
+
+4. UEFI image will be "Build/Pv660D02/RELEASE_GCC49/FV/PV660D02.fd" (Assuming you are using gcc 4.9, or else replace 49 in the path with your gcc version).
 
