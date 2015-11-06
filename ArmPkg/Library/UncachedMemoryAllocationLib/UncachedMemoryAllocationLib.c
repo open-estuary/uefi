@@ -25,6 +25,10 @@
 #include <Library/PcdLib.h>
 #include <Library/ArmLib.h>
 #include <Library/DxeServicesTableLib.h>
+//uniBIOS_z00304930_000_start 2015-3-24 18:46:09
+ //Issue ID:DTS2015033005516 Description:UncachedAllocate函数添加刷LLC
+#include <Library/CacheMaintenanceLib.h>
+//uniBIOS_z00304930_000_end   2015-3-24 18:46:09
 
 VOID *
 UncachedInternalAllocatePages (
@@ -164,6 +168,12 @@ AllocatePagesFromList (
     gBS->FreePages (Memory, Pages);
     return Status;
   }
+
+  //uniBIOS_z00304930_000_start 2015-3-24 18:46:09
+   //Issue ID:DTS2015033005516 Description:UncachedAllocate函数添加刷LLC
+  WriteBackInvalidateDataCacheRange((VOID *)(UINTN)Memory, EFI_PAGES_TO_SIZE(Pages));
+  //uniBIOS_z00304930_000_end   2015-3-24 18:46:09
+
 
   NewNode = AllocatePool (sizeof (FREE_PAGE_NODE));
   if (NewNode == NULL) {
