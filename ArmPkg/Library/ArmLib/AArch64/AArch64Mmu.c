@@ -38,7 +38,7 @@ ArmMemoryAttributeToPageAttribute (
   case ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH:
     return TT_ATTR_INDX_MEMORY_WRITE_THROUGH;
   case ARM_MEMORY_REGION_ATTRIBUTE_DEVICE:
-    return TT_ATTR_INDX_DEVICE_MEMORY;
+    return (TT_ATTR_INDX_DEVICE_MEMORY | TT_UXN_MASK);
   case ARM_MEMORY_REGION_ATTRIBUTE_UNCACHED_UNBUFFERED:
     return TT_ATTR_INDX_MEMORY_NON_CACHEABLE;
   case ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK:
@@ -604,6 +604,8 @@ ArmConfigureMmu (
   if (TranslationTable == NULL) {
     return RETURN_OUT_OF_RESOURCES;
   }
+
+  DEBUG((EFI_D_ERROR, "[%a]:[%dL] TranslationTable=0x%X\n", __FUNCTION__, __LINE__, TranslationTable));
   // We set TTBR0 just after allocating the table to retrieve its location from the subsequent
   // functions without needing to pass this value across the functions. The MMU is only enabled
   // after the translation tables are populated.
@@ -625,7 +627,7 @@ ArmConfigureMmu (
   ArmDisableInstructionCache ();
 
   // Make sure nothing sneaked into the cache
-  ArmCleanInvalidateDataCache ();
+  //ArmCleanInvalidateDataCache ();
   ArmInvalidateInstructionCache ();
 
   TranslationTableAttribute = TT_ATTR_INDX_INVALID;
@@ -649,7 +651,7 @@ ArmConfigureMmu (
     TCR |= TCR_SH_NON_SHAREABLE | TCR_RGN_OUTER_NON_CACHEABLE | TCR_RGN_INNER_NON_CACHEABLE;
   } else if ((TranslationTableAttribute == ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK) ||
       (TranslationTableAttribute == ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_BACK)) {
-    TCR |= TCR_SH_INNER_SHAREABLE | TCR_RGN_OUTER_WRITE_BACK_ALLOC | TCR_RGN_INNER_WRITE_BACK_ALLOC;
+    TCR |= TCR_SH_NON_SHAREABLE | TCR_RGN_OUTER_WRITE_BACK_ALLOC | TCR_RGN_INNER_WRITE_BACK_ALLOC;
   } else if ((TranslationTableAttribute == ARM_MEMORY_REGION_ATTRIBUTE_WRITE_THROUGH) ||
       (TranslationTableAttribute == ARM_MEMORY_REGION_ATTRIBUTE_NONSECURE_WRITE_THROUGH)) {
     TCR |= TCR_SH_NON_SHAREABLE | TCR_RGN_OUTER_WRITE_THROUGH | TCR_RGN_INNER_WRITE_THROUGH;
