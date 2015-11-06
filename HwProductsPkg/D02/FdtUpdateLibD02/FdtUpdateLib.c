@@ -16,14 +16,21 @@ RWYRb5Ee+3GEtRz6aB8O6FmfEz2rZSQTYYqV6zkp7JA23HAqjx5FHCTB4bJ35zOtwanDulV6
 #include <Protocol/OemNicProtocol.h>
 #include <Library/MemoryAllocationLib.h>
 
-// Linux kernel regard debug port 6~7 to be 0~1,
-// and DSAF port 0~5 to be 2~7.
+
 CHAR8  *EthName[8]=
 {
+ "ethernet@0","ethernet@1",
  "ethernet@2","ethernet@3",
  "ethernet@4","ethernet@5",
- "ethernet@6","ethernet@7",
- "ethernet@0","ethernet@1"
+ "ethernet@6","ethernet@7"
+};
+
+CHAR8  *MacName[4]=
+{
+ "ethernet-mac@c7040000",
+ "ethernet-mac@c7044000",
+ "ethernet-mac@c7048000",
+ "ethernet-mac@c704c000"
 };
 
 STATIC
@@ -110,7 +117,7 @@ DelPhyhandleUpdateMacAddress(IN VOID* Fdt)
             ethernetnode=fdt_subnode_offset(Fdt, node,EthName[port]);
             if (ethernetnode < 0) 
             {
-                DEBUG ((EFI_D_ERROR, "can not find %a node\n", EthName[port]));
+                DEBUG ((EFI_D_ERROR, "can not find ethernet@ %d node\n",port));
             }
             m_prop = fdt_get_property_w(Fdt, ethernetnode, "local-mac-address", &m_oldlen);
             if(m_prop)
