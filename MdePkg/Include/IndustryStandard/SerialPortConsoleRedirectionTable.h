@@ -90,6 +90,10 @@ typedef struct {
 /// I/O SAPIC interrupt (Global System Interrupt)
 ///
 #define EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_INTERRUPT_TYPE_SAPIC   0x4
+///
+/// ARMH GIC interrupt (Global System Interrupt)
+///
+#define EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_INTERRUPT_TYPE_GIC     0x8
 
 //
 // Baud Rate
