@@ -184,5 +184,4 @@ DefaultExceptionHandler (
 
   DescribeExceptionSyndrome (SystemContext.SystemContextAArch64->ESR);
   ASSERT (FALSE);
-  CpuDeadLoop ();
 }
