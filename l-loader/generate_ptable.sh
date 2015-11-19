@@ -13,9 +13,11 @@ case ${PTABLE} in
   tiny)
     SECTOR_NUMBER=81920
     ;;
-  aosp|linux)
+  aosp-4G|linux-4G)
     SECTOR_NUMBER=7471104
     ;;
+  aosp-8G|linux-8G)
+    SECTOR_NUMBER=15269888
 esac
 
 BK_PTABLE_LBA=$(expr ${SECTOR_NUMBER} - 33)
@@ -29,7 +31,7 @@ case ${PTABLE} in
     sgdisk -n 1:2048:4095 -t 1:0700 -u 1:F9F21F01-A8D4-5F0E-9746-594869AEC3E4 -c 1:"vrl" -p ${TEMP_FILE}
     sgdisk -n 2:4096:6143 -t 2:0700 -u 2:F9F21F02-A8D4-5F04-9746-594869AEC3E4 -c 2:"vrl_backup" -p ${TEMP_FILE}
     ;;
-  aosp)
+  aosp*)
     dd if=/dev/zero of=${TEMP_FILE} bs=${SECTOR_SIZE} count=${SECTOR_NUMBER}
     sgdisk -U 2CB85345-6A91-4043-8203-723F0D28FBE8 -v ${TEMP_FILE}
     #[1: vrl: 1M-2M]
@@ -53,7 +55,7 @@ case ${PTABLE} in
     #[10: userdata: 2126M-End]
     sgdisk -n -E -t 10:8300 -u 10:064111F6-463B-4CE1-876B-13F3684CE164 -c 10:"userdata" -p ${TEMP_FILE}
     ;;
-  linux)
+  linux*)
     dd if=/dev/zero of=${TEMP_FILE} bs=${SECTOR_SIZE} count=${SECTOR_NUMBER}
     sgdisk -U 2CB85345-6A91-4043-8203-723F0D28FBE8 -v ${TEMP_FILE}
     #[1: vrl: 1M-2M]
