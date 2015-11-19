@@ -1,26 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePcxREXVZ5dUR67fNFdcsGWwP1ecJzNoC5Nk+8B
-iJvImLuolrIPUKBGd8L2wpF6y6N3BrBWhrMiUsGHALluV0im+t4T28eAdD4NhRGenqxofQly
-tiYrdQUOiCbgko7X8I9R7sXS0nvwXr8GKLUB1vDslWVM+jomrqhBcmv9hcQOHQ==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/******************************************************************************
 
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : UpdateFdtDxe.c
-  版 本 号   : v1.0
-  作    者   : s00296804
-  生成日期   : 2014年12月23日
-  最近修改   :
-  功能描述   : 从SPI Flash读出FDT并更新,创建FDT Configuration Table
-  修改历史   :
-1.   日	  期   : 
-     作	  者   :
-     修改内容  :
-******************************************************************************/
 #include <Uefi.h>
 #include <Pi/PiDxeCis.h>
 #include <Library/DebugLib.h>
@@ -111,7 +89,7 @@ EFIAPI UpdateFdt (
 
     Fdt = (VOID*)(PcdGet64(FdtFileAddress));
     
-    //查找FTD tree
+   
     Error = fdt_check_header ((VOID*)(PcdGet64(FdtFileAddress)));
     DEBUG ((EFI_D_ERROR,"fdtfileaddress:--------- 0x%lx\n",PcdGet64(FdtFileAddress)));
     if (Error != 0) 
@@ -143,7 +121,7 @@ EFIAPI UpdateFdt (
         goto EXIT;
     }
     
-    // 安装FDT Configuration Table
+  
     Status = InstallFdtIntoConfigurationTable ((VOID*)(UINTN)NewFdtBlobBase, NewFdtBlobSize);
     DEBUG ((EFI_D_ERROR, "NewFdtBlobBase: 0x%lx  NewFdtBlobSize:0x%lx\n",NewFdtBlobBase,NewFdtBlobSize));
     if (EFI_ERROR (Status))
@@ -152,7 +130,7 @@ EFIAPI UpdateFdt (
         goto EXIT;
     }
 
-    //查找FDT Configuration Table,做验证用，查看FDT Configuration Table 地址
+  
     for (Index = 0; Index < gST->NumberOfTableEntries; Index ++) 
     {
         if (CompareGuid (&gFdtTableGuid, &(gST->ConfigurationTable[Index].VendorGuid)))
@@ -166,7 +144,7 @@ EFIAPI UpdateFdt (
     return Status; 
     
     EXIT:
-         //释放内存
+     
          gBS->FreePages(NewFdtBlobBase,EFI_SIZE_TO_PAGES(NewFdtBlobSize));
         
     return Status;  

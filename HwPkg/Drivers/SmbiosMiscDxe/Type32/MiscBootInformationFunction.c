@@ -1,10 +1,4 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:EG4uRhTwMmgcVFBsBnYHCDadN5jJKSuVyxmmaCmKFU6eJEbB2fyHF9weu4/jer/hxLHb+S1e
-E0zVg4C3NiZh4bPwYvCdjdVpqIFpLgARMXYjreBf//8/f5Q3OZWBrJs7rTqjWIcFzf/y20MJ
-X2UYclotv4h3Y+tETyRv8RM2xWONaBeZKM8cSZk2MwZ6+N6myXWg3zuIkxQhT2qsVL0g7jos
-u1WQ9Guv4nDchW5Xbh/MRJ+gEr/M3JX9GQ0yk+/XsII1kF2Y3qYWhAaz4jQaMA==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
+
 /** @file
   boot information boot time changes.
   SMBIOS type 32.

@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd9eWrg7kbnwT8pJNg0wH5FdTXdt7ttdMM2Yc2EP5l79/YNfzBrGXMi1pSyJOK+vCPoZX
-1bnahHl2C2SZk8SGnaLQ2p2210yni/4t0PHn8gLNKYddwRA5WYjr0LkDClscWg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
 /*++
 
 Copyright (c) 2009, Hewlett-Packard Company. All rights reserved.<BR>
@@ -378,8 +371,7 @@ InterruptDxeInitialize (
   
   mGicNumInterrupts = ArmGicGetMaxNumInterrupts (PcdGet32(PcdGicDistributorBase));
 
-  //t00200952 OS已经提单让gic负责人修改，但是这个修改会影响到BIOS和OS，当前讨论结果是先不合入此处修改。
-  //l00228991 最新B109版本，最大中断已经修改为1024，需要添加如下修改
+ 
   mGicNumInterrupts /=8;
   
   for (Index = 0; Index < mGicNumInterrupts; Index++) {
@@ -394,7 +386,6 @@ InterruptDxeInitialize (
       ARM_GIC_DEFAULT_PRIORITY << RegShift
       );
   }
-  //start_d00183345, 2012-11-17, PV650,一个中断可对应16个CPU，一个32bit的寄存器可以对应2个中断
   // Configure interrupts for Primary Cpu
   CpuTarget = (1 << PcdGet32 (PcdGicPrimaryCoreId));
   CpuTarget |= CpuTarget << 16;

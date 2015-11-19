@@ -24,7 +24,6 @@ typedef struct{
 } EXT_VENDOR_DEVICE_PATH;
 
 //uniBIOS_l00306713_000_start 2015-5-21 10:18:41
- //Issue ID:DTS2015050507615    Description: 【iWare V200R002C00B980 BIOS】启动管理代码检视修改
 typedef struct{
 
 UINT16  BootIndex;
@@ -46,7 +45,6 @@ UINT16  Port;
 //uniBIOS_l00306713_000_end   2015-5-21 10:18:41
 //uniBIOS_l00306713_000_end   2015-5-5 14:46:48
 
-//DTS2015081300635 【iWare uniBIOS V200R001C00B990 ST】 网卡驱动代码检视意见修改
 extern EFI_GUID gEfiHisiSocControllerGuid; 
 
 #endif

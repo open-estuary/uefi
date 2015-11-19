@@ -1,12 +1,4 @@
-/*************************************************
 
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\PL390Gic\AArch64\Gicv3.s
-
-Description: 
-
-*************************************************/
 
 #define ICC_EOIR1_EL1   S3_0_C12_C12_1
 #define ICC_EOIR0_EL1   S3_0_C12_C8_1

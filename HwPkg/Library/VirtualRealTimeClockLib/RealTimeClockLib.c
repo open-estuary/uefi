@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:64z4jYnYa5t1KtRL8a/vnMxg4uGttU/wzF06xcyNtiEfsIe4UpyXkUSy93j7U7XZDdqx2rNx
-p+25Dla32ZW7onUkKu5TWq4Q5zG307zi/cnai6B1wCItBbdinZKFc8xhcVSamK3UgdVdRbMX
-ZVq1lOS7yHOYu1ExODZDpXgVT/14Le+hnmBNQq7NyJS4ikhO828ClmIQM2xDxyKSgAJl+Ehm
-YEaszbmtKFojak2xSUnMNEdTDf0oCGK+Y2jCbifo093+xF03IzufiBAME0HszA==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
 /** @file
   Implement EFI RealTimeClock runtime services via RTC Lib.
 
@@ -59,7 +52,7 @@ STATIC CONST CHAR16           mDaylightVariableName[] = L"PV660VirtualRtcDayligh
 STATIC EFI_EVENT              mRtcVirtualAddrChangeEvent;
 STATIC EFI_RUNTIME_SERVICES   *mRT;
 
-// g00179230: 支持虚拟的settime接口
+
 STATIC INTN mEpochDiff = 0;
 
 /**
@@ -217,10 +210,10 @@ LibGetTime (
     return EFI_INVALID_PARAMETER;
   }
 
-  ArmArchTimerReadReg(CntPct,&Temp); /*by z00201473 获取寄存器cntpct_el0的值，并计算得出秒数*/
-  // 通过PCD指定核内timer的频率
+  ArmArchTimerReadReg(CntPct,&Temp); 
+  
   // UINT32 force convertion for PC-LINT
-  EpochSeconds = mEpochDiff + Temp / (UINT32) PcdGet32(PcdArmArchTimerFreqInHz);  /*by z00201473 转换成秒*/
+  EpochSeconds = mEpochDiff + Temp / (UINT32) PcdGet32(PcdArmArchTimerFreqInHz);  
 
   // Get the current time zone information from non-volatile storage
   Size = sizeof (TimeZone);
@@ -328,7 +321,7 @@ LibGetTime (
   if (Capabilities != NULL) {
     Capabilities->Resolution  = 1;
     // Accuracy in ppm multiplied by 1,000,000, e.g. for 50ppm set 50,000,000
-    // g00179230: PPM的含义还不是太清楚, pl031是300,000,000，此处直接用时钟频率
+   
     Capabilities->Accuracy    = PcdGet32 (PcdArmArchTimerFreqInHz);
     // FALSE: Setting the time does not clear the values below the resolution level
     Capabilities->SetsToZero  = FALSE;
@@ -400,10 +393,10 @@ LibSetTime (
     EpochSeconds -= SEC_PER_HOUR;
   }
 
-  ArmArchTimerReadReg(CntPct,&Temp); /*by z00201473 获取寄存器cntpct_el0的值，并计算得出秒数*/
-  // 通过PCD指定核内timer的频率
+  ArmArchTimerReadReg(CntPct,&Temp); 
+ 
   // UINT32 force convertion for PC-LINT
-  mEpochDiff = EpochSeconds - Temp / (UINT32) PcdGet32(PcdArmArchTimerFreqInHz);  /*by z00201473 转换成秒*/
+  mEpochDiff = EpochSeconds - Temp / (UINT32) PcdGet32(PcdArmArchTimerFreqInHz); 
 
   // The accesses to Variable Services can be very slow, because we may be writing to Flash.
   // Do this after having set the RTC.

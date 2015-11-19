@@ -54,7 +54,6 @@
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum
   gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz  
 
-  #add by t0020095 PV660¼ìÊÓÐÞ¸Ä
   gHwTokenSpaceGuid.PcdTimerBaseAddress
   gHwTokenSpaceGuid.PcdSysControlBaseAddress  
   gHwTokenSpaceGuid.PcdPeriSubctrlAddress

@@ -1,15 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwProductsPkg\Pv660Evb\Library\OemMiscLibEvb\AArch64\OemPostStartIndicatorEvb.s
-
-Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.10.10
-
-Description:
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/PcdLib.h>
 
@@ -26,13 +14,13 @@ ASM_PFX(OemPostStartIndicator):
   ldr w3, PcdGet32(PcdOemGpioLed1)
   lslv w3, w0, w3
 
-  ldr x0, =0x602e0000       //打开GPIOx y
+  ldr x0, =0x602e0000      
   ldr w1, [x0, #0x4]
   orr w1, w1, w2
   orr w1, w1, w3
   str w1, [x0, #0x4]
 
-  ldr w1, [x0]       //打开GPIOx, 关闭GPIOy
+  ldr w1, [x0]       
   bic w1, w1, w2
   orr w1, w1, w3
   str w1, [x0]

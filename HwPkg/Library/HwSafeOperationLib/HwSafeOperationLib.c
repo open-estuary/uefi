@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Library\HwSafeOperationLib\HwSafeOperationLib.c
-
-Description:
-
-*************************************************/
-
 #include "HwSafeOpInternal.h"
 
 typedef struct _SECUREC_XPRINTF_STREAM

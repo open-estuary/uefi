@@ -1,11 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVedespbxTjZ1vyhERcXhe5efbuRMKmuY6KO5Lg8wq5Y88LfOVhFiIbNw3+1oyK7nIGc9
-8jZ28fn8DcOERn9JauEIxXqkzvvlDlHKSKs1ljczvaLPSX6FRZ820CehbF3Ozg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-
 #include <Uefi.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -75,8 +67,7 @@ EFI_STATUS OemGetSerdesParam (serdes_param_t *Param)
 
 
 //uniBIOS_l00306713_000_start 2014-12-19 10:23:43
- //Issue ID:DTS2014121901209 //盘古加了，防止编译问题
- //Description:serdes初始化后复位解复位PCIE，PCIE枚举
+
 VOID OemPcieResetAndOffReset(void)
 {
   return;
@@ -84,7 +75,7 @@ VOID OemPcieResetAndOffReset(void)
 //uniBIOS_l00306713_000_end   2014-12-19 10:23:43
 
 // start-uniBIOS-s00296804  2015-2-13 >>
-//增加boardinformation信息
+
 VOID BoardInformation(void)
 {
     return;
@@ -97,7 +88,7 @@ UINTN OemGetDimmSlot(UINTN Socket, UINTN Channel)
 }
 
 //uniBIOS_z00304930_000_start 2015-3-23 14:42:15
- //Issue ID:DTS2015032408517 Description: ?????
+ //Issue ID:DTS2015032408517
 ETH_PRODUCT_DESC gEthPdtDesc[ETH_MAX_PORT] = 
 {   
     {FALSE, ETH_INVALID,     ETH_INVALID,     ETH_INVALID,           ETH_INVALID},
@@ -110,21 +101,6 @@ ETH_PRODUCT_DESC gEthPdtDesc[ETH_MAX_PORT] =
     {FALSE, ETH_INVALID,     ETH_INVALID,     ETH_INVALID,           ETH_INVALID}
 };
 
-/*****************************************************************************
- ? ? ?  : OemEthFindFirstSP
- ????  : ????????????
- ????  : ?
- ????  : ?????
- ? ? ?  : 
- ????  : 
- ????  : 
- 
- ????      :
-  1.?    ?   : 2015?4?17?
-    ?    ?   : ZhuGeSheng
-    ????   : ?????
-
-*****************************************************************************/
 UINT32 OemEthFindFirstSP()
 {
     UINT32 i;
@@ -140,21 +116,6 @@ UINT32 OemEthFindFirstSP()
     return ETH_INVALID;
 }
 
-/*****************************************************************************
- ? ? ?  : OemEthInit
- ????  : ???????????
- ????  : UINT port  
- ????  : ?
- ? ? ?  : ETH_PRODUCT_DESC
- ????  : 
- ????  : 
- 
- ????      :
-  1.?    ?   : 2015?3?23?
-    ?    ?   : ZhuGeSheng
-    ????   : ?????
-
-*****************************************************************************/
 ETH_PRODUCT_DESC *OemEthInit(UINT32 port)
 {
     return (ETH_PRODUCT_DESC *)(&(gEthPdtDesc[port]));

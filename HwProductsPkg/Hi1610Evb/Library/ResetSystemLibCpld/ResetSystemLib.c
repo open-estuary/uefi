@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVegU+hOwXxwBPvY79ThZgAcnFthw71ThLsRFRu/V1MynFYMSZQZ+Bc1EF+wYTwa8JeCr
-Sl8zHJWLjHeUpkQ2IIDJRNt1/fIz9vaT47rbjh4rz23kSx5SgNwseFJFz1m3SA==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
 /** @file
   Template library implementation to support ResetSystem Runtime call.
 
@@ -86,9 +79,8 @@ LibResetSystem (
 
   case EfiResetShutdown:
     MmioWrite32(mResetRegBaseAddr + (0x16 << 1), 0x55);
-  //uniBIOS_l00306713_000_start 2015-4-11 14:58:14
- //Issue ID:DTS2015040805519    Description: 【iWare V200R002C00B980 PANGEA BBIT测试】EBL下的输入复位命令后会打印部分硬盘启动信息，各单板都需要整改      
-    MicroSecondDelay(2000000);  //由于写入CPLD重启命令后，重启CPU还需一段时间，有继续打印，所以加延时      
+     
+    MicroSecondDelay(2000000);       
     break;
   
   }

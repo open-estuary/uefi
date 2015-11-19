@@ -1,10 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd2906K7BWMK86UBuLVUmsgUM/4y83F9Zab2orM6V4QjY1thvdHchX1S3M/nSL2uMr4nQ
-F0kaxZ1tUsp2/3v9cKckw+ijIp2nOLMnNO2rYbbeJgX7x9R/s32UwnKMPLIikQ==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
+
 /** @file
 
   Copyright (c) 2009, Intel Corporation. All rights reserved.<BR>
@@ -130,7 +124,7 @@ MISC_SMBIOS_TABLE_FUNCTION(MiscBiosVendor)
         return EFI_INVALID_PARAMETER;
     }
 
-    //从PCD获取相关字符串，并更新相关字段
+    
     Vendor = (CHAR16 *) PcdGetPtr (PcdFirmwareVendor);
     if (StrLen(Vendor) > 0) 
     {
@@ -185,7 +179,7 @@ MISC_SMBIOS_TABLE_FUNCTION(MiscBiosVendor)
         goto Exit;
     }
     
-    //获取字符串的长度
+    
     TokenToGet = STRING_TOKEN (STR_MISC_BIOS_VENDOR);
     Char16String = HiiGetPackageString(&gEfiCallerIdGuid, TokenToGet, NULL);
     VendorStrLen = StrLen(Char16String);

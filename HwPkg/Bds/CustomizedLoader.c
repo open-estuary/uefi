@@ -1,14 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Bds\CustomizedLoader.c
-
-
-Description: 
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/IoLib.h>
 #include <Library/UefiLib.h>
@@ -22,7 +11,7 @@ Description:
 #include <Library/TimerLib.h>
 #include <Library/OemAddressMapLib.h>
 #include <Library/FdtUpdateLib.h>
-// We move asm_read_reg from ArmLib to HwArmLib
+// We move asm_read_reg from ArmLib to HwArmLib
 #include <Library/HwArmLib.h>
 
 #include <Library/LzmaCustomDecompressLib/LzmaDecompressLibInternal.h>

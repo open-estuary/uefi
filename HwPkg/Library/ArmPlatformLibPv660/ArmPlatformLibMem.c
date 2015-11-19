@@ -92,7 +92,7 @@ ArmPlatformGetVirtualMemoryMap (
   {
     if (NextHob.ResourceDescriptor->ResourceType == EFI_RESOURCE_SYSTEM_MEMORY)
     {
-        if (NextHob.ResourceDescriptor->PhysicalStart > BASE_4GB)//只修改4G以上的属性
+        if (NextHob.ResourceDescriptor->PhysicalStart > BASE_4GB)
         {
             VirtualMemoryTable[++Index].PhysicalBase = NextHob.ResourceDescriptor->PhysicalStart;
             VirtualMemoryTable[Index].VirtualBase  = NextHob.ResourceDescriptor->PhysicalStart;

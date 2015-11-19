@@ -1,10 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefdyQGuGBwAX8cElpg1LdymAfo/aat9/4MgHtMVk5KLWjqVzMtFpeUZrmPmZ+Tq4BBFVzx
-+7Ixr0GeTL1wq6N2QH1Qg3MjbYLCacw7Zoo8Hzkj3zXE776T1FeuFiiYApZPlw==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
+
 /** @file
 
   Copyright (c) 2009 - 2011, Intel Corporation. All rights reserved.<BR>

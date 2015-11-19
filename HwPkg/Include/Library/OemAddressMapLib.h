@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Library\OemAddressMapLib.h
-
-Description:
-
-*************************************************/
-
 #ifndef _OEM_ADDRESS_MAP_LIB_H_
 #define _OEM_ADDRESS_MAP_LIB_H_
 

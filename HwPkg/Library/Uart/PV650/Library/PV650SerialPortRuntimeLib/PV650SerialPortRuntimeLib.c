@@ -1,34 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd50B4PIDWwBp0YlKjCmq6NsaaOFSKSxtOgZSEZ7KeruCoO0gWgDaP0M1QCMusvWQtRj8
-j3Ii9oX4odDoJIm3q8lZUsIEYNImPuPAzutXyE6BddUdo00LH5Q7AZeg6PU1OA==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/** @file
-  UART Serial Port library functions
 
-  Copyright (c) 2006 - 2009, Intel Corporation
-  All rights reserved. This program and the accompanying materials
-  are licensed and made available under the terms and conditions of the BSD License
-  which accompanies this distribution.  The full text of the license may be found at
-  http://opensource.org/licenses/bsd-license.php
-
-  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
-  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
-
-**/
-/*******************************************************************************
-  文 件 名   : PV650SerialPortRuntimeLib.c
-  作    者   : z00201473
-  生成日期   : 2014年2月11日
-  最近修改   :
-  功能描述   :
-  修改历史   :
-  1.日    期   : 2014年2月11日
-    作    者   : z00201473
-    修改内容   : 新建文件
-******************************************************************************/
 #include <Uefi.h>
 #include <PiDxe.h>
 
@@ -223,20 +193,19 @@ SerialPortPoll (
   VOID
   )
 {
-  //接收fifo中有值 
+ 
   return (BOOLEAN) ((*(volatile UINT8 *)(UART_LSR_REG) & UART_LSR_DR) == UART_LSR_DR);
 
 }
 
-/*t00216239从1380移植*/
+
 VOID SerialPortWriteChar(UINT8 scShowChar)
 {
   UINT32 ulLoop = 0;
     
   while(ulLoop < (UINT32)UART_SEND_DELAY)
   {
-      /* 不需要等待THR寄存器为空，只要发送FIFO未满就可以写了-x68638 */
-      /* 检查UART_USR[TFNF]，判断发送FIFO未满标志，如果发送FIFO未满，可写入数据 */
+      
       if ((*(volatile UINT8 *)(UART_USR_REG) & 0x02) == 0x02)
       {
           break;
@@ -247,7 +216,7 @@ VOID SerialPortWriteChar(UINT8 scShowChar)
   *(volatile UINT8 *)(UART_THR_REG) = (UINT8)scShowChar;
   
   ulLoop = 0;
-  while(ulLoop < (UINT32)UART_SEND_DELAY)   /*等发送缓冲区空*/
+  while(ulLoop < (UINT32)UART_SEND_DELAY)  
   {
     if ((*(volatile UINT8 *)(UART_USR_REG) & 0x04) == 0x04) {
       break;

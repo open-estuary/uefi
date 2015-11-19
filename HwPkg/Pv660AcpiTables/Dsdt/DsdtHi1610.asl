@@ -24,7 +24,7 @@ DefinitionBlock("DsdtTable.aml", "DSDT", 1, "ARMLTD", "ARM-JUNO", EFI_ACPI_ARM_O
    
     
     //Device(I2C0)  { 
-	//Name(_HID, "HISI0001")  // 海思p660 I2C，具体命名还未定
+	//Name(_HID, "HISI0001")  
 	//Name(_UID, 0)
 	//Name (_CRS, ResourceTemplate ()  { 
 	//	Memory32Fixed (ReadWrite, 0xA00E0000 , 0x10000) 
@@ -41,7 +41,7 @@ DefinitionBlock("DsdtTable.aml", "DSDT", 1, "ARMLTD", "ARM-JUNO", EFI_ACPI_ARM_O
    //}
 
    //Device(I2C1)  { 
-	//Name(_HID, "HISI0001")  // 海思p660 I2C，具体命名还未定
+	//Name(_HID, "HISI0001")  
 	//Name(_UID, 1)
 	//Name (_CRS, ResourceTemplate ()  { 
 	//	Memory32Fixed (ReadWrite, 0xA00F0000 , 0x10000) 
@@ -57,7 +57,7 @@ DefinitionBlock("DsdtTable.aml", "DSDT", 1, "ARMLTD", "ARM-JUNO", EFI_ACPI_ARM_O
 	//})
     //}
     //Device(I2C2)  { 
-	//Name(_HID, "HISI0001")  // 海思p660 I2C，具体命名还未定
+	//Name(_HID, "HISI0001")  
 	//Name(_UID, 2)
 	//Name (_CRS, ResourceTemplate ()  { 
 	//	Memory32Fixed (ReadWrite, 0x60320000 , 0x10000) 
@@ -73,7 +73,7 @@ DefinitionBlock("DsdtTable.aml", "DSDT", 1, "ARMLTD", "ARM-JUNO", EFI_ACPI_ARM_O
 	//})
     //}
     //Device(I2C3)  { 
-	//Name(_HID, "HISI0001")  // 海思p660 I2C，具体命名还未定
+	//Name(_HID, "HISI0001")  
 	//Name(_UID, 3)
 	//Name (_CRS, ResourceTemplate ()  { 
 	//	Memory32Fixed (ReadWrite, 0x60330000 , 0x10000) 

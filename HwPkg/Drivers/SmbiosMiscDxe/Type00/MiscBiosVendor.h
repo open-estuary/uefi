@@ -1,20 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
-******************************************************************************
-  文 件 名   : MiscBiosVendor.h
-  版 本 号   : 初稿
-  作    者   : y00216284
-  生成日期   : 
-  最近修改   :
-  功能描述   : 
-  函数列表   :   
-  修改历史   :
-  1.日    期   : 
-    作    者   : 
-    修改内容   : 创建文件  
-******************************************************************************/
 #ifndef _MISC_BIOS_VENDER_H
 #define _MISC_BIOS_VENDER_H
 
@@ -36,20 +20,19 @@ typedef struct _OEM_TIME{
   UINT8   Sec;
 }OEM_TIME;
 
-//内嵌版本信息
 typedef struct {
   UINT16       structV;
-  char         vendor[32];  // 厂商名
+  char         vendor[32]; 
   OEM_TIME     buildTime;   // 
-  char         strV[3];     // BIOS的V版本号，字符串"xxx\0"
-  char         strR[3];     // BIOS的R版本号，字符串"xxx\0"
-  char         strC[3];     // BIOS的C版本号，字符串"xx\0"
-  char         strB[6];     // BIOS的B版本号，字符串"xxx\0"
+  char         strV[3];     
+  char         strR[3];    
+  char         strC[3];    
+  char         strB[6];     
   UINT32       biosImageSize; 
-  char         vName[32];   // 版本名称
+  char         vName[32];   
   UINT32       biosUpdateFlag; 
-  UINT32       fileCheckSum;    // BIOS文件的Checksum，保证整个BIOS文件累计和为0
-  UINT32       dataCheckSum;   // Checksum Region0~3的校验和
+  UINT32       fileCheckSum;   
+  UINT32       dataCheckSum;   
   UINT32       ckRegionAddr0;  
   UINT32       ckRegionSize0;  
   UINT32       ckRegionAddr1;  

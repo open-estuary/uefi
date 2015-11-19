@@ -1,16 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : MemorySubClass.h
-  版 本 号   : v1.0
-  作    者   : 
-  生成日期   : 2014年10月20日
-  最近修改   :
-  功能描述   : Header file for the MemorySubClass Driver.
-  修改历史   :
-******************************************************************************/
 
 #ifndef _MEMORY_SUBCLASS_DRIVER_H
 #define _MEMORY_SUBCLASS_DRIVER_H
@@ -42,7 +30,7 @@
 
 extern UINT8 MemorySubClassStrings[];
 
-#define MAX_DIMM_SIZE       16  // In GB  单板默认单根DIMM条最大支持16GB
+#define MAX_DIMM_SIZE       16  
 
 struct SPD_JEDEC_MANUFACTURER 
 {

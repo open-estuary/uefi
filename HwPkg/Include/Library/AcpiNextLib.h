@@ -1,13 +1,4 @@
-/*************************************************
 
-Copyright (C), 1988-2015, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Library\AcpiNextLib.h
-
-Description: Utilities to construct ACPI tables for next generation
-             specification.
-
-*************************************************/
 
 #ifndef __ACPI_NEXT_LIB_H__
 #define __ACPI_NEXT_LIB_H__

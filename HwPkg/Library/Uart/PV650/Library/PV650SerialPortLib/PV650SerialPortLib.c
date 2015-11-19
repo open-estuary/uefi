@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd5IAVhU7iV0D/ALEu5wQxVKdUNpdTwZc0pRRpDeeLSj3NEXoyuTICFLoXooSFiSUDsFR
-ed5HqScGgXGDUKeQC7NtQmkVynuihXW74gQtVkob+bYg6TbiNsCDHFys6iIpzg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
 /** @file
   UART Serial Port library functions
 
@@ -45,31 +38,28 @@ SerialPortInitialize (
 {
     UINT32 ulUartClkFreq;
     
-    //设置发送和接收数据的长度为8位
+   
     *(volatile UINT8 *)(UART_LCR_REG) = UART_LCR_DLS8;
     
-    // 设置FIFO控制寄存器*/
+  
     *(volatile UINT8 *)(UART_FCR_REG) = UART_FCR_EN | UART_FCR_RXCLR | UART_FCR_TXCLR;
     
-    // 设置能够波特率的分频因子
-    // ULCR.DLAB = 1, Enable UDLB/UDMB/UAFR的访问
+    
     *(volatile UINT8 *)(UART_LCR_REG) = UART_LCR_DLAB | UART_LCR_DLS8;
     
-    // uniBIOS-g00179230 2013-5-23, 串口驱动
-    // 设置串口频率，20000000
+  
     ulUartClkFreq = PcdGet32(PcdUartClkInHz);
 
     *(volatile UINT8 *)(UART_DLL_REG) = (ulUartClkFreq / (16 * (UINT32)BAUDRATE) ) & 0xff;
     *(volatile UINT8 *)(UART_DLH_REG) = ((ulUartClkFreq/ (16 * (UINT32)BAUDRATE) ) >> 8 ) & 0xff;
     
-    // ULCR.DLAB = 0, 禁止 UDLB/UDMB/UAFR的访问
+    
     *(volatile UINT8 *)(UART_LCR_REG) = UART_LCR_DLS8;
     
-    // 设置中断使能寄存器, 禁止DUART中断 LSR
+   
     *(volatile UINT8 *)(UART_IEL_REG) = 0x00;
     
-    //start_d00183345_2012-11-7, 去掉很多的S打印
-    // 写's' 
+   
     //*(volatile UINT8 *)(UART_THR_REG) = 0x53;
     //end_d00183345_2012-11-7
     
@@ -176,20 +166,19 @@ SerialPortPoll (
   VOID
   )
 {
-  //接收fifo中有值 
+ 
   return (BOOLEAN) ((*(volatile UINT8 *)(UART_LSR_REG) & UART_LSR_DR) == UART_LSR_DR);
 
 }
 
-/*t00216239从1380移植*/
+
 VOID SerialPortWriteChar(UINT8 scShowChar)
 {
     UINT32 ulLoop = 0;
       
     while(ulLoop < (UINT32)UART_SEND_DELAY)
     {
-        /* 不需要等待THR寄存器为空，只要发送FIFO未满就可以写了-x68638 */
-        /* 检查UART_USR[TFNF]，判断发送FIFO未满标志，如果发送FIFO未满，可写入数据 */
+       
         if ((*(volatile UINT8 *)(UART_USR_REG) & 0x02) == 0x02)
         {
             break;
@@ -200,7 +189,7 @@ VOID SerialPortWriteChar(UINT8 scShowChar)
     *(volatile UINT8 *)(UART_THR_REG) = (UINT8)scShowChar;
 
     ulLoop = 0;
-    while(ulLoop < (UINT32)UART_SEND_DELAY)   /*等发送缓冲区空*/
+    while(ulLoop < (UINT32)UART_SEND_DELAY)  
     {
         if ((*(volatile UINT8 *)(UART_USR_REG) & 0x04) == 0x04)
         {

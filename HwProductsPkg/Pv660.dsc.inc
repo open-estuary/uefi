@@ -284,7 +284,6 @@
   gArmPlatformTokenSpaceGuid.PcdFirmwareVendor|"ARM Versatile Express"
 
   gEmbeddedTokenSpaceGuid.PcdEmbeddedPrompt|"VExpress"
-  #PV660 CPU内存地址空间是44位
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|44
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|0
   gEfiMdePkgTokenSpaceGuid.PcdMaximumUnicodeStringLength|1000000

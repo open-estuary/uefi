@@ -1,12 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: OemNicConfig.h
-
-
-*************************************************/
-
 #ifndef __OEM_NIC_CONFIG_H__
 #define __OEM_NIC_CONFIG_H__
 

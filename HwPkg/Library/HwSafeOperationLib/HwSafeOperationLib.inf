@@ -1,13 +1,3 @@
-##################################################
-#
-#Copyright (C), 1988-2020, Huawei Tech. Co., Ltd.
-#
-#File name: HwSafeOperationLib.inf
-#
-#Description:
-#
-##################################################
-
 [Defines]
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = HwSafeOperationLib

@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Library\HwArmLib\AArch64\HwArmLib.s
-
-Description: 
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/HwArmLib.h>
 

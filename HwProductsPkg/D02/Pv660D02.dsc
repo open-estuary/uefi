@@ -41,7 +41,7 @@
 
   #DebugAgentTimerLib|ArmPlatformPkg/ArmVExpressPkg/Library/DebugAgentTimerLib/DebugAgentTimerLib.inf
 
-  #c00213799 2013.6.29 I2C库接口
+ 
   I2CLib|HwPkg/Library/I2CLib/I2CLib.inf
   #UpdateCpldLib|HwProductsPkg/D02/UpdateCpldLib/UpdateCpldLib.inf
   TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
@@ -159,7 +159,7 @@
   #UEFI BIOS_t00216239_end   2014-10-29 11:00:07
 
   gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00000000
-  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3c000000 #快速启动配置
+  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3c000000
   #gArmTokenSpaceGuid.PcdSystemMemorySize|0x20000000
 
   # Size of the region used by UEFI in permanent memory (Reserved 64MB)
@@ -183,7 +183,7 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|115200
 
   gHwTokenSpaceGuid.PcdUartClkInHz|200000000
-## 在FPGA上需要查询真实的串口状态，因此需要有一些延时等待
+
   gHwTokenSpaceGuid.PcdSerialPortSendDelay|10000000
 
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultDataBits|8
@@ -207,7 +207,7 @@
   # ARM PL390 General Interrupt Controller
   #
 
-  ## 更新GIC基地址
+  
   gArmTokenSpaceGuid.PcdGicDistributorBase|0x8D000000
   gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase|0xFE000000
 
@@ -243,7 +243,7 @@
   # Set model tick to 120Mhz. This depends a lot on workstation performance.
   #gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|120000000
 
-  ## 样片核内Timer频率固定为50MHz
+  
   gArmTokenSpaceGuid.PcdArmArchTimerFreqInHz|50000000
 
 
@@ -254,18 +254,18 @@
 
   gHwTokenSpaceGuid.PcdCpldBaseAddress|0x98000000
 
-  #定时器寄存器基地址 add by t00200952
+ 
   gHwTokenSpaceGuid.PcdTimerBaseAddress|0x80060000
 
-  #I2C控制器寄存器地址 add by t00200952
+ 
 
-  gHwTokenSpaceGuid.PcdSFCCFGBaseAddress|0xA6000000      #配置口寄存器基址
-  gHwTokenSpaceGuid.PcdSFCMEM0BaseAddress|0xA4000000      #MEM口基址
+  gHwTokenSpaceGuid.PcdSFCCFGBaseAddress|0xA6000000     
+  gHwTokenSpaceGuid.PcdSFCMEM0BaseAddress|0xA4000000      
 
-  #Ramdisk占用内存大小，单位MB add by t00200952
+ 
   gHwTokenSpaceGuid.PcdRamDiskMaxSize|128
 
-  #sub 11 的sub ctrl地址(Peri subctrl) add by t00200952
+  
   gHwTokenSpaceGuid.PcdPeriSubctrlAddress|0x80000000
   
   gHwTokenSpaceGuid.PcdMdioSubctrlAddress|0x80000000
@@ -361,10 +361,10 @@
   #
   ArmPkg/Drivers/CpuDxe/CpuDxe.inf
   MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
-  #c00213799 在Flash芯片上使用
+ 
   HwPkg/Drivers/NorFlashDxe/NorFlashDxe.inf
 
-  ## 板级网口配置驱动
+ 
   HwProductsPkg/D02/OemNicConfigD02/OemNicConfigD02.inf
 
   #HwPkg/Drivers/SFC/SfcDxeDriver.inf
@@ -428,7 +428,7 @@
   #
   #network
   #
-  #D02只有两个网口，目前只使用GE5
+ 
   #HwPkg/Drivers/Network/SnpPV600DxeDebug/SnpPV600Dxe.inf
   #HwPkg/Drivers/Network/SnpPV600DxeDebug_GE6/SnpPV600Dxe.inf
   #HwPkg/Drivers/Network/SnpPV600DxeD02Service_GE5/SnpPV600Dxe.inf
@@ -462,7 +462,7 @@
   #
   # FAT filesystem + GPT/MBR partitioning
   #
-  #l00228991 增加RAMDISK
+ 
   HwPkg/Drivers/ramdisk/ramdisk.inf
   MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
   MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
@@ -492,13 +492,13 @@
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
-  # 【HRD ARM PV660 V100R001C00B010 BIOS】Smbiso模块
+ 
   MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
   HwPkg/Drivers/SmbiosMiscDxe/SmbiosMiscDxe.inf
 
   HwPkg/Drivers/UpdateFdtDxe/UpdateFdtDxe.inf
   
-  # 【HRD ARM PV660 V100R001C00B010 BIOS】Memory Subclass Driver模块
+ 
   HwPkg/Drivers/MemorySubClassDxe/MemorySubClassDxe.inf
   
   HwPkg/Drivers/ProcessorSubClassDxe/ProcessorSubClassDxe.inf

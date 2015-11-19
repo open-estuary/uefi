@@ -1,10 +1,3 @@
-#
-# Huawei Package
-#
-# Copyright (c) 2011 - 2020, Huawei Corporation.
-#
-#
-
 [Defines]
   DEC_SPECIFICATION              = 0x00010005
   PACKAGE_NAME                   = HwDriversPkg
@@ -32,7 +25,7 @@
   gHwTokenSpaceGuid = { 0x99999999, 0x74c5, 0x4043, { 0xb4, 0x17, 0xa3, 0x22, 0x38, 0x14, 0xce, 0x76 } }
   gBootLineVariableGuid = { 0xc3253c90, 0xa24f, 0x4588, { 0xa6, 0x64, 0x1f, 0x88, 0x13, 0x77, 0x8f, 0xc9} }
 
-## Ramdisk GUID统一定义
+
   gRamDiskGuid = {0x6ED4DD0, 0xFF78, 0x11d3, {0xbd, 0xc4, 0x00, 0xa0, 0xc9, 0x40, 0x53, 0xd1}}
   gEfiMemoryMapGuid  = { 0xf8870015, 0x6994, 0x4b98, { 0x95, 0xa2, 0xbd, 0x56, 0xda, 0x91, 0xc0, 0x7f }} 
 
@@ -42,7 +35,7 @@
 
   UniL1L2Lib|HwPkg\Include\Library\UniL1L2Lib.h
 
-## c00213799 2014.11.26 LLC功能合入
+
   CacheMbistLib|HwPkg\Include\Library\CacheMbistLib.h
 
 [PcdsFixedAtBuild]
@@ -61,30 +54,30 @@
   gHwTokenSpaceGuid.PcdL1BiosBaseAddress|0x90000000|UINT64|0x02000012
   gHwTokenSpaceGuid.PcdL2BiosBaseAddress|0x90200000|UINT64|0x02000013
 
-  #初始化相关寄存器基地址 add by t00200952
+ 
   gHwTokenSpaceGuid.PcdSysControlBaseAddress|0|UINT64|0x01000023
   gHwTokenSpaceGuid.PcdCpldBaseAddress|0|UINT64|0x01000024
   gHwTokenSpaceGuid.PcdMailBoxAddress|0|UINT64|0x01000025
 
 
-  #定时器寄存器基地址 add by t00200952
+
   gHwTokenSpaceGuid.PcdTimerBaseAddress|0|UINT64|0x01000030
 
-  gHwTokenSpaceGuid.PcdSFCCFGBaseAddress|0|UINT64|0x01000037      #配置口寄存器基址
-  gHwTokenSpaceGuid.PcdSFCMEM0BaseAddress|0|UINT64|0x01000038      #MEM口基址
+  gHwTokenSpaceGuid.PcdSFCCFGBaseAddress|0|UINT64|0x01000037     
+  gHwTokenSpaceGuid.PcdSFCMEM0BaseAddress|0|UINT64|0x01000038     
 
-  #PMBUS寄存器基地址  
+ 
   gHwTokenSpaceGuid.PcdPmBusBaseAddress|0x403A0000|UINT32|0x01000039      
 
-  #Ramdisk占用内存大小 add by t00200952
+
   gHwTokenSpaceGuid.PcdRamDiskMaxSize|0|UINT32|0x01000040
 
-  #sub 11 的sub ctrl地址 add by t00200952
+
   gHwTokenSpaceGuid.PcdPeriSubctrlAddress|0|UINT64|0x01000041
 
   gHwTokenSpaceGuid.PcdMdioSubctrlAddress|0|UINT64|0x01000042
   
-  #内存诊断起始地址、大小 add by t00216239
+  
   gHwTokenSpaceGuid.PcdDdrExamStartAdd|0|UINT32|0x03000050
   gHwTokenSpaceGuid.PcdDdrExamLenth|0x100000|UINT32|0x03000051
 

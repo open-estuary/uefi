@@ -1,14 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Library\PlatformSysCtrlLib.h
-
-
-Description: 
-
-*************************************************/
-
 #ifndef _PLATFORM_SYS_CTRL_LIB_H_
 #define _PLATFORM_SYS_CTRL_LIB_H_
 
@@ -27,7 +16,7 @@ UINTN PlatformGetPll (UINT32 NodeId, UINTN Pll);
 #define DJTAG_CHAIN_ID_AA        1
 #define DJTAG_CHAIN_ID_LLC       4
 
-/*系统控制寄存器DJTAG部分偏移地址*/
+
 #define SC_DJTAG_MSTR_EN_OFFSET             0x6800
 #define SC_DJTAG_MSTR_START_EN_OFFSET       0x6804
 #define SC_DJTAG_SEC_ACC_EN_OFFSET          0x6808

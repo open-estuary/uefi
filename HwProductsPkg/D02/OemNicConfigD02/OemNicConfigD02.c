@@ -1,21 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVVe1Zr9/gtteWy0L8B4LdSodtP3H6AEC9vz0Fjm76jab4u72zHmPo2Lpv+S6/F4Sg1jF
-DUroMQVPLNXCAEaIvBAEJpa+9rFgEPX+1f4l1GK7dZiZ5NgxXR1EhaQOcpkjEg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: OemNicConfig.c
-
-
-Description:
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/IoLib.h>
 #include <Library/DebugLib.h>
@@ -39,22 +21,7 @@ OEM_NIC_PROTOCOL mOemNicProtocol = {
   .SetMac = OemSetMac,
 };
 
-/*******************************************************************************
- 函 数 名  : OemGetMacE2prom
- 功能描述  : 从EEPROM中获取mac地址
- 输入参数  : Port    
-             *pucAddr  
- 输出参数  : 无
- 返 回 值  : 
- 调用函数  : 
- 被调函数  : 
- 
- 修改历史      :
-  1.日    期   : 2014年11月24日
-    作    者   : ZhuGeSheng
-    修改内容   : 新生成函数
 
-*******************************************************************************/
 EFI_STATUS OemGetMacE2prom(IN UINT32 Port, OUT UINT8 *pucAddr)
 {
     I2C_DEVICE stI2cDev = {0};
@@ -84,22 +51,7 @@ EFI_STATUS OemGetMacE2prom(IN UINT32 Port, OUT UINT8 *pucAddr)
     return EFI_SUCCESS;
 }
 
-/*******************************************************************************
- 函 数 名  : OemSetMacE2prom
- 功能描述  : 向EEPROM中写入MAC地址
- 输入参数  : Port    
-             *pucAddr  
- 输出参数  : 无
- 返 回 值  : 
- 调用函数  : 
- 被调函数  : 
- 
- 修改历史      :
-  1.日    期   : 2014年11月24日
-    作    者   : ZhuGeSheng
-    修改内容   : 新生成函数
 
-*******************************************************************************/
 EFI_STATUS OemSetMacE2prom(IN UINT32 Port, IN UINT8 *pucAddr)
 {
     I2C_DEVICE stI2cDev = {0};

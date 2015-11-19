@@ -1,11 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:EG4uRhTwMmgcVFBsBnYHCDadN5jJKSuVyxmmaCmKFU6eJEbB2fyHF9weu4/jer/hxLHb+S1e
-E0zVg4C3NiZh4WIPvj4+Pmfbh+YGahSH5JdS/1MeXWIN/Su+lyHPU8Ju8/XPgqOK/1CKOV13
-RWYRb5Ee+3GEtRz6aB8O6FmfEz2rZSQTYYqV6zkp7JA23HAqjx5FHCTB4bJ35zOtwanDulV6
-3GiooklnefLZbUwz+FAwxl7hKIyVseoJjRwQQ5aAmdGpqW07slMMZAJHgPekeA==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
-
 #include <Uefi.h>
 #include <Library/BaseLib.h>
 #include <libfdt.h>

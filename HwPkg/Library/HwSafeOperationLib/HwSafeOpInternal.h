@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Library\HwSafeOperationLib\HwSafeOpInternal.h
-
-Description:
-
-*************************************************/
-
 #ifndef __HW_SAFE_OP_INTERNAL_H__
 #define __HW_SAFE_OP_INTERNAL_H__
 

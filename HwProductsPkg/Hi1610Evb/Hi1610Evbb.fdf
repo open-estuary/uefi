@@ -25,7 +25,6 @@
 # existing system flash.
 #
 ################################################################################
-#DTS2015050902612 【iWare V200R002C00B980 BIOS】盘古C02编译文件分开
 [FD.HI1610Evbb]
 BaseAddress   = 0xA4800000|gArmTokenSpaceGuid.PcdFdBaseAddress  # The base address of the Firmware in NOR Flash.
 
@@ -61,7 +60,6 @@ gArmTokenSpaceGuid.PcdFvBaseAddress|gArmTokenSpaceGuid.PcdFvSize
 FV = FVMAIN_COMPACT
 
 # uniBIOS_y00216284_092_start DTS2015090800843 2015-9-8 >>>
-# Description:将编译的TrustedFirmware文件直接放到BIOS二进制文件中
 ## Place for Trusted Firmware
 0x00200000|0x00020000
 FILE = HwProductsPkg/Hi1610Evb/Hi1610Evbb/bl1.bin
@@ -112,18 +110,15 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
   INF HwPkg/Drivers/NorFlashDxe/NorFlashDxe.inf
 
-  ## 板级网口配置驱动
   INF HwProductsPkg/Hi1610Evb/OemNicConfigEvb/OemNicConfigEvb.inf
 
   #
-  # DTS2014021204581  z00201473 2013.10.22  新增SFC驱动
   #
   #INF HwPkg/Drivers/SFC/SfcDxeDriver.inf
   INF HwProductsPkg/Hi1610Evb/Hi1610Evbb/Drivers/SFC/SfcDxeDriver.inf
 
   #uniBIOS_c00213799_start 2015-1-13 17:02:02
   #Issue ID:DTS2015011302934
-  #Description:【iWare V200R002C00B970】合入变量区读写功能
   #INF HwPkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   #INF MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   #INF MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
@@ -168,7 +163,6 @@ READ_LOCK_STATUS   = TRUE
   #
   # FAT filesystem + GPT/MBR partitioning
   #
-  #l00228991 增加RAMDISK
   INF HwPkg/Drivers/ramdisk/ramdisk.inf
   INF MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
   INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
@@ -185,21 +179,17 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
   #
   # uniBIOS-y00216284 DTS2014071901841 2014-7-19
-  #【HRD ARM PV660 V100R001C00B010 BIOS】提供PCIe初始化功能
   #INF HwPkg/Pcie/PcieInitDxe.inf
 
   # uniBIOS-y00216284  2014-10-20
-  # 【HRD ARM PV660 V100R001C00B010 BIOS】Smbiso模块
   INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
   INF HwPkg/Drivers/SmbiosMiscDxe/SmbiosMiscDxe.inf
 
   # uniBIOS-y00216284-002  2014-10-31
-  # 【HRD ARM PV660 V100R001C00B010 BIOS】Memory Subclass Driver模块
   INF HwPkg/Drivers/MemorySubClassDxe/MemorySubClassDxe.inf
   
   # uniBIOS_y00216284_009_start 2014-12-13 14:37:09
   # Issue ID:DTS2014121301222 
-  # Description:【iWare V2R2C00B930 BIOS】Processor Subclass Driver模块
   INF HwPkg/Drivers/ProcessorSubClassDxe/ProcessorSubClassDxe.inf
 
   #
@@ -215,10 +205,7 @@ READ_LOCK_STATUS   = TRUE
   #Network
   #
 ## uniBIOS-g00179230 DTS2013102904527 2013-10-29
-## 【HRD ARM PV660 V100R001C00B010 BIOS】提供FPGA上调试网口下载功能
   # uniBIOS_y00216284_042_start DTS2015051309327 2015-5-13 >>>
-  # Description: 网卡驱动归一，删除多余代码
-  # DTS2015101008148 二进制整改，删除无用二进制驱动。
   #FILE FREEFORM = 347DB881-B9DB-4258-ACD0-3C444B861306 {
   #      SECTION RAW = HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/bin/firmware_KR_v1p10.bin
   #      SECTION RAW = HwPkg/Drivers/Network/SnpPV600Dxe_PLAT/bin/retimer10Gbaser_KR_v1p10.bin
@@ -241,7 +228,6 @@ READ_LOCK_STATUS   = TRUE
   INF MdeModulePkg/Universal/Network/UefiPxeBcDxe/UefiPxeBcDxe.inf
   #INF MdeModulePkg/Universal/Network/VlanConfigDxe/VlanConfigDxe.inf
 
-  #s00296804 新增更新FDT并创建FDT Configuration Table 驱动
   INF HwPkg/Drivers/UpdateFdtDxe/UpdateFdtDxe.inf
 
   #

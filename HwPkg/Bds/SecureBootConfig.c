@@ -119,7 +119,6 @@ CreateTimeBasedPayload (
   //
   Payload     = *Data;
   PayloadSize = *DataSize;
-  //计算descriptor2结构体大小
   DescriptorSize    = OFFSET_OF (EFI_VARIABLE_AUTHENTICATION_2, AuthInfo) + OFFSET_OF (WIN_CERTIFICATE_UEFI_GUID, CertData);
   
   NewData = (UINT8*) AllocateZeroPool (DescriptorSize + PayloadSize);
@@ -136,7 +135,6 @@ CreateTimeBasedPayload (
   DescriptorData = (EFI_VARIABLE_AUTHENTICATION_2 *) (NewData);
 
   ZeroMem (&Time, sizeof (EFI_TIME));
-  //由于时间获取失败，采用直接赋值的方式
   //Status = gRT->GetTime (&Time, NULL);
   //DEBUG ((EFI_D_ERROR, "[CreateTimeBasedPayload]gRT->GetTime: %r\n", Status));
   //if (EFI_ERROR (Status)) {
@@ -653,7 +651,7 @@ EnrollX509ToKek (
   CopyGuid (&KekSigList->SignatureType, &gEfiCertX509Guid);
 
   KEKSigData = (EFI_SIGNATURE_DATA*) ((UINT8*) KekSigList + sizeof (EFI_SIGNATURE_LIST));
-  CopyGuid (&KEKSigData->SignatureOwner, &gSignatureOwnerGuid);//signatureGUID 直接赋值了
+  CopyGuid (&KEKSigData->SignatureOwner, &gSignatureOwnerGuid);//signatureGUID
   CopyMem (KEKSigData->SignatureData, Data, DataSize);
 
   //
@@ -780,7 +778,6 @@ EnrollX509toSigDB (
   SigDBCertData = NULL;
   TempData          = NULL;
 
-  //构造签名数据库格式
   SigDBSize = sizeof(EFI_SIGNATURE_LIST) + sizeof(EFI_SIGNATURE_DATA) - 1 + X509DataSize;
   TempData = AllocateZeroPool (SigDBSize);
   if (TempData == NULL) {
@@ -805,8 +802,7 @@ EnrollX509toSigDB (
   // Check if signature database entry has been already existed. 
   // If true, use EFI_VARIABLE_APPEND_WRITE attribute to append the 
   // new signature data to original variable
-  //
-  //构造time-base属性的证书格式
+  
   Attr = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_RUNTIME_ACCESS 
           | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS;
   Status = CreateTimeBasedPayload (&SigDBSize, (UINT8**) &TempData);
@@ -814,7 +810,7 @@ EnrollX509toSigDB (
     DEBUG ((EFI_D_ERROR, "Fail to create time-based data payload: %r\n", Status));
     goto ON_EXIT;
   }
-  //获取现有的DB证书
+
   Status = gRT->GetVariable(
                   VarName, 
                   &gEfiImageSecurityDatabaseGuid, 
@@ -827,8 +823,7 @@ EnrollX509toSigDB (
     Attr |= EFI_VARIABLE_APPEND_WRITE;
   } else if (Status != EFI_NOT_FOUND) {
     goto ON_EXIT;
-  }  
-  //设置DB证书
+  } 
   Status = gRT->SetVariable(
                   VarName, 
                   &gEfiImageSecurityDatabaseGuid, 
@@ -1287,7 +1282,6 @@ EnrollRSA2048ToSigDB (
     // If true, use EFI_VARIABLE_APPEND_WRITE attribute to append the 
     // new signature data to original variable
     //
-    //构造time-base属性的证书格式
     Attr = EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_RUNTIME_ACCESS 
             | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_TIME_BASED_AUTHENTICATED_WRITE_ACCESS;
     Status = CreateTimeBasedPayload (&SigDBSize, (UINT8**) &SigDBCert);
@@ -1295,7 +1289,6 @@ EnrollRSA2048ToSigDB (
       DEBUG ((EFI_D_ERROR, "Fail to create time-based data payload: %r\n", Status));
       goto ON_EXIT;
     }
-    //获取现有的DB证书
     Status = gRT->GetVariable(
                     VarName, 
                     &gEfiImageSecurityDatabaseGuid, 
@@ -1309,7 +1302,6 @@ EnrollRSA2048ToSigDB (
     } else if (Status != EFI_NOT_FOUND) {
       goto ON_EXIT;
     }  
-    //设置DB证书
     Status = gRT->SetVariable(
                     VarName, 
                     &gEfiImageSecurityDatabaseGuid, 
@@ -1770,7 +1762,7 @@ DeleteSignatureDatabase (
   Cert            = NULL;
   Attr            = 0; 
 
-  //进入custom模式，删除变量
+  
   Status = SetSecureBootMode(CUSTOM_SECURE_BOOT_MODE);
   if (EFI_ERROR (Status)) {
     return Status;

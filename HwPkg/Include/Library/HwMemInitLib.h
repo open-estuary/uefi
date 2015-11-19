@@ -1,20 +1,3 @@
-/******************************************************************************
-
-                  版权所有 (C), 2014-2014, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : HwMemInit.h
-  版 本 号   : v1.0
-  作    者   : z00201473
-  生成日期   : 2014年8月1日
-  最近修改   :
-  功能描述   :
-  修改历史   :
-  1.日    期   : 2014年8月1日
-    作    者   : z00201473
-    修改内容   : 新建文件
-******************************************************************************/
-
 #ifndef _HW_MEM_INIT_LIB_H_
 #define _HW_MEM_INIT_LIB_H_
 
@@ -60,17 +43,17 @@ typedef struct _DDR_FREQ_TCK
 }DDR_FREQ_TCK;
 
 typedef struct _GBL_CFG{
-  //外部对内存初始化的配置数据
+ 
 
 }GBL_CFG;
 
 typedef struct _GBL_VAR{
-  //内存初始化过程中用到的全局变量存在这个结构体里
+ 
 
 }GBL_VAR;
 
 typedef struct _GBL_NVDATA{
-//需要热复位不丢失的数据成员放在这里
+
 
 }GBL_NVDATA;
 
@@ -106,7 +89,7 @@ typedef struct _DDR_DIMM{
     UINT8       DramType;           //Byte 2
     UINT8       ModuleType;         //Byte 3
     UINT8       SDRAMCapacity;      //Byte 4
-    UINT8       BankNum;            //Byte 4，对于DDR4，该值为所有BankGroup中的Bank之和
+    UINT8       BankNum;           
     UINT8       BGNum;              //Byte 4 For DDR4
     UINT8       RowBits;            //Byte 5
     UINT8       ColBits;            //Byte 5
@@ -173,8 +156,8 @@ typedef struct {
 
 typedef struct _DDR_Channel{
     BOOLEAN     Status;
-    UINT8       CurrentDimmNum;    //临时使用
-    UINT8       CurrentRankNum;    //临时使用
+    UINT8       CurrentDimmNum;    
+    UINT8       CurrentRankNum;    
     UINT16      RankPresent;
     UINT8       DramType;
     UINT8       DramWidth;
@@ -295,7 +278,7 @@ typedef struct _NVRAM{
 }NVRAM;
 
 typedef struct _MEMORY{
-    UINT8           Config[7];//根据setup配置决定全空间或者topoflowmemory范围的内存测试。
+    UINT8           Config[7];
     UINT32          Config1;
 }MEMORY;
 
@@ -303,20 +286,20 @@ typedef struct _GBL_DATA
 {
     DDR_CHANNEL Channel[MAX_SOCKET][MAX_CHANNEL];
     UINT8       DramType;
-    UINT8       CurrentDimmNum;    //临时使用
-    UINT8       CurrentRankNum;    //临时使用
+    UINT8       CurrentDimmNum;    
+    UINT8       CurrentRankNum;   
     UINT8       MaxSPCNum;
     UINT32      Freq;
     UINT32      SpdTckMtb;
     UINT32      SpdTckFtb;
     UINT32      SpdTck;
-    UINT32      Tck;     //系统的DDR时钟周期   0.1ps
-    UINT32      DdrFreqIdx;    //系统DDR时钟频率索引
+    UINT32      Tck;    
+    UINT32      DdrFreqIdx;  
     UINT32      MemSize;    
     UINT32      EccEn;    
     
     BOOLEAN     SetupExist;
-    UINT8       warmReset; //DTS2015072007681-C00227771-D20150720 热复位的情况下保存该标志
+    UINT8       warmReset; 
     
     UINT8       cl;
     UINT8       cwl;
@@ -462,7 +445,7 @@ struct ODT_ACTIVE_STRUCT {
 #define FREQUENCY_MTB_OFFSET            1000000
 #define FREQUENCY_FTB_OFFSET               1000
 
-//单位0.1ps
+//
 #define DDR_800_TCK_MIN                 25000
 #define DDR_1000_TCK_MIN                20000
 #define DDR_1067_TCK_MIN                18750

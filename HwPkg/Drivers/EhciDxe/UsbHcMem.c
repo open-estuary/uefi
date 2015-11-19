@@ -95,7 +95,6 @@ UsbHcAllocMemBlock (
   }
   #endif
 
-  // 根据需求申请4G以上或以下不可Cache内存
   if(Pool->Check4G) {
     BufHost = UncachedAllocatePages(Pages);
   } else {

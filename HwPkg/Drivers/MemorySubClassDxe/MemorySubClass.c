@@ -1,23 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePcxREXVZ5dUR67fNFdcsGWwP1ecJzNoC5Nk+8B
-iJvImN1S+tx+2aUFF3UpnqtcKos7TaqjNZUlquSbqWJ1CbZiMt61kQ5MPvDnuF6TvahDeYLJ
-7AvJamas+cGYBZYsCdgXsffc3Co3tIFYL6hf0xKgNUN3pawllmLU2WsGw5H5Ww==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/******************************************************************************
-
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : MemorySubClass.c
-  版 本 号   : v1.0
-  作    者   : 
-  生成日期   : 2014年10月20日
-  最近修改   :
-  功能描述   : 
-  修改历史   :
-******************************************************************************/
 
 /**@file
 Module Name:
@@ -461,7 +441,7 @@ SmbiosAddType17Table (
     Type17Record->FormFactor 					= MemoryFormFactorDimm;
     Type17Record->DeviceLocator 				= 1;
     Type17Record->BankLocator 					= 2;
-    Type17Record->MemoryType = MemoryTypeDram;    //暂时以0x03替代,没有DDR4 标准
+    Type17Record->MemoryType = MemoryTypeDram;    
     if (pGblData->Channel[Skt][Ch].Dimm[Dimm].DramType == SPD_TYPE_DDR3) 
     {
         Type17Record->MemoryType = MemoryTypeDdr3;

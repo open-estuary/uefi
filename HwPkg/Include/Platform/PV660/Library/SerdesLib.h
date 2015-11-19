@@ -1,14 +1,8 @@
-//DTS2015081106432 w00216241 20150813 【iWare uniBIOS V200R001C00B990 Pangea LLT测试】按照安全能力中心要求对代码中存在的敏感词汇进行整改
+
 #ifndef _SERDES_LIB_H_
 #define _SERDES_LIB_H_
 
-/*************************************************************
-       新增加的宏定义begin
-***********************************************************/
-/*l00290354 add serdes struct
-注意当hilink0为EM_HILINK0_PCIE1_4LANE_PCIE2_4LANE模式
-hilink2必须为EM_HILINK2_SAS0_8LANE
-*/
+
 typedef enum hilink0_mode_type
 {
 	EM_HILINK0_PCIE1_8LANE = 0,
@@ -66,7 +60,7 @@ typedef struct {
     UINT32 DsNum;
 } SERDES_POLARITY_INVERT;
 
-// 以下并非SerdesLib所产生，而是SerdesLib需要使用的外部接口，在OemMiscLib里生成
+
 EFI_STATUS OemGetSerdesParam (serdes_param_t *Param);
 extern SERDES_POLARITY_INVERT gSerdesPolarityTxDesc[];
 extern SERDES_POLARITY_INVERT gSerdesPolarityRxDesc[];
@@ -77,12 +71,12 @@ EfiSerdesInitWrap (VOID);
 
 void serdes_state_show(UINT32 macro1);
 //uniBIOS__l00228991_start DTS2015042210118 2015-4-22 20:06:34
-//Description:2P/1P代码归一
+
 void SRE_SerdesEnableCTLEDFE(UINT32 macro, UINT32 lane, UINT32 ulDsCfg);
 //uniBIOS__l00228991_end DTS2015042210118 2015-4-22 20:06:34
 
 //uniBIOS_l00306713_000_start 2015-3-19 17:37:06
- //Issue ID:DTS2015031908171    Description: 【iWare V200R002C00B980】BIOS下增加serdes Debug命令，与OS对齐
+
 //EYE test
 UINT32 serdes_eye_test(UINT32 uwMacroId, UINT32 uwDsNum, UINT32 eyemode, UINT32 scanwindowvalue, UINT32 uwRateData);
 
@@ -107,7 +101,7 @@ void serdes_ctle_dfe_reset(UINT32 macro,UINT32 lane);
 
 
 //uniBIOS_l00306713_000_start 2015-7-15 9:13:55
- //Issue ID:DTS2015071500088    Description:【iWare V200R002C00B980 BIOS】serdes环回测试命令合入 
+ 
 void serdes_tx_to_rx_serial_loopback(UINT32 macro,UINT32 lane,UINT32 val);
 
 void serdes_tx_to_rx_parallel_loopback(UINT32 macro,UINT32 lane,UINT32 val);

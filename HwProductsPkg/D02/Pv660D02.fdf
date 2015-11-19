@@ -155,7 +155,7 @@ READ_LOCK_STATUS   = TRUE
   ##  NOR flash on D02 board s00296804 2015-1-20
   INF HwPkg/Drivers/NorFlashDxe/NorFlashDxe.inf
 
-  ## 板级网口配置驱动
+  
   INF HwProductsPkg/D02/OemNicConfigD02/OemNicConfigD02.inf
   #INF HwProductsPkg/Pv660Evb/OemNicConfigEvb/OemNicConfigEvb.inf
 
@@ -217,7 +217,6 @@ READ_LOCK_STATUS   = TRUE
   #
   # FAT filesystem + GPT/MBR partitioning
   #
-  #l00228991 增加RAMDISK
   INF HwPkg/Drivers/ramdisk/ramdisk.inf
   INF MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
   INF MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
@@ -244,8 +243,7 @@ READ_LOCK_STATUS   = TRUE
 
   #
   #Network
-  #
-  #D02只有GE4,GE5,目前只初始化GE5用做调试网口
+  # 
   #INF HwPkg/Drivers/Network/SnpPV600DxeD02Service_GE5/SnpPV600Dxe.inf
   #INF HwPkg/Drivers/Network/SnpPV600DxeDebug_GE6/SnpPV600Dxe.inf
   #INF HwPkg/Drivers/Network/SnpPV600DxeDebug/SnpPV600Dxe.inf

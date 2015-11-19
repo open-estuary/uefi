@@ -1,10 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:RHdz7ygZrZqPlkAy/+I2+ShIzoIqjpQfhsVejzUV8gT3FlKT+KQlBvPfenzCefQUjTM5Ry7W
-lMlv1yXCGAx99LeFdvhJqcqoCvs5kRRqWP6BfP2TaXLyxPo06yNofyMteDxbVcfi8HGkCtWu
-pIzVecT7Grj6ooBQX7dcsCJmbx1Yt8yM8f5rYCZ6niN9yVDAyg6n8blpUs6KI2MbaumuQf5I
-POLjvoTMF58jFoCls42KuuQzTOoShyZIjESJvXsIiCEPcRbjsfKB36chKvriGw==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
 /**@file
 
 Copyright (c) 2006, Intel Corporation. All rights reserved.<BR>

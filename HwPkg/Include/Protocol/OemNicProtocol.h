@@ -1,14 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Protocol\OemNicProtocol.h
-
-
-Description:
-
-*************************************************/
-
 #ifndef _OEM_NIC_PROTOCOL_H_
 #define _OEM_NIC_PROTOCOL_H_
 

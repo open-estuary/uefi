@@ -1,10 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd3VnsM6s5mj5FipNn/jcsO/EncCPwg5OvWbYGEl5eNKnphP5XtvoVV2vs4NkR6dsJZxA
-0I1HI386EDu9mnX2fWP2nkcSyTpO+qVgGh+rtYI754PG1vu+3Vj6uRUYPS44Qg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
+
 /** @file
   Timer Architecture Protocol driver of the ARM flavor
 
@@ -52,21 +46,7 @@ void MyFunc()
 }
 
 
-/*****************************************************************************
- 函 数 名  : HITIMER_Start
- 功能描述  : PV650片上timer模块初始化
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年10月18日
-    作    者   : huwei 64632
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void HITIMER_Start()
 {
 		UINT32 ulRegAddr;
@@ -74,26 +54,23 @@ void HITIMER_Start()
 		UINT32 ulMask;
         //UINT64 ullSysAddr;
 
-		//add by t0020095 PV660检视修改
+		
         //ullSysAddr = PcdGet64(PcdSysControlBaseAddress);
         
-        //start_by_d00183345_2013-2-1, timer0~3使用PLL0的8分频
         
-         //使能timer时钟，使用晶振时钟
+        
+         
         //ulVal = *(UINT32*)ullSysAddr;
         //ulVal |= BIT16;
        
 
-        // uniBIOS-g00179230 2013-9-14, FPGA版本同步
-        // FPGA上时钟不需要配置, 暂时屏蔽
-
-         //使能timer时钟，使用PLL0的8分频
+       
         //ulVal = *(UINT32*)ullSysAddr;
         //ulVal |= BIT17 | BIT16 | BIT18 | BIT19;
         
         //*(UINT32*)ullSysAddr = ulVal;
 
-        // uniBIOS-g00179230 2013-9-14, FPGA版本同步
+        
         // Timer0 clock enable
         *(volatile UINT32*)(TIMER_SUBCTRL_BASE + SC_TM_CLKEN0_REG) = 0x3;
 
@@ -111,7 +88,7 @@ void HITIMER_Start()
 		ulRegAddr = gRegBase + SRE_HITIMER32_CNTL_OFFSET;
 		ulVal = *(volatile UINT32*)(UINTN)ulRegAddr;
 		ulVal = ulVal;
-		ulVal |= ulMask; /*不屏蔽*/
+		ulVal |= ulMask;
         //DEBUG((EFI_D_ERROR, "int mode = %0x at %0x\n", ulVal, ulRegAddr));
 		*(volatile UINT32*)(UINTN)ulRegAddr = ulVal;
 
@@ -126,21 +103,7 @@ void HITIMER_Start()
 
 }
 
-/*****************************************************************************
- 函 数 名  : HITMER_ClearInt
- 功能描述  : PV650片上timer清中断
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年10月18日
-    作    者   : huwei 64632
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void HITMER_ClearInt()
 {
 	UINT32 ulRegAddr;
@@ -152,26 +115,11 @@ void HITMER_ClearInt()
     //DEBUG((EFI_D_ERROR, "HITMER_ClearInt = %0x at %0x\n", ulVal, ulRegAddr));
 	*(volatile UINT32*)(UINTN)ulRegAddr = ulVal;
 
-    // uniBIOS-g00179230 2013-9-14, FPGA版本同步
-    // 当前版本的GIC需要人为加入DSB指令
+   
 	asm("DSB SY");
 }
 
-/*****************************************************************************
- 函 数 名  : HITMER_Disable
- 功能描述  : PV650片上timer去使能
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年10月18日
-    作    者   : huwei 64632
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void DisableTimer()
 {
 	UINT32 ulRegAddr;
@@ -318,7 +266,7 @@ TimerDriverSetTimerPeriod (
     
     //ArmArchTimerSetTimerVal((UINTN)TimerTicks);
     
-    /*设置PV650 TIMER定时周期*/
+   
     ulRegAddr = gRegBase + SRE_HITIMER32_LOAD_OFFSET;
     //DEBUG((EFI_D_ERROR, "TimerTicks1 = %0x at %0x ======\n", TimerTicks, ulRegAddr));
     *(volatile UINT32*)(UINTN)ulRegAddr = TimerTicks;
@@ -514,7 +462,7 @@ TimerInitialize (
   EFI_STATUS  Status;
 
 
-  //add by t0020095 PV660检视修改
+ 
   gRegBase = PcdGet64(PcdTimerBaseAddress);
   // Find the interrupt controller protocol.  ASSERT if not found.
   Status = gBS->LocateProtocol (&gHardwareInterruptProtocolGuid, NULL, (VOID **)&gInterrupt);

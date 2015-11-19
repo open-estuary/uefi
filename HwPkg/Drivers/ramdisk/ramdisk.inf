@@ -54,7 +54,6 @@ ramdisk.h
   gEfiBlockIoProtocolGuid
   gEfiLoadedImageProtocolGuid
 [PCD]
-  #add by t0020095 PV660¼ìÊÓÐÞ¸Ä
   gHwTokenSpaceGuid.PcdRamDiskMaxSize
 
 

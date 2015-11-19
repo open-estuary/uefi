@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Library\HwSafeOperationLib\HwSafeMemOpWrapper.c
-
-Description: 
-
-*************************************************/
-
 #include "HwSafeOpInternal.h"
 
 VOID *

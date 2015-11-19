@@ -1,22 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:EG4uRhTwMmgcVFBsBnYHCDadN5jJKSuVyxmmaCmKFU6eJEbB2fyHF9weu4/jer/hxLHb+S1e
-E0zVg4C3NiZh4WIPvj4+Pmfbh+YGahSH5JekcNbwDJ3EondjpJjt4q4ECmDk1NoHHofliorY
-nR2tpLrHP3QAWInGJGilmc65ltkqHDyYl13KZXlLbM20hQ5iTvC4s13FYkEk3+117k918qB/
-3nk2RQpLnmQCbVAcemeecOx+rh9VQCIQ7GXsh7G4+IKyKUrvDDIpI8XfCooKOQ==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
-/******************************************************************************
-
-                版权所有 (C), 2009-2019, 华为技术有限公司
-
-******************************************************************************
-文 件 名   : FlashBlockIoDxe.c
-版 本 号   : v1.0
-作    者   : c00213799
-生成日期   : 2015年01月07日
-功能描述   :
-修改历史   :
-******************************************************************************/
 #include "FlashFvbDxe.h"
 
 //

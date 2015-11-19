@@ -1,14 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd1c+x33NDPwqpTmM0D8zx9Utx3JxVELqYS/9RntqHJZMlZcrHeaW/VTufJkPlZwbzEUn
-W0ne0Hk3/io/uMdAelJfIlrHNpm0Bdv9cmQoKt6Tfc2uNAKf/ah/4eQvqqia0Q==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/******************************************************************************
 
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-******************************************************************************/
 #include "Uefi.h"
 #include <Library/ArmLib.h>
 #include <Library/DebugLib.h>  
@@ -18,18 +8,7 @@ W0ne0Hk3/io/uMdAelJfIlrHNpm0Bdv9cmQoKt6Tfc2uNAKf/ah/4eQvqqia0Q==*/
 #include <Library/HobLib.h>  
 #include <Guid/MemoryMapData.h>  
 
-/****************************************************************************
- 函 数 名  : SaveMemoryConfigDxeEntry
- 功能描述  : 读取Memory相关配置hob数据，存入Flash
- 输入参数  : IN EFI_HANDLE         ImageHandle,
-             IN EFI_SYSTEM_TABLE  *SystemTable
- 输出参数  : 无
- 返 回 值  : EFI_STATUS
- 修改历史  :
- 1.日    期   : 2014年12月18日
-  作    者   : l00228991
-  修改内容   : 新生成函数
-****************************************************************************/
+
 EFI_STATUS
 EFIAPI SaveMemoryConfigDxeEntry (
   IN EFI_HANDLE         ImageHandle,

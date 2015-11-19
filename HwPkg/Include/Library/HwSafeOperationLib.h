@@ -1,13 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Library\HwSafeOperationLib.h
-
-Description:
-
-*************************************************/
-
 #ifndef __HW_SAFE_OPERATION_LIB_H__
 #define __HW_SAFE_OPERATION_LIB_H__
 

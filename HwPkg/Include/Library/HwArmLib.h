@@ -1,12 +1,3 @@
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\Library\HwArmLib.h
-
-Description: Huawei library for CPU core
-*************************************************/
-
 #ifndef _HW_ARM_LIB_H_
 #define _HW_ARM_LIB_H_
 

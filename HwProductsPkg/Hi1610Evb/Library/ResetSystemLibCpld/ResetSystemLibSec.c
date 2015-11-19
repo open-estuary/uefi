@@ -1,10 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVfkbaSe+hl9RXTC9oabrF7EREUkVfNcDt2gwoBwRt3KcHmgSvQcnU+RDGmN6q0dx1r30
-ZarNrai2krun4kgghZ2KPn8RaLAsb4JnlYAI6FH5BWQAbvcFNfWRn2qTqmrpAA==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
 /** @file
   Template library implementation to support ResetSystem Runtime call.
 
@@ -31,7 +24,7 @@ ZarNrai2krun4kgghZ2KPn8RaLAsb4JnlYAI6FH5BWQAbvcFNfWRn2qTqmrpAA==*/
 #include <Library/IoLib.h>
 #include <Library/PcdLib.h>
 
-//检视意见修改 z00201473   2014.12.26  DTS2014122401186
+
 
 
 /**

@@ -1,19 +1,9 @@
-/*************************************************
 
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Include\PlatformArch.h
-
-Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.11.1
-
-Description: 
-
-*************************************************/
 
 #ifndef _PLATFORM_ARCH_H_
 #define _PLATFORM_ARCH_H_
 
-#define MAX_SOCKET      2   //暂时只支持单片
+#define MAX_SOCKET      2   
 #define MAX_DIE         4
 #define MAX_DDRC        2
 #define MAX_NODE        (MAX_SOCKET * MAX_DIE)

@@ -1,23 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:RHdz7ygZrZqPlkAy/+I2+ShIzoIqjpQfhsVejzUV8gT3FlKT+KQlBvPfenzCefQUjTM5Ry7W
-lMlv1yXCGAx99LeFdvhJqcqoCvs5kRRqWP7Z7nFVWRnE+JluncMrEolmW9l5JzAqS7qgT1mL
-ZT309QhYVnr0+E+vn2o4fVowQWmy2YDihUOpqrzdRghiAnxhf9dlFsqpRMnti2LUc027y2yE
-R11cBKO0hZsmBFNSiy0YbwicajXoQJh06oRzEmtqdomIpS4dl7iVUDxLTiK8mw==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
-/******************************************************************************
-
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : ProcessorSubClass.c
-  版 本 号   : v1.0
-  作    者   : 
-  生成日期   : 2014年11月10日
-  最近修改   :
-  功能描述   : 
-  修改历史   :
-******************************************************************************/
 
 /**@file
 Module Name:
@@ -112,7 +92,6 @@ AddSmbiosCacheTypeTable (
 	ZeroMem(CacheInfo, sizeof(CACHE_INFO) * MAX_CACHE_LEVEL);
 	
 	//
-	// 获取Cache信息
 	//
 	GetCacheInfo(ProcessorNumber, CacheInfo);	
 	
@@ -169,7 +148,7 @@ AddSmbiosCacheTypeTable (
 		Type7Record->SystemCacheType		= CacheInfo[CacheLevel].SystemCacheType;
 		Type7Record->Associativity			= CacheInfo[CacheLevel].Associativity;        
 		
-		// 配置Cache Config信息
+		
 		CacheConfig.Socketed				= 0;	// Not Socketed
 		CacheConfig.Reserved1				= 0;	// 
 		CacheConfig.Location				= 0;	// Internal  
@@ -188,7 +167,7 @@ AddSmbiosCacheTypeTable (
         //CopyMem(&Type7Record->CacheConfiguration, &CacheConfig, sizeof(CACHE_CONFIGURATION));
         (VOID)memcpy_s(&Type7Record->CacheConfiguration, sizeof(CACHE_CONFIGURATION), &CacheConfig, sizeof(CACHE_CONFIGURATION));
 		
-		// 配置Cache Size信息
+		
         if(CacheLevel <= 1)
         {
         	TotalSize = (CacheInfo[CacheLevel].InstalledSize) * CoreCount;
@@ -212,7 +191,7 @@ AddSmbiosCacheTypeTable (
         	Type7Record->InstalledSize		|= BIT15;
         }
         
-        // 配置SRAM Type信息
+       
        
         ZeroMem(&CacheSramType, sizeof(CACHE_SRAM_TYPE_DATA));
         CacheSramType.Synchronous = 1;
@@ -221,7 +200,7 @@ AddSmbiosCacheTypeTable (
         (VOID)memcpy_s(&Type7Record->SupportedSRAMType, sizeof(CACHE_SRAM_TYPE_DATA), &CacheSramType, sizeof(CACHE_SRAM_TYPE_DATA));
         (VOID)memcpy_s(&Type7Record->CurrentSRAMType, sizeof(CACHE_SRAM_TYPE_DATA), &CacheSramType, sizeof(CACHE_SRAM_TYPE_DATA));
         
-        // 配置Error Correction Type信息
+       
         if(CacheLevel == CPU_CACHE_L1_Instruction)
         {
             Type7Record->ErrorCorrectionType	= CacheErrorParity;
@@ -241,7 +220,7 @@ AddSmbiosCacheTypeTable (
             goto Exit;
         }
 		
-		// 配置L1/L2/L3 Cache Handle
+		
         switch(CacheLevel)
         {
         	case CPU_CACHE_L1_Instruction:
@@ -329,18 +308,18 @@ AddSmbiosProcessorTypeTable (
 	AssetTagStr         = NULL;
 	PartNumberStr       = NULL;
 
-    if(OemIsSocketPresent(ProcessorNumber))  //CPU 在位
+    if(OemIsSocketPresent(ProcessorNumber)) 
     {
         Voltage         = BIT7 | 9;          // 0.9V
         
-        // 首先获取Cache信息
+       
     	Status = AddSmbiosCacheTypeTable (ProcessorNumber, &L1CacheHandle, &L2CacheHandle, &L3CacheHandle);
         if(EFI_ERROR(Status))
         {
             return Status;
         }
 
-        // 获取当前CPU的频率
+       
         ExternalClock       = EXTERNAL_CLOCK;    // 50MHz
         MaxSpeed            = CPU_MAX_SPEED;     // 2.1GHz
         CurrentSpeed        = GetCpuFrequency(ProcessorNumber);  
@@ -505,7 +484,7 @@ AddSmbiosProcessorTypeTable (
     UnicodeStrToAsciiStr (AssetTagStr, OptionalStrStart + ProcessorSocketStrLen + 1 + ProcessorManuStrLen + 1 + ProcessorVersionStrLen + 1 + SerialNumberStrLen + 1);
     UnicodeStrToAsciiStr (PartNumberStr, OptionalStrStart + ProcessorSocketStrLen + 1 + ProcessorManuStrLen + 1 + ProcessorVersionStrLen + 1 + SerialNumberStrLen + 1 + AssetTagStrLen + 1);
     
-	// 上报Type4 信息
+
 	SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
 	Status = mSmbios->Add (mSmbios, NULL, &SmbiosHandle, (EFI_SMBIOS_TABLE_HEADER *) Type4Record);
     if (EFI_ERROR (Status)) 

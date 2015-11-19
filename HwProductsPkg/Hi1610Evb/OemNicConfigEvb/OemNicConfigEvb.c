@@ -1,22 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVVn+imGPUvVvApaCslZ6IA0YlQFptasYmlBIaKTuuOc9wSnqDp/zxVkqZYbec6Jpcrnd
-Sm6KRYdV7nHKgBhY6CdAH3CMPlW+6+csX70XlAFiHwz6ZZNpetUbbiT7gr/rvg==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwProductsPkg\Pv660Evb\OemNicConfigEvb\OemNicConfigEvb.c
-
-Author: uniBIOS-g00179230 (Heyi Guo)    Date: 2014.11.17
-
-Description:
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/PcdLib.h>
 #include <Library/DebugLib.h>
@@ -69,7 +50,7 @@ EFIAPI OemSetMacEvb (
     return Status;
   }
 
-  // 当前只使用MAC前6字节
+  
   Status = Flash->Write(Flash, 0x00A00000, Mac->Addr, 6);
   return Status;
 }

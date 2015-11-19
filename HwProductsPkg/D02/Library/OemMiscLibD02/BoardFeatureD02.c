@@ -1,20 +1,3 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpd1z2bQhhV6cC9dn956MYMwSDGfeyc2k9r9TKK9bTrj6YPvsPEr44pJLAZWy
-NJXlVZyN3q1irPCsNWRZ5S+LBR2EKa9YjLuNajZ13sp37ua3GoHk+HBM4ldou5v9Ii44FOh6
-CEPqvXpwa4mh2n09JCneqo6LrEKUOY7bbGDDieClYJ2slsnFkN+Hunf4A8KI4g==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*************************************************
-
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: BoardFeature.c
-
-Description: 
-
-*************************************************/
-
 #include <Uefi.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>

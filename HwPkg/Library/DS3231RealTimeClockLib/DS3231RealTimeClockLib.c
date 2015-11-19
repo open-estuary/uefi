@@ -1,11 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:EG4uRhTwMmgcVFBsBnYHCDadN5jJKSuVyxmmaCmKFU6eJEbB2fyHF9weu4/jer/hxLHb+S1e
-E0zVg4C3NiZh4bPwYvCdjdVpqIFpLgARMXYjreBf//8/f5Q3OZWBrJs7rTqjWIcFzf/y20MJ
-X2UYcj5srUU/fhHsxwVVYBNyX3kjh6JdgjA1nQQ6grY3U3PdPFOdcKemjyxehqS1VTf9Gd4k
-5yCXqUqGJwyzyPlE4BTPblK/bo8eU945po+UhDQn+SgJlhpj43QPf4TmWWRnBA==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
-
 /** @file
   Implement EFI RealTimeClock runtime services via RTC Lib.
 
@@ -190,7 +182,7 @@ LibGetTime (
   
   (VOID) memcpy_s(&Dev, sizeof(Dev), &gDS3231RtcDevice, sizeof(Dev));
 
-  //获取月份
+  
   Status = I2CRead(&Dev,DS3231_REGADDR_MONTH,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -201,9 +193,9 @@ LibGetTime (
     goto EXIT;
   }
   if((Temp&0x80) == 0){
-    BaseYear = 2100;   //跨过了一个世纪
+    BaseYear = 2100;  
   }
-  //获取年份
+  
   Status = I2CRead(&Dev,DS3231_REGADDR_YEAR,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -213,7 +205,7 @@ LibGetTime (
     Status = EFI_DEVICE_ERROR;
     goto EXIT;
   }
-  //获取日期
+
   Status = I2CRead(&Dev,DS3231_REGADDR_DATE,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -223,7 +215,7 @@ LibGetTime (
     Status = EFI_DEVICE_ERROR;
     goto EXIT;
   }
-  //获取小时
+ 
   Status = I2CRead(&Dev,DS3231_REGADDR_HOURS,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -244,7 +236,7 @@ LibGetTime (
     Status = EFI_DEVICE_ERROR;
     goto EXIT;
   }
-  //获取分钟
+
   Status = I2CRead(&Dev,DS3231_REGADDR_MIUTES,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -254,7 +246,7 @@ LibGetTime (
     Status = EFI_DEVICE_ERROR;
     goto EXIT;
   }
-  //获取秒数
+
   Status = I2CRead(&Dev,DS3231_REGADDR_SECONDS,1,&Temp);
   if(EFI_ERROR (Status)){
     goto EXIT;
@@ -349,7 +341,7 @@ LibSetTime (
   } else {
     Temp = 0;
   }
-  Temp = (Temp << 4) | (Time->Hour%10); //采用24小时制，不必把原有值读出来
+  Temp = (Temp << 4) | (Time->Hour%10); 
   MicroSecondDelay(1000);
   Status = I2CWrite(&Dev,DS3231_REGADDR_HOURS,1,&Temp);
   if(EFI_ERROR (Status)){

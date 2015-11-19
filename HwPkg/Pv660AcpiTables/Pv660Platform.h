@@ -1,13 +1,4 @@
-/*************************************************
 
-Copyright (C), 1988-2010, Huawei Tech. Co., Ltd.
-
-File name: HwPkg\Pv660AcpiTables\Pv660Platform.h
-
-
-Description: 
-
-*************************************************/
 #ifndef _PV660_PLATFORM_H_
 #define _PV660_PLATFORM_H_
 

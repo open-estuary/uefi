@@ -1,10 +1,4 @@
-/*--------------------------------------------------------------------------------------------------------------------------*/
-/*!!Warning: This is a key information asset of Huawei Tech Co.,Ltd                                                         */
-/*CODEMARK:kOyQZYzjDpyGdBAEC2GaWuVy7vy/wDnq7gJfHBOj2pBXFF9pJtpDLt9sw5WJiMsUkN5d7jr7
-aK5J3kmlnl+vpZ4X5IrQg0R6dsKjrHb0BePRXyTmI6pqqZK/VsgQAFF+TLEhrrYdasNpB+ZM
-CUefd5O3CKzZLiXtIrTLAeeBo9hiUBDFRtWLfmmDPz3NygbZMNYFwguXWufTDQfwe/5xekn/
-MpfbcbvR7H7enWOwlsFuKL6B2OX2ZJUIM8AQ0Nd9DEIKQ+yN2O0UJFzCHsSUAw==*/
-/*--------------------------------------------------------------------------------------------------------------------------*/
+
 /*++
 
 Copyright (c) 2006 - 2011, Intel Corporation. All rights reserved.<BR>
@@ -88,7 +82,7 @@ MISC_SMBIOS_TABLE_FUNCTION(MiscSystemManufacturer)
         HiiSetString (mHiiHandle, TokenToUpdate, pVersion, NULL);
     }
     
-    //获取相关字符串的长度
+   
     TokenToGet   = STRING_TOKEN (STR_MISC_SYSTEM_MANUFACTURER);
     Manufacturer = HiiGetPackageString(&gEfiCallerIdGuid, TokenToGet, NULL);
     ManuStrLen   = StrLen(Manufacturer);

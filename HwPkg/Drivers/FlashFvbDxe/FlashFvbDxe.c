@@ -1,22 +1,3 @@
-/*-----------------------------------------------------------------------*/
-/*!!Warning: Huawei key information asset. No spread without permission. */
-/*CODEMARK:EG4uRhTwMmgcVFBsBnYHCDadN5jJKSuVyxmmaCmKFU6eJEbB2fyHF9weu4/jer/hxLHb+S1e
-E0zVg4C3NiZh4WIPvj4+Pmfbh+YGahSH5JekcNbwDJ3EondjpJjt4q4ECmDk1NoHHofliorY
-nR2tpCjs3wHMNIZMRUpV0SV2xxx/6XUjnIugwHZ+YrtI/hasm03qWHm5r1ca/vGLShAaXHf+
-HyiZ+AFpp0DRdf27SBhhT3s6SPsLvhTuL7DeVdtyjLR2w9L/SzK4Yzmmzeu4hg==#*/
-/*--!!Warning: Deleting or modifying the preceding information is prohibited.--*/
-/******************************************************************************
-
-                  版权所有 (C), 2009-2019, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : FlashFvbDxe.c
-  版 本 号   : v1.0
-  作    者   : c00213799
-  生成日期   : 2015年01月07
-  最近修改   :
-  修改历史   :
-******************************************************************************/
 #include "FlashFvbDxe.h"
 
 //
@@ -859,17 +840,7 @@ FvbInitialize (
     return Status;
 }
 
-/*****************************************************************************
- 函 数 名  : FlashPlatformGetDevices
- 功能描述  : Flash设备获取函数
- 输入参数  :
- 输出参数  : FlashDevices----------设备描述
-             Count--------------------设备数目
- 返 回 值  : EFI_SUCCESS----------------成功
-           EFI_INVALID_PARAMETER-------参数错误
- 调用函数  :
- 被调函数  :
-*****************************************************************************/
+
 EFI_STATUS
 FlashPlatformGetDevices (
     OUT FLASH_DESCRIPTION**   FlashDevices,
@@ -1154,15 +1125,7 @@ FlashReadBlocks (
 }
 
 
-/*****************************************************************************
- 函 数 名   : FlashFvbInitialize
- 功能描述  : FVB初始化
- 输入参数  :
- 输出参数  :
- 返 回 值    :
- 调用函数  :
- 被调函数  :
-*****************************************************************************/
+
 EFI_STATUS
 EFIAPI
 FlashFvbInitialize (
