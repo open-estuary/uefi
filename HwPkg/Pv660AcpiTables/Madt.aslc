@@ -80,7 +80,7 @@
     //EFI_ACPI_5_1_GIC_STRUCTURE                            GicInterfaces[FixedPcdGet32 (PcdCoreCount)];
     EFI_ACPI_5_1_GIC_STRUCTURE                            GicInterfaces[16];
     EFI_ACPI_5_0_GIC_DISTRIBUTOR_STRUCTURE                GicDistributor;
-    //EFI_ACPI_5_1_GICR_STRUCTURE             			  GicRe;
+    EFI_ACPI_5_1_GICR_STRUCTURE             			  GicRe;
     EFI_ACPI_6_0_GIC_ITS_STRUCTURE                		  GicITS[5];
     EFI_ACPI_HuaWei_GIC_MBI_STRUCTURE                	  GicMBI[3];
   } EFI_ACPI_1_0_MULTIPLE_APIC_DESCRIPTION_TABLE;
@@ -179,7 +179,7 @@
 	 // EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x2B00000,0x300000),//15
 	 // EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x2E00000,0x300000) //16
     //},
-     //EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x100000,0x300000),//1
+     EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x100000,0x300000),//1
     {
       EFI_ACPI_6_0_GIC_ITS_INIT(0,0x8C000000),
       EFI_ACPI_6_0_GIC_ITS_INIT(1,0xC6000000),
