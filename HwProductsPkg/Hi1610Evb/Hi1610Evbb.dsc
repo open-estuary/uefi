@@ -223,7 +223,7 @@
   #DTS2014120801648
   gArmPlatformTokenSpaceGuid.PcdDefaultBootDescription|L"Linux from SATA"
   gArmPlatformTokenSpaceGuid.PcdDefaultBootDevicePath|L""
-  gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath|L"EFI\GRUB2\grubaa64.efi"
+  gArmPlatformTokenSpaceGuid.PcdDefaultBootInitrdPath|L"EFI\BOOT\BOOTAA64.EFI"
   gArmPlatformTokenSpaceGuid.PcdDefaultBootArgument|""
   gArmPlatformTokenSpaceGuid.PcdDefaultBootType|2
 
