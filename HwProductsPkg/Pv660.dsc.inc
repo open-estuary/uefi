@@ -263,7 +263,7 @@
   # Control what commands are supported from the UI
   # Turn these on and off to add features or save size
   #
-  gEmbeddedTokenSpaceGuid.PcdEmbeddedMacBoot|TRUE
+  gEmbeddedTokenSpaceGuid.PcdEmbeddedMacBoot|FALSE
   gEmbeddedTokenSpaceGuid.PcdEmbeddedDirCmd|TRUE
   gEmbeddedTokenSpaceGuid.PcdEmbeddedHobCmd|TRUE
   gEmbeddedTokenSpaceGuid.PcdEmbeddedHwDebugCmd|TRUE
