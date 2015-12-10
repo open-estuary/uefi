@@ -2,6 +2,8 @@
   Differentiated System Description Table Fields (DSDT)
 
   Copyright (c) 2014, ARM Ltd. All rights reserved.<BR>
+  Copyright (c) 2015, Hisilicon Limited. All rights reserved.<BR>
+  Copyright (c) 2015, Linaro Limited. All rights reserved.<BR>
     This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -10,206 +12,125 @@
   THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 
+  Based on the files under ArmPlatformPkg/ArmJunoPkg/AcpiTables/
+
 **/
 
 //#include "ArmPlatform.h"
 Scope(_SB) 
 {
-    //
-
-    // USB Host Controller
-
-    //
-
-    Device(USB0){
-
-        Name(_HID, "ARMH0D20")
-
-        Name(_CID, "PNP0D20")
-
-        Name(_UID, 1)
-
- 
-
-        Method(_CRS, 0x0, Serialized){
-
-            Name(RBUF, ResourceTemplate(){
-
-                Memory32Fixed(ReadWrite, 0xa1000000, 0x10000)
-
-                Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive) {13588}  // 0x3500 + 0x14,level trigger, for USB EHCI Controller
-
-            })
-
-            Return(RBUF)
-
-        }
-
- 
-
-        //
-
-        // Root Hub
-
-        //
-
-        Device(RHUB){
-
-            Name(_ADR, 0x00000000)  // Address of Root Hub should be 0 as per ACPI 5.0 spec
-
- 
-
-            //
-
-            // Ports connected to Root Hub
-
-            //
-
-            Device(HUB1){
-
-                Name(_ADR, 0x00000001)
-
-                Name(_UPC, Package(){
-
-                    0x00,       // Port is NOT connectable
-
-                    0xFF,       // Don't care
-
-                    0x00000000, // Reserved 0 must be zero
-
-                    0x00000000  // Reserved 1 must be zero
-
+	Device (USB0)
+        {
+            Name (_HID, "PNP0D20")  // _HID: Hardware ID
+            Name (_CID, "HISI0D2" /* EHCI USB Controller without debug */)  // _CID: Compatible ID
+            Name (_CCA, One)  // _CCA: Cache Coherency Attribute
+            Method (_CRS, 0, Serialized)  // _CRS: Current Resource Settings
+            {
+                Name (RBUF, ResourceTemplate ()
+                {
+                    Memory32Fixed (ReadWrite,
+                        0xA1000000,         // Address Base
+                        0x00010000,         // Address Length
+                        )
+                    Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, )
+                    {
+                        0x00000014,
+                    }
                 })
+                Return (RBUF) /* \_SB_.USB0._CRS.RBUF */
+            }
 
- 
+	Name (_DSD, Package () {
+              ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+              Package ()
+              {
+                  Package () {"interrupt-parent",Package() {\_SB.MBI2}}
+              }
+	  })
 
-                Device(PRT1){
-
-                    Name(_ADR, 0x00000001)
-
-                    Name(_UPC, Package(){
-
-                        0xFF,        // Port is connectable
-
-                        0x00,        // Port connector is A
-
-                        0x00000000,
-
-                        0x00000000
+            Device (RHUB)
+            {
+                Name (_ADR, Zero)  // _ADR: Address
+                Device (PRT1)
+                {
+                    Name (_ADR, One)  // _ADR: Address
+                    Name (_UPC, Package (0x04)  // _UPC: USB Port Capabilities
+                    {
+                        0xFF,
+                        Zero,
+                        Zero,
+                        Zero
+                    })
+                    Name (_PLD, Package (0x01)  // _PLD: Physical Location of Device
+                    {
+                        ToPLD (
+                            PLD_Revision       = 0x1,
+                            PLD_IgnoreColor    = 0x1,
+                            PLD_Red            = 0x0,
+                            PLD_Green          = 0x0,
+                            PLD_Blue           = 0x0,
+                            PLD_Width          = 0x0,
+                            PLD_Height         = 0x0,
+                            PLD_UserVisible    = 0x1,
+                            PLD_Dock           = 0x0,
+                            PLD_Lid            = 0x0,
+                            PLD_Panel          = "UNKNOWN",
+                            PLD_VerticalPosition = "UPPER",
+                            PLD_HorizontalPosition = "LEFT",
+                            PLD_Shape          = "UNKNOWN",
+                            PLD_GroupOrientation = 0x0,
+                            PLD_GroupToken     = 0x0,
+                            PLD_GroupPosition  = 0x0,
+                            PLD_Bay            = 0x0,
+                            PLD_Ejectable      = 0x0,
+                            PLD_EjectRequired  = 0x0,
+                            PLD_CabinetNumber  = 0x0,
+                            PLD_CardCageNumber = 0x0,
+                            PLD_Reference      = 0x0,
+                            PLD_Rotation       = 0x0,
+                            PLD_Order          = 0x0,
+                            PLD_VerticalOffset = 0x0,
+                            PLD_HorizontalOffset = 0x0)
 
                     })
+                }
 
-                    Name(_PLD, Package(){
-
-                        Buffer(0x10){
-
-                            0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-
-                            0x31, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-                        }
-
+                Device (PRT2)
+                {
+                    Name (_ADR, 0x02)  // _ADR: Address
+                    Name (_UPC, Package (0x04)  // _UPC: USB Port Capabilities
+                    {
+                        Zero,
+                        0xFF,
+                        Zero,
+                        Zero
                     })
+                }
 
-                } // USB0_RHUB_HUB1_PRT1
-
-                Device(PRT2){
-
-                    Name(_ADR, 0x00000002)
-
-                    Name(_UPC, Package(){
-
-                        0xFF,        // Port is connectable
-
-                        0x00,        // Port connector is A
-
-                        0x00000000,
-
-                        0x00000000
-
+                Device (PRT3)
+                {
+                    Name (_ADR, 0x03)  // _ADR: Address
+                    Name (_UPC, Package (0x04)  // _UPC: USB Port Capabilities
+                    {
+                        Zero,
+                        0xFF,
+                        Zero,
+                        Zero
                     })
+                }
 
-                    Name(_PLD, Package(){
-
-                        Buffer(0x10){
-
-                            0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-
-                            0x31, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-                        }
-
+                Device (PRT4)
+                {
+                    Name (_ADR, 0x04)  // _ADR: Address
+                    Name (_UPC, Package (0x04)  // _UPC: USB Port Capabilities
+                    {
+                        Zero,
+                        0xFF,
+                        Zero,
+                        Zero
                     })
-
-                } // USB0_RHUB_HUB1_PRT2
-
- 
-
-                Device(PRT3){
-
-                    Name(_ADR, 0x00000003)
-
-                    Name(_UPC, Package(){
-
-                        0xFF,        // Port is connectable
-
-                        0x00,        // Port connector is A
-
-                        0x00000000,
-
-                        0x00000000
-
-                    })
-
-                    Name(_PLD, Package(){
-
-                        Buffer(0x10){
-
-                            0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-
-                            0x31, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-                        }
-
-                    })
-
-                } // USB0_RHUB_HUB1_PRT3
-
- 
-
-                Device(PRT4){
-
-                    Name(_ADR, 0x00000004)
-
-                    Name(_UPC, Package(){
-
-                        0xFF,        // Port is connectable
-
-                        0x00,        // Port connector is A
-
-                        0x00000000,
-
-                        0x00000000
-
-                    })
-
-                    Name(_PLD, Package(){
-
-                        Buffer(0x10){
-
-                            0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-
-                            0x31, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-                        }
-
-                    })
-
-                } // USB0_RHUB_HUB1_PRT4
-
-            } // USB0_RHUB_HUB1
-
-        } // USB0_RHUB
-
-    } // USB0
+                }
+            }
+        }
 }
+

@@ -11,6 +11,8 @@
 *  THE PROGRAM IS DISTRIBUTED UNDER THE BSD LICENSE ON AN "AS IS" BASIS,
 *  WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 *
+*  Based on the files under ArmPlatformPkg/ArmJunoPkg/AcpiTables/
+*
 **/
 
 #include <Library/AcpiLib.h>
@@ -55,14 +57,8 @@ EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE Spcr = {
   EFI_ACPI_RESERVED_DWORD  //Reserved2;
 };
 
-VOID*
-ReferenceAcpiTable (
-  VOID
-  )
-{
-  //
-  // Reference the table being generated to prevent the optimizer from removing the
-  // data structure from the exeutable
-  //
-  return (VOID*)&Spcr;
-}
+//
+// Reference the table being generated to prevent the optimizer from removing the
+// data structure from the executable
+//
+VOID* CONST ReferenceAcpiTable = &Spcr;

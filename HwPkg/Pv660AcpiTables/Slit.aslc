@@ -74,15 +74,9 @@ EFI_ACPI_5_0_SYSTEM_LOCALITY_INFORMATION_TABLE Slit = {
   }, 
 };
 
+//
+// Reference the table being generated to prevent the optimizer from removing the
+// data structure from the executable
+//
+VOID* CONST ReferenceAcpiTable = &Slit;
 
-VOID*
-ReferenceAcpiTable (
-  VOID
-  )
-{
-  //
-  // Reference the table being generated to prevent the optimizer from removing the
-  // data structure from the exeutable
-  //
-  return (VOID*)&Slit;
-}
