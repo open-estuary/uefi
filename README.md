@@ -11,3 +11,4 @@ HwPkg and HwProductsPkg are for D02 specifically, while Hw stands for Huawei.
 
 3. UEFI image will be "Build/Pv660D02/RELEASE_GCC49/FV/PV660D02.fd" (Assuming you are using gcc 4.9, or else replace 49 in the path with your gcc version).
 
+[NOTE] As we need to build ACPI ASL file and some tables are only valid until ACPI specification v6.0, we recommend to use acpica tools of version 20150930 or later.
