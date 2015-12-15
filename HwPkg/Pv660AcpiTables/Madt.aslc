@@ -31,6 +31,13 @@
 // 0x20000 is only for socket 0
 #define PLATFORM_GET_MPID(ClusterId, CoreId)   (0x20000 | ((ClusterId) << 8) | (CoreId))
 
+// Linux Hack for D02 GICR, setting the last reserved bytes to be "D02"
+#define EFI_ACPI_5_0_GIC_DISTRIBUTOR_INIT_D02(GicDistHwId, GicDistBase, GicDistVector) \
+  { \
+    EFI_ACPI_5_0_GICD, sizeof (EFI_ACPI_5_0_GIC_DISTRIBUTOR_STRUCTURE), EFI_ACPI_RESERVED_WORD, \
+    GicDistHwId, GicDistBase, GicDistVector, 0x3230 << 16 | 'D' << 8 \
+  }
+
 //
 // Multiple APIC Description Table
 //
@@ -117,7 +124,7 @@ EFI_ACPI_1_0_MULTIPLE_APIC_DESCRIPTION_TABLE Madt = {
         FixedPcdGet32 (PcdGicInterruptInterfaceBase) + 0x20000, FixedPcdGet32 (PcdGicInterruptInterfaceBase) + 0x10000, 25, FixedPcdGet32 (PcdGicDistributorBase) + 0x3D0000 /* GicRBase */),
   },
   
-  EFI_ACPI_5_0_GIC_DISTRIBUTOR_INIT(0, FixedPcdGet32 (PcdGicDistributorBase), 0),
+  EFI_ACPI_5_0_GIC_DISTRIBUTOR_INIT_D02(0, FixedPcdGet32 (PcdGicDistributorBase), 0),
   //{
 //  EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x100000,0x300000),//1
  // EFI_ACPI_5_1_GICR_STRUCTURE_INIT(FixedPcdGet32 (PcdGicDistributorBase) + 0x400000,0x300000),//2
