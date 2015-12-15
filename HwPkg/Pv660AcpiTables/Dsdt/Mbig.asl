@@ -16,7 +16,7 @@ Scope(_SB)
 {
   // Mbi-gen totem
   Device(MBI0) {
-    Name(_HID, "HISI00B0")
+    Name(_HID, "HISI0151")
     Name(_CID, "MBIGen")
     Name(_UID, 0)
     Name(_CRS, ResourceTemplate() {
@@ -33,7 +33,7 @@ Scope(_SB)
 
   // mbi-gen dsa
   Device(MBI1) {
-    Name(_HID, "HISI00B0")
+    Name(_HID, "HISI0151")
     Name(_CID, "MBIGen")
     Name(_UID, 1)
     Name(_CRS, ResourceTemplate() {
@@ -50,7 +50,7 @@ Scope(_SB)
 
   // mbi-gen m3
   Device(MBI2) {
-    Name(_HID, "HISI00B0")
+    Name(_HID, "HISI0151")
     Name(_CID, "MBIGen")
     Name(_UID, 2)
     Name(_CRS, ResourceTemplate() {
@@ -68,7 +68,7 @@ Scope(_SB)
 
   // mbi-gen pcie
   Device(MBI3) {
-    Name(_HID, "HISI00B0")
+    Name(_HID, "HISI0151")
     Name(_CID, "MBIGen")
     Name(_UID, 3)
     Name(_CRS, ResourceTemplate() {
