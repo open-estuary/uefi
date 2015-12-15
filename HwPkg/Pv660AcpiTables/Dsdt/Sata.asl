@@ -20,20 +20,20 @@
 // SATA AHCI
 //
 
-Device (SATA0)
+Device (AHCI)
 {
-  Name(_HID, "HISI0600")	// HiSi AHCI
-  Name (_CCA, 1)       		// Cache-coherent controller
-  Name (_CLS, Package (3)	// How to identify direct attached AHCI to Windows
-  {
-    0x01,       // Base Class:  Mass Storage
-    0x06,       // Sub-Class: Serial ATA
-    0x01,       // Interface: AHCI
-  })
-  Name (_CRS, ResourceTemplate ()
-  {
-    Memory32Fixed (ReadWrite, %AHCI_ADDRESS%, 0x00010000)
-    Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { %AHCI_GSIV% }
-  })
-}
+	Name(_HID, "HISI0001")	// HiSi AHCI
+	Name (_CCA, 1)       		// Cache-coherent controller
+	Name (_CRS, ResourceTemplate () {
+		Memory32Fixed (ReadWrite, 0xb1002800, 0x00000B00)
+		Memory32Fixed (ReadWrite, 0xb1000000, 0x00002800)
+		Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 382 }
+	})
 
+	Name (_DSD, Package () {
+		ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+		Package () {
+			Package () {"interrupt-parent",Package() {\_SB.MBI3}}
+		}
+	})
+}
