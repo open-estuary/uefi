@@ -460,9 +460,11 @@ BdsFileSystemSupport (
   EFI_STATUS  Status;
   EFI_SIMPLE_FILE_SYSTEM_PROTOCOL     *FsProtocol;
 
-  Status = gBS->HandleProtocol (Handle, &gEfiSimpleFileSystemProtocolGuid, (VOID **)&FsProtocol);
-
-  return (!EFI_ERROR (Status) && IS_DEVICE_PATH_NODE (RemainingDevicePath, MEDIA_DEVICE_PATH, MEDIA_FILEPATH_DP));
+  if (IS_DEVICE_PATH_NODE (RemainingDevicePath, MEDIA_DEVICE_PATH, MEDIA_FILEPATH_DP)) {
+    Status = gBS->HandleProtocol (Handle, &gEfiSimpleFileSystemProtocolGuid, (VOID **)&FsProtocol);
+    return (!EFI_ERROR (Status));
+  }
+  return FALSE;
 }
 
 EFI_STATUS
