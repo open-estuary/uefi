@@ -630,81 +630,96 @@ BdsFirmwareVolumeLoadImage (
   EFI_FV_FILE_ATTRIBUTES            Attrib;
   UINT32                            AuthenticationStatus;
   VOID* ImageBuffer;
+  UINTN                           NoHandles, HandleIndex;
+  EFI_HANDLE                      *Handles;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *FwDevicePath;
 
   ASSERT (IS_DEVICE_PATH_NODE (RemainingDevicePath, MEDIA_DEVICE_PATH, MEDIA_PIWG_FW_FILE_DP));
 
-  Status = gBS->HandleProtocol (Handle, &gEfiFirmwareVolume2ProtocolGuid, (VOID **)&FwVol);
-  if (EFI_ERROR (Status)) {
+  Status = gBS->LocateHandleBuffer (ByProtocol, &gEfiFirmwareVolume2ProtocolGuid, NULL, &NoHandles, &Handles);
+  if (EFI_ERROR (Status) || (NoHandles == 0)) {
+    DEBUG ((EFI_D_ERROR, "FAIL to find Firmware Volume\n"));
     return Status;
   }
+  // Search in all Firmware Volume for the EFI Application
+  for (HandleIndex = 0; HandleIndex < NoHandles; HandleIndex++) {
+    Status = gBS->HandleProtocol (Handles[HandleIndex], &gEfiFirmwareVolume2ProtocolGuid, (VOID **)&FwVol);
+    if (EFI_ERROR (Status))
+      continue;
 
-  FvNameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)RemainingDevicePath);
-  if (FvNameGuid == NULL) {
-    Status = EFI_INVALID_PARAMETER;
-  }
+    FwDevicePath = (MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)RemainingDevicePath;
+    FvNameGuid = &(FwDevicePath->FvFileName);
+    if (FvNameGuid == NULL) {
+      Status = EFI_INVALID_PARAMETER;
+      continue;
+    }
 
-  SectionType = EFI_SECTION_PE32;
-  AuthenticationStatus = 0;
-  //Note: ReadSection at the opposite of ReadFile does not allow to pass ImageBuffer == NULL to get the size of the file.
-  ImageBuffer = NULL;
-  Status = FwVol->ReadSection (
-                    FwVol,
-                    FvNameGuid,
-                    SectionType,
-                    0,
-                    &ImageBuffer,
-                    ImageSize,
-                    &AuthenticationStatus
-                    );
-  if (!EFI_ERROR (Status)) {
+    SectionType = EFI_SECTION_PE32;
+    AuthenticationStatus = 0;
+    //Note: ReadSection at the opposite of ReadFile does not allow to pass ImageBuffer == NULL to get the size of the file.
+    ImageBuffer = NULL;
+    Status = FwVol->ReadSection (
+                      FwVol,
+                      FvNameGuid,
+                      SectionType,
+                      0,
+                      &ImageBuffer,
+                      ImageSize,
+                      &AuthenticationStatus
+                      );
+    if (!EFI_ERROR (Status)) {
 #if 0
-    // In case the buffer has some address requirements, we must copy the buffer to a buffer following the requirements
-    if (Type != AllocateAnyPages) {
-      Status = gBS->AllocatePages (Type, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize),Image);
-      if (!EFI_ERROR (Status)) {
-        CopyMem ((VOID*)(UINTN)(*Image), ImageBuffer, *ImageSize);
-        FreePool (ImageBuffer);
+      // In case the buffer has some address requirements, we must copy the buffer to a buffer following the requirements
+      if (Type != AllocateAnyPages) {
+        Status = gBS->AllocatePages (Type, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize),Image);
+        if (!EFI_ERROR (Status)) {
+          CopyMem ((VOID*)(UINTN)(*Image), ImageBuffer, *ImageSize);
+          FreePool (ImageBuffer);
+        }
       }
-    }
 #else
-    // We must copy the buffer into a page allocations. Otherwise, the caller could call gBS->FreePages() on the pool allocation
-    Status = gBS->AllocatePages (Type, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
-    // Try to allocate in any pages if failed to allocate memory at the defined location
-    if ((Status == EFI_OUT_OF_RESOURCES) && (Type != AllocateAnyPages)) {
-      Status = gBS->AllocatePages (AllocateAnyPages, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
-    }
-    if (!EFI_ERROR (Status)) {
-      CopyMem ((VOID*)(UINTN)(*Image), ImageBuffer, *ImageSize);
-      FreePool (ImageBuffer);
-    }
-#endif
-  } else {
-    // Try a raw file, since a PE32 SECTION does not exist
-    Status = FwVol->ReadFile (
-                        FwVol,
-                        FvNameGuid,
-                        NULL,
-                        ImageSize,
-                        &FvType,
-                        &Attrib,
-                        &AuthenticationStatus
-                        );
-    if (!EFI_ERROR (Status)) {
+      // We must copy the buffer into a page allocations. Otherwise, the caller could call gBS->FreePages() on the pool allocation
       Status = gBS->AllocatePages (Type, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
       // Try to allocate in any pages if failed to allocate memory at the defined location
       if ((Status == EFI_OUT_OF_RESOURCES) && (Type != AllocateAnyPages)) {
         Status = gBS->AllocatePages (AllocateAnyPages, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
       }
       if (!EFI_ERROR (Status)) {
-        Status = FwVol->ReadFile (
-                                FwVol,
-                                FvNameGuid,
-                                (VOID**)Image,
-                                ImageSize,
-                                &FvType,
-                                &Attrib,
-                                &AuthenticationStatus
-                                );
+        CopyMem ((VOID*)(UINTN)(*Image), ImageBuffer, *ImageSize);
+        FreePool (ImageBuffer);
+	return Status;
+      }
+#endif
+    } else {
+      // Try a raw file, since a PE32 SECTION does not exist
+      Status = FwVol->ReadFile (
+                          FwVol,
+                          FvNameGuid,
+                          NULL,
+                          ImageSize,
+                          &FvType,
+                          &Attrib,
+                          &AuthenticationStatus
+                          );
+      if (!EFI_ERROR (Status)) {
+        Status = gBS->AllocatePages (Type, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
+        // Try to allocate in any pages if failed to allocate memory at the defined location
+        if ((Status == EFI_OUT_OF_RESOURCES) && (Type != AllocateAnyPages)) {
+          Status = gBS->AllocatePages (AllocateAnyPages, EfiBootServicesCode, EFI_SIZE_TO_PAGES(*ImageSize), Image);
+        }
+        if (!EFI_ERROR (Status)) {
+          Status = FwVol->ReadFile (
+                                  FwVol,
+                                  FvNameGuid,
+                                  (VOID*)(UINTN)(*Image),
+                                  ImageSize,
+                                  &FvType,
+                                  &Attrib,
+                                  &AuthenticationStatus
+                                  );
+	  if (!EFI_ERROR (Status))
+	    return Status;
+        }
       }
     }
   }
