@@ -46,9 +46,5 @@
 
 // All bits low except one bit high, native bit length
 #define GPIO_PIN_MASK(Pin)              (1UL << ((UINTN)(Pin)))
-// All bits low except one bit high, restricted to 8 bits (i.e. ensures zeros above 8bits)
-#define GPIO_PIN_MASK_HIGH_8BIT(Pin)    (GPIO_PIN_MASK(Pin) && 0xFF)
-// All bits high except one bit low, restricted to 8 bits (i.e. ensures zeros above 8bits)
-#define GPIO_PIN_MASK_LOW_8BIT(Pin)     ((~GPIO_PIN_MASK(Pin)) && 0xFF)
 
 #endif  // __PL061_GPIO_H__
