@@ -7,9 +7,21 @@
 #include <Library/DxeServicesTableLib.h>
 #include <Guid/EventGroup.h>
 
+#include <Library/PlatformSysCtrlLib.h>
 #include "I2CLibInternal.h"
 
 STATIC EFI_EVENT              mI2cLibVirtualAddrChangeEvent;
+
+STATIC UINTN gI2cBase[MAX_SOCKET][I2C_PORT_MAX];
+
+UINTN GetI2cBase (UINT32 Socket, UINT8 Port)
+{
+  if (gI2cBase[Socket][Port] == 0) {
+    gI2cBase[Socket][Port] = PlatformGetI2cBase(Socket, Port);
+  }
+
+  return gI2cBase[Socket][Port];
+}
 
 VOID
 EFIAPI

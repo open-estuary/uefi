@@ -6,8 +6,6 @@
 
 UINTN GetI2cBase (UINT32 Socket, UINT8 Port);
 
-extern UINTN gI2cBase[MAX_SOCKET][I2C_PORT_MAX];
-
 EFI_STATUS
 I2cLibRuntimeSetup (UINT32 Socket, UINT8 Port);
 
