@@ -62,6 +62,7 @@ typedef UINT32 MMC_CMD;
 #define MMC_CMD20             (MMC_INDX(20) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD23             (MMC_INDX(23) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD24             (MMC_INDX(24) | MMC_CMD_WAIT_RESPONSE)
+#define MMC_CMD25             (MMC_INDX(25) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD51             (MMC_INDX(51) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_CMD55             (MMC_INDX(55) | MMC_CMD_WAIT_RESPONSE)
 #define MMC_ACMD41            (MMC_INDX(41) | MMC_CMD_WAIT_RESPONSE | MMC_CMD_NO_CRC_RESPONSE)
@@ -150,6 +151,10 @@ typedef EFI_STATUS (EFIAPI *MMC_SETIOS) (
   IN  UINT32                    TimingMode
   );
 
+typedef BOOLEAN (EFIAPI *MMC_ISMULTIBLOCK) (
+  IN  EFI_MMC_HOST_PROTOCOL     *This
+  );
+
 
 struct _EFI_MMC_HOST_PROTOCOL {
 
@@ -167,6 +172,7 @@ struct _EFI_MMC_HOST_PROTOCOL {
   MMC_WRITEBLOCKDATA      WriteBlockData;
 
   MMC_SETIOS              SetIos;
+  MMC_ISMULTIBLOCK        IsMultiBlock;
 
 };
 
