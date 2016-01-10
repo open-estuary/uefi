@@ -16,10 +16,12 @@
 
 [Sources.common]
   IoInitDxe.c
+  Smmu.c
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  ArmPkg/ArmPkg.dec
   HwPkg/HwPkg.dec
   
 [LibraryClasses]
@@ -28,6 +30,7 @@
   DebugLib
   BaseLib
   PcdLib
+  CacheMaintenanceLib
   SerdesLib
   PlatformSysCtrlLib
   
@@ -36,6 +39,10 @@
 [Protocols]
 
 [Pcd]
+  gHwTokenSpaceGuid.PcdM3SmmuBaseAddress|0xa0040000
+  gHwTokenSpaceGuid.PcdPcieSmmuBaseAddress|0xb0040000
+  gHwTokenSpaceGuid.PcdDsaSmmuBaseAddress|0xc0040000
+  gHwTokenSpaceGuid.PcdAlgSmmuBaseAddress|0xd0040000
 
 [Depex]
   TRUE
