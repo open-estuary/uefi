@@ -52,15 +52,34 @@ Scope(_SB)
               ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
               Package () {
                   Package () {"interrupt-parent",Package() {\_SB.MBI1}},
-                  Package () {"hisilicon,sas-syscon",Package() {\_SB.CTL0}},
 		  Package (2) {"sas-addr", Package() {50, 01, 88, 20, 16, 00, 00, 0x0a}},
-		  Package () {"ctrl-reset-reg", 0xa60},
-		  Package () {"ctrl-reset-sts-reg", 0x5a30},
-		  Package () {"ctrl-clock-ena-reg", 0x338},
 		  Package () {"queue-count", 32},
 		  Package () {"phy-count", 8},
               }
           })
+
+	  OperationRegion (CTL, SystemMemory, 0xC0000000, 0x10000)
+	  Field (CTL, AnyAcc, NoLock, Preserve)
+	  {
+		  Offset (0x338),
+		  CLK, 32,
+		  CLKD, 32,
+		  Offset (0xa60),
+		  RST, 32,
+		  DRST, 32,
+		  Offset (0x5a30),
+		  STS, 32,
+	  }
+
+	  Method (_RST, 0x0, Serialized)
+	  {
+		  Store(0x7ffff, RST)
+		  Store(0x7ffff, CLKD)
+		  Sleep(1)
+		  Store(0x7ffff, DRST)
+		  Store(0x7ffff, CLK)
+		  Sleep(1)
+	  }
     }
 
     Device(SAS1) {
@@ -101,14 +120,33 @@ Scope(_SB)
               ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
               Package () {
                   Package () {"interrupt-parent",Package() {\_SB.MBI3}},
-                  Package () {"hisilicon,sas-syscon",Package() {\_SB.CTL1}},
 		  Package (2) {"sas-addr", Package() {50, 01, 88, 20, 16, 00, 00, 00}},
-		  Package () {"ctrl-reset-reg", 0xa18},
-		  Package () {"ctrl-reset-sts-reg", 0x5a0c},
-		  Package () {"ctrl-clock-ena-reg", 0x318},
 		  Package () {"queue-count", 32},
 		  Package () {"phy-count", 8},
               }
           })
+
+	  OperationRegion (CTL, SystemMemory, 0xB0000000, 0x10000)
+	  Field (CTL, AnyAcc, NoLock, Preserve)
+	  {
+		  Offset (0x318),
+		  CLK, 32,
+		  CLKD, 32,
+		  Offset (0xa18),
+		  RST, 32,
+		  DRST, 32,
+		  Offset (0x5a0c),
+		  STS, 32,
+	  }
+
+	  Method (_RST, 0x0, Serialized)
+	  {
+		  Store(0x7ffff, RST)
+		  Store(0x7ffff, CLKD)
+		  Sleep(1)
+		  Store(0x7ffff, DRST)
+		  Store(0x7ffff, CLK)
+		  Sleep(1)
+	  }
     }
 }
