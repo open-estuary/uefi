@@ -23,7 +23,7 @@ Scope(_SB)
 		Name (_DSD, Package () {
 			ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
 			Package () {
-				Package () {"subctrl_vbase",Package() {\_SB.CTL2} }
+				Package () {"subctrl-vbase",Package() {\_SB.CTL2} }
 			}
 		})
 

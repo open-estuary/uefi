@@ -26,7 +26,7 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package ()
       {
-        Package () {"num-msis", 256}
+        Package () {"num-pins", 256}
       }
     })
   }
@@ -43,7 +43,7 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package ()
       {
-        Package () {"num-msis", 640}
+        Package () {"num-pins", 640}
       }
     })
   }
@@ -61,7 +61,7 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package ()
       {
-        Package () {"num-msis", 256}
+        Package () {"num-pins", 256}
       }
     })
   }
@@ -79,7 +79,7 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package ()
       {
-        Package () {"num-msis", 640}
+        Package () {"num-pins", 640}
       }
     })
   }
