@@ -38,6 +38,7 @@
 #include <Library/SynchronizationLib.h>
 #include <Library/TimerLib.h>
 #include <Library/UefiCpuLib.h>
+#include <Library/CpuLib.h>
 
 #include "Microcode.h"
 
@@ -49,6 +50,14 @@ typedef enum {
   CpuStateBusy,
   CpuStateDisabled
 } CPU_STATE;
+
+#define WAKEUP_AP_SIGNAL SIGNATURE_32 ('S', 'T', 'A', 'P')
+
+typedef enum {
+  ApInHltLoop   = 1,
+  ApInMwaitLoop = 2,
+  ApInRunLoop   = 3
+} AP_LOOP_MODE;
 
 //
 // AP reset code information
@@ -72,7 +81,7 @@ typedef struct {
 
 typedef struct _PEI_CPU_MP_DATA  PEI_CPU_MP_DATA;
 
-#pragma pack()
+#pragma pack(1)
 
 typedef union {
   struct {
@@ -95,6 +104,8 @@ typedef union {
 
 //
 // MP CPU exchange information for AP reset code
+// This structure is required to be packed because fixed field offsets
+// into this structure are used in assembly code in this module
 //
 typedef struct {
   UINTN                 Lock;
@@ -126,6 +137,7 @@ typedef struct {
 } CPU_VOLATILE_REGISTERS;
 
 typedef struct {
+  volatile UINT32                *StartupApSignal;
   UINT32                         ApicId;
   EFI_HEALTH_FLAGS               Health;
   CPU_STATE                      State;
@@ -155,6 +167,8 @@ struct _PEI_CPU_MP_DATA {
   CPU_EXCHANGE_ROLE_INFO         BSPInfo;
   CPU_EXCHANGE_ROLE_INFO         APInfo;
   MTRR_SETTINGS                  MtrrTable;
+  UINT8                          ApLoopMode;
+  UINT8                          ApTargetCState;
   PEI_CPU_DATA                   *CpuData;
   volatile MP_CPU_EXCHANGE_INFO  *MpCpuExchangeInfo;
 };
@@ -182,16 +196,6 @@ VOID
 EFIAPI
 AsmInitializeGdt (
   IN IA32_DESCRIPTOR  *Gdtr
-  );
-
-/**
-  Assembly code to do CLI-HALT loop.
-
-**/
-VOID
-EFIAPI
-AsmCliHltLoop (
-  VOID
   );
 
 /**
@@ -241,7 +245,7 @@ CpuMpEndOfPeiCallback (
   @param PeiCpuMpData       Pointer to PEI CPU MP Data
   @param Broadcast          TRUE:  Send broadcast IPI to all APs
                             FALSE: Send IPI to AP by ApicId
-  @param ApicId             Apic ID for the processor to be waked
+  @param ProcessorNumber    The handle number of specified processor
   @param Procedure          The function to be invoked by AP
   @param ProcedureArgument  The argument to be passed into AP function
 **/
@@ -249,7 +253,7 @@ VOID
 WakeUpAP (
   IN PEI_CPU_MP_DATA           *PeiCpuMpData,
   IN BOOLEAN                   Broadcast,
-  IN UINT32                    ApicId,
+  IN UINTN                     ProcessorNumber,
   IN EFI_AP_PROCEDURE          Procedure,              OPTIONAL
   IN VOID                      *ProcedureArgument      OPTIONAL
   );

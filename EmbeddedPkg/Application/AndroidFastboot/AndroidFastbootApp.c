@@ -45,9 +45,9 @@ typedef enum {
 STATIC ANDROID_FASTBOOT_STATE mState = ExpectCmdState;
 
 // When in ExpectDataState, the number of bytes of data to expect:
-STATIC UINT32 mNumDataBytes;
+STATIC UINTN mNumDataBytes;
 // .. and the number of bytes so far received this data phase
-STATIC UINT32 mBytesReceivedSoFar;
+STATIC UINTN mBytesReceivedSoFar;
 // .. and the buffer to save data into
 STATIC UINT8 *mDataBuffer = NULL;
 

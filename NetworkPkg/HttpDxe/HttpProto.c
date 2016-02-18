@@ -150,6 +150,9 @@ HttpTcpReceiveNotifyDpc (
     gBS->CloseEvent (Wrap->TcpWrap.Rx6Token.CompletionToken.Event);
     
     if (EFI_ERROR (Wrap->TcpWrap.Rx6Token.CompletionToken.Status)) {
+      Wrap->HttpToken->Status = Wrap->TcpWrap.Rx6Token.CompletionToken.Status;
+      gBS->SignalEvent (Wrap->HttpToken->Event);
+      FreePool (Wrap);
       return ;
     }
 
@@ -157,6 +160,9 @@ HttpTcpReceiveNotifyDpc (
     gBS->CloseEvent (Wrap->TcpWrap.Rx4Token.CompletionToken.Event);
     
     if (EFI_ERROR (Wrap->TcpWrap.Rx4Token.CompletionToken.Status)) {
+      Wrap->HttpToken->Status = Wrap->TcpWrap.Rx4Token.CompletionToken.Status;
+      gBS->SignalEvent (Wrap->HttpToken->Event);
+      FreePool (Wrap);
       return ;
     }
   }
@@ -562,13 +568,9 @@ HttpCloseTcpRxEvent (
   )
 {
   HTTP_PROTOCOL            *HttpInstance;
-  EFI_TCP4_IO_TOKEN        *Rx4Token;
-  EFI_TCP6_IO_TOKEN        *Rx6Token;
 
   ASSERT (Wrap != NULL);
   HttpInstance   = Wrap->HttpInstance;
-  Rx4Token       = NULL;
-  Rx6Token       = NULL;
   
   if (HttpInstance->LocalAddressIsIPv6) {
     if (Wrap->TcpWrap.Rx6Token.CompletionToken.Event != NULL) {

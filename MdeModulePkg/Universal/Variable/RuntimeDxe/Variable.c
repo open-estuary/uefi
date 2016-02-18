@@ -799,7 +799,7 @@ RecordVarErrorFlag (
       //
       // Update the data in NV cache.
       //
-      *VarErrFlag = Flag;
+      *VarErrFlag = TempFlag;
     }
   }
 }
@@ -1191,6 +1191,9 @@ Reclaim (
       mVariableModuleGlobal->CommonVariableTotalSize = CommonVariableTotalSize;
       mVariableModuleGlobal->CommonUserVariableTotalSize = CommonUserVariableTotalSize;
     } else {
+      mVariableModuleGlobal->HwErrVariableTotalSize = 0;
+      mVariableModuleGlobal->CommonVariableTotalSize = 0;
+      mVariableModuleGlobal->CommonUserVariableTotalSize = 0;
       Variable = GetStartPointer ((VARIABLE_STORE_HEADER *)(UINTN)VariableBase);
       while (IsValidVariableHeader (Variable, GetEndPointer ((VARIABLE_STORE_HEADER *)(UINTN)VariableBase))) {
         NextVariable = GetNextVariablePtr (Variable);
@@ -1716,7 +1719,7 @@ CheckRemainingSpaceForConsistencyInternal (
   ASSERT_EFI_ERROR (Status);
 
   TotalNeededSize = 0;
-  Args = Marker;
+  VA_COPY (Args, Marker);
   VariableEntry = VA_ARG (Args, VARIABLE_ENTRY_CONSISTENCY *);
   while (VariableEntry != NULL) {
     //
@@ -1745,7 +1748,7 @@ CheckRemainingSpaceForConsistencyInternal (
     return FALSE;
   }
 
-  Args = Marker;
+  VA_COPY (Args, Marker);
   VariableEntry = VA_ARG (Args, VARIABLE_ENTRY_CONSISTENCY *);
   while (VariableEntry != NULL) {
     //
@@ -2198,6 +2201,7 @@ UpdateVariable (
         // go to delete this variable in variable HOB and
         // try to flush other variables from HOB to flash.
         //
+        UpdateVariableInfo (VariableName, VendorGuid, FALSE, FALSE, FALSE, TRUE, FALSE);
         FlushHobVariableToFlash (VariableName, VendorGuid);
         return EFI_SUCCESS;
       }
@@ -3623,6 +3627,8 @@ InitNonVolatileVariableStore (
   UINT32                                HwErrStorageSize;
   UINT32                                MaxUserNvVariableSpaceSize;
   UINT32                                BoottimeReservedNvVariableSpaceSize;
+  EFI_STATUS                            Status;
+  VOID                                  *FtwProtocol;
 
   mVariableModuleGlobal->FvbInstance = NULL;
 
@@ -3645,30 +3651,36 @@ InitNonVolatileVariableStore (
   //
   CopyMem (NvStorageData, (UINT8 *) (UINTN) NvStorageBase, NvStorageSize);
 
+  Status = GetFtwProtocol ((VOID **)&FtwProtocol);
   //
-  // Check the FTW last write data hob.
+  // If FTW protocol has been installed, no need to check FTW last write data hob.
   //
-  GuidHob = GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid);
-  if (GuidHob != NULL) {
-    FtwLastWriteData = (FAULT_TOLERANT_WRITE_LAST_WRITE_DATA *) GET_GUID_HOB_DATA (GuidHob);
-    if (FtwLastWriteData->TargetAddress == NvStorageBase) {
-      DEBUG ((EFI_D_INFO, "Variable: NV storage is backed up in spare block: 0x%x\n", (UINTN) FtwLastWriteData->SpareAddress));
-      //
-      // Copy the backed up NV storage data to the memory buffer from spare block.
-      //
-      CopyMem (NvStorageData, (UINT8 *) (UINTN) (FtwLastWriteData->SpareAddress), NvStorageSize);
-    } else if ((FtwLastWriteData->TargetAddress > NvStorageBase) &&
-               (FtwLastWriteData->TargetAddress < (NvStorageBase + NvStorageSize))) {
-      //
-      // Flash NV storage from the Offset is backed up in spare block.
-      //
-      BackUpOffset = (UINT32) (FtwLastWriteData->TargetAddress - NvStorageBase);
-      BackUpSize = NvStorageSize - BackUpOffset;
-      DEBUG ((EFI_D_INFO, "Variable: High partial NV storage from offset: %x is backed up in spare block: 0x%x\n", BackUpOffset, (UINTN) FtwLastWriteData->SpareAddress));
-      //
-      // Copy the partial backed up NV storage data to the memory buffer from spare block.
-      //
-      CopyMem (NvStorageData + BackUpOffset, (UINT8 *) (UINTN) FtwLastWriteData->SpareAddress, BackUpSize);
+  if (EFI_ERROR (Status)) {
+    //
+    // Check the FTW last write data hob.
+    //
+    GuidHob = GetFirstGuidHob (&gEdkiiFaultTolerantWriteGuid);
+    if (GuidHob != NULL) {
+      FtwLastWriteData = (FAULT_TOLERANT_WRITE_LAST_WRITE_DATA *) GET_GUID_HOB_DATA (GuidHob);
+      if (FtwLastWriteData->TargetAddress == NvStorageBase) {
+        DEBUG ((EFI_D_INFO, "Variable: NV storage is backed up in spare block: 0x%x\n", (UINTN) FtwLastWriteData->SpareAddress));
+        //
+        // Copy the backed up NV storage data to the memory buffer from spare block.
+        //
+        CopyMem (NvStorageData, (UINT8 *) (UINTN) (FtwLastWriteData->SpareAddress), NvStorageSize);
+      } else if ((FtwLastWriteData->TargetAddress > NvStorageBase) &&
+                 (FtwLastWriteData->TargetAddress < (NvStorageBase + NvStorageSize))) {
+        //
+        // Flash NV storage from the Offset is backed up in spare block.
+        //
+        BackUpOffset = (UINT32) (FtwLastWriteData->TargetAddress - NvStorageBase);
+        BackUpSize = NvStorageSize - BackUpOffset;
+        DEBUG ((EFI_D_INFO, "Variable: High partial NV storage from offset: %x is backed up in spare block: 0x%x\n", BackUpOffset, (UINTN) FtwLastWriteData->SpareAddress));
+        //
+        // Copy the partial backed up NV storage data to the memory buffer from spare block.
+        //
+        CopyMem (NvStorageData + BackUpOffset, (UINT8 *) (UINTN) FtwLastWriteData->SpareAddress, BackUpSize);
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 /** @file
     Manually generated Python Configuration file for EDK II.
 
+    Copyright (c) 2015, Daryl McDaniel. All rights reserved.<BR>
     Copyright (c) 2011 - 2012, Intel Corporation. All rights reserved.<BR>
     This program and the accompanying materials are licensed and made available under
     the terms and conditions of the BSD License that accompanies this distribution.
@@ -67,6 +68,9 @@
 /* Define to 1 if you have the 'alarm' function. */
 #undef HAVE_ALARM
 
+/* Define to 1 if you have the <alloca.h> header file. */
+#undef HAVE_ALLOCA_H
+
 /* Define this if your time.h defines altzone. */
 #undef HAVE_ALTZONE
 
@@ -108,6 +112,9 @@
 
 /* define to 1 if your sem_getvalue is broken. */
 #define HAVE_BROKEN_SEM_GETVALUE      1
+
+/* Define if 'unsetenv' does not return an int. */
+#undef HAVE_BROKEN_UNSETENV
 
 /* Define this if you have the type _Bool. */
 #define HAVE_C99_BOOL                 1
@@ -170,17 +177,16 @@
 /* Define to 1 if you have the device macros. */
 #undef HAVE_DEVICE_MACROS
 
-/* Define if we have /dev/ptc. */
+/* Define to 1 if you have the /dev/ptc device file. */
 #undef HAVE_DEV_PTC
 
-/* Define if we have /dev/ptmx. */
+/* Define to 1 if you have the /dev/ptmx device file. */
 #undef HAVE_DEV_PTMX
 
 /* Define to 1 if you have the <direct.h> header file. */
 #undef HAVE_DIRECT_H
 
-/* Define to 1 if you have the <dirent.h> header file, and it defines 'DIR'.
-   */
+/* Define to 1 if you have the <dirent.h> header file, and it defines 'DIR'. */
 #define HAVE_DIRENT_H   1
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
@@ -273,8 +279,7 @@
 /* Define to 1 if you have the 'gamma' function. */
 #undef HAVE_GAMMA
 
-/* Define if we can use gcc inline assembler to get and set x87 control word
-*/
+/* Define if we can use gcc inline assembler to get and set x87 control word */
 #if defined(__GNUC__)
   #define HAVE_GCC_ASM_FOR_X87  1
 #else
@@ -282,7 +287,8 @@
 #endif
 
 /* Define if you have the getaddrinfo function. */
-#undef HAVE_GETADDRINFO
+//#undef HAVE_GETADDRINFO
+#define HAVE_GETADDRINFO  1
 
 /* Define to 1 if you have the 'getcwd' function. */
 #define HAVE_GETCWD   1
@@ -290,11 +296,15 @@
 /* Define this if you have flockfile(), getc_unlocked(), and funlockfile() */
 #undef HAVE_GETC_UNLOCKED
 
+/* Define to 1 if you have the 'getentropy' function. */
+#undef HAVE_GETENTROPY
+
 /* Define to 1 if you have the 'getgroups' function. */
 #undef HAVE_GETGROUPS
 
 /* Define to 1 if you have the 'gethostbyname' function. */
-#undef HAVE_GETHOSTBYNAME
+//#undef HAVE_GETHOSTBYNAME
+#define HAVE_GETHOSTBYNAME  1
 
 /* Define this if you have some version of gethostbyname_r() */
 #undef HAVE_GETHOSTBYNAME_R
@@ -318,7 +328,8 @@
 #undef HAVE_GETLOGIN
 
 /* Define to 1 if you have the 'getnameinfo' function. */
-#undef HAVE_GETNAMEINFO
+//#undef HAVE_GETNAMEINFO
+#define HAVE_GETNAMEINFO 1
 
 /* Define if you have the 'getpagesize' function. */
 #undef HAVE_GETPAGESIZE
@@ -382,6 +393,12 @@
 
 /* Define to 1 if you have the 'initgroups' function. */
 #undef HAVE_INITGROUPS
+
+/* Define if your compiler provides int32_t. */
+#undef HAVE_INT32_T
+
+/* Define if your compiler provides int64_t. */
+#undef HAVE_INT64_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H   1
@@ -479,6 +496,9 @@
 /* Define to 1 if you have the 'mktime' function. */
 #define HAVE_MKTIME     1
 
+/* Define to 1 if you have the 'mmap' function. */
+#undef HAVE_MMAP
+
 /* Define to 1 if you have the 'mremap' function. */
 #undef HAVE_MREMAP
 
@@ -524,6 +544,9 @@
 /* Define if you have GNU PTH threads. */
 #undef HAVE_PTH
 
+/* Define to 1 if you have the 'pthread_atfork' function. */
+#undef HAVE_PTHREAD_ATFORK
+
 /* Defined for Solaris 2.6 bug in pthread header. */
 #undef HAVE_PTHREAD_DESTRUCTOR
 
@@ -541,6 +564,9 @@
 
 /* Define to 1 if you have the 'putenv' function. */
 #undef HAVE_PUTENV
+
+/* Define if the libcrypto has RAND_egd */
+#undef HAVE_RAND_EGD
 
 /* Define to 1 if you have the 'readlink' function. */
 #undef HAVE_READLINK
@@ -717,6 +743,12 @@
 /* Define to 1 if 'st_rdev' is a member of 'struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_RDEV
 
+/* Define to 1 if 'st_dev' is a member of 'struct stat'. */
+#undef HAVE_STRUCT_STAT_ST_DEV
+
+/* Define to 1 if 'st_ino' is a member of 'struct stat'. */
+#undef HAVE_STRUCT_STAT_ST_INO
+
 /* Define to 1 if 'tm_zone' is a member of 'struct tm'. */
 #undef HAVE_STRUCT_TM_TM_ZONE
 
@@ -863,6 +895,12 @@
 /* Define this if you have tcl and TCL_UTF_MAX==6 */
 #undef HAVE_UCS4_TCL
 
+/* Define if your compiler provides uint32_t. */
+#undef HAVE_UINT32_T
+
+/* Define if your compiler provides uint64_t. */
+#undef HAVE_UINT64_T
+
 /* Define to 1 if the system has the type 'uintptr_t'. */
 #define HAVE_UINTPTR_T    1
 
@@ -932,22 +970,22 @@
 #undef MVWDELCH_IS_EXPRESSION
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT   "edk2-devel@lists.sourceforge.net"
+#define PACKAGE_BUGREPORT   "edk2-devel@lists.01.org"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME    "EDK II Python Package"
+#define PACKAGE_NAME    "EDK II Python 2.7.10 Package"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING  "EDK II Python Package V0.8"
+#define PACKAGE_STRING  "EDK II Python 2.7.10 Package V0.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME   "EADK_Python"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL   "http://edk2.tianocore.org/toolkit/python"
+#define PACKAGE_URL   "http://edk2.tianocore.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION  "V0.8"
+#define PACKAGE_VERSION  "V0.1"
 
 /* Define if POSIX semaphores aren't enabled on your system */
 #define POSIX_SEMAPHORES_NOT_ENABLED    1
@@ -1160,13 +1198,14 @@
 /* This must be defined on some systems to enable large file support. */
 #undef _LARGEFILE_SOURCE
 
+/* This must be defined on AIX systems to enable large file support. */
+#undef _LARGE_FILES
+
 /* Define to 1 if on MINIX. */
 #undef _MINIX
 
 /* Define on NetBSD to activate all library features */
-#ifndef _NETBSD_SOURCE
-  #define _NETBSD_SOURCE  1
-#endif
+#define _NETBSD_SOURCE  1
 
 /* Define _OSF_SOURCE to get the makedev macro. */
 #undef _OSF_SOURCE

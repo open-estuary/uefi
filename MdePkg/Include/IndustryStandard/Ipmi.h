@@ -14,16 +14,16 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
-#ifndef _IPMIDEFINITIONS_H_
-#define _IPMIDEFINITIONS_H_
+#ifndef _IPMI_H_
+#define _IPMI_H_
 
-#include <IndustryStandard/IpmiNetFnChassisDefinitions.h>
-#include <IndustryStandard/IpmiNetFnBridgeDefinitions.h>
-#include <IndustryStandard/IpmiNetFnSensorEventDefinitions.h>
-#include <IndustryStandard/IpmiNetFnAppDefinitions.h>
-#include <IndustryStandard/IpmiNetFnFirmwareDefinitions.h>
-#include <IndustryStandard/IpmiNetFnStorageDefinitions.h>
-#include <IndustryStandard/IpmiNetFnTransportDefinitions.h>
-#include <IndustryStandard/IpmiNetFnGroupExtensionDefinitions.h>
+#include <IndustryStandard/IpmiNetFnChassis.h>
+#include <IndustryStandard/IpmiNetFnBridge.h>
+#include <IndustryStandard/IpmiNetFnSensorEvent.h>
+#include <IndustryStandard/IpmiNetFnApp.h>
+#include <IndustryStandard/IpmiNetFnFirmware.h>
+#include <IndustryStandard/IpmiNetFnStorage.h>
+#include <IndustryStandard/IpmiNetFnTransport.h>
+#include <IndustryStandard/IpmiNetFnGroupExtension.h>
 
 #endif

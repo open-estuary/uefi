@@ -327,6 +327,9 @@ GroupMultipleLegacyBootOption4SameType (
   SetMem (DeviceTypeIndex, sizeof (DeviceTypeIndex), 0xff);
 
   GetEfiGlobalVariable2 (L"BootOrder", (VOID **) &BootOrder, &BootOrderSize);
+  if (BootOrder == NULL) {
+    return;
+  }
 
   for (Index = 0; Index < BootOrderSize / sizeof (UINT16); Index++) {
     UnicodeSPrint (OptionName, sizeof (OptionName), L"Boot%04x", BootOrder[Index]);
@@ -678,6 +681,18 @@ BootManagerCallback (
   EFI_BOOT_MANAGER_LOAD_OPTION *BootOption;
   UINTN                        BootOptionCount;
   EFI_INPUT_KEY                Key;
+
+  if (Action == EFI_BROWSER_ACTION_FORM_OPEN) {
+    //
+    //Means enter the boot manager form.
+    //Update the boot manage page,because the boot option may changed.
+    //
+    if (QuestionId == 0x1212){
+      UpdateBootManager();
+    }
+    return EFI_SUCCESS;
+  }
+
   if (Action != EFI_BROWSER_ACTION_CHANGED) {
     //
     // Do nothing for other UEFI Action. Only do call back when data is changed.
@@ -690,6 +705,13 @@ BootManagerCallback (
   }
 
   BootOption = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+
+  //
+  // Clear  the  screen  before.
+  //
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_TEXT_ATTR (EFI_LIGHTGRAY, EFI_BLACK));
+  gST->ConOut->ClearScreen (gST->ConOut);
+
   //
   // parse the selected option
   //
@@ -756,10 +778,6 @@ BootManagerLibConstructor (
                                     );
   ASSERT (gBootManagerPrivate.HiiHandle != NULL);
 
-  //
-  // Update boot manager page 
-  //
-  UpdateBootManager ();
 
   return EFI_SUCCESS;
 }

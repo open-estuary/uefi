@@ -3873,7 +3873,9 @@ HiiConfigRoutingExtractConfig (
                       &gEfiHiiConfigAccessProtocolGuid,
                       (VOID **) &ConfigAccess
                       );
-      ASSERT_EFI_ERROR (Status);
+      if (EFI_ERROR (Status)) {
+        goto Done;
+      }
 
       Status = ConfigAccess->ExtractConfig (
                                ConfigAccess,
@@ -4344,7 +4346,11 @@ HiiConfigRoutingRouteConfig (
                       &gEfiHiiConfigAccessProtocolGuid,
                       (VOID **)  &ConfigAccess
                       );
-      ASSERT_EFI_ERROR (Status);
+      if (EFI_ERROR (Status)) {
+        *Progress = StringPtr;
+        FreePool (ConfigResp);
+        return EFI_NOT_FOUND;
+      }
 
       Status = ConfigAccess->RouteConfig (
                                ConfigAccess,

@@ -32,14 +32,18 @@
   IoLib
   ArmLib
   PrintLib
+  FdtLib
 
 [Sources.common]
   RelocatableVirt.c
   XenVirtMem.c
+  FdtParser.c
 
 [Sources.AARCH64]
   AARCH64/RelocatableVirtHelper.S
-  AARCH64/MemnodeParser.S
+
+[Sources.ARM]
+  ARM/RelocatableVirtHelper.S
 
 [FeaturePcd]
   gEmbeddedTokenSpaceGuid.PcdCacheEnable

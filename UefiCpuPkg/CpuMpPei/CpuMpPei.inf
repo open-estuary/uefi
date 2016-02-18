@@ -66,6 +66,7 @@
   SynchronizationLib
   TimerLib
   UefiCpuLib
+  CpuLib
 
 [Ppis]
   gEfiPeiMpServicesPpiGuid                      ## PRODUCES
@@ -81,6 +82,8 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuApStackSize                      ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMicrocodePatchAddress            ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuMicrocodePatchRegionSize         ## CONSUMES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuApLoopMode                       ## CONSUMES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuApTargetCstate                   ## SOMETIMES_CONSUMES
 
 [Depex]
   gEfiPeiMemoryDiscoveredPpiGuid

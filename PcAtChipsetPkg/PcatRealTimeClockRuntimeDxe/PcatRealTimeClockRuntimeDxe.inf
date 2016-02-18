@@ -57,6 +57,10 @@
 [Protocols]
   gEfiRealTimeClockArchProtocolGuid             ## PRODUCES
 
+[Guids]
+  gEfiAcpi10TableGuid                           ## CONSUMES ## Event
+  gEfiAcpiTableGuid                             ## CONSUMES ## Event
+
 [Depex]
   gEfiVariableArchProtocolGuid AND gEfiVariableWriteArchProtocolGuid
   

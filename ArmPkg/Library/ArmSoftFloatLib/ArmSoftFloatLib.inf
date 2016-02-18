@@ -41,9 +41,14 @@
   Arm/__aeabi_dcmpun.c
   Arm/__aeabi_fcmpun.c
 
+  Arm/__aeabi_cdcmp.asm   | RVCT
+  Arm/__aeabi_cfcmp.asm   | RVCT
+
 [Packages]
   MdePkg/MdePkg.dec
 
 [BuildOptions]
-  GCC:*_*_*_CC_FLAGS = -DSOFTFLOAT_FOR_GCC -Wno-enum-compare -fno-tree-vrp
+  GCC:*_*_*_CC_FLAGS = -DSOFTFLOAT_FOR_GCC -Wno-enum-compare
+  *_GCC46_*_CC_FLAGS = -fno-tree-vrp
+  *_GCC47_*_CC_FLAGS = -fno-tree-vrp
   RVCT:*_*_*_CC_FLAGS = -DSOFTFLOAT_FOR_GCC

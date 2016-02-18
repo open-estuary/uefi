@@ -31,8 +31,10 @@ CONTROLLER_DEVICE_PATH mControllerDevicePathTemplate = {
   {
     HARDWARE_DEVICE_PATH,
     HW_CONTROLLER_DP,
-    sizeof (CONTROLLER_DEVICE_PATH),
-    0
+    {
+      (UINT8) (sizeof (CONTROLLER_DEVICE_PATH)),
+      (UINT8) ((sizeof (CONTROLLER_DEVICE_PATH)) >> 8)
+    }
   },
   0
 };
@@ -858,7 +860,8 @@ SerialControllerDriverStart (
     return EFI_SUCCESS;
   }
 
-
+  ControllerNumber = 0;
+  ContainsControllerNode = FALSE;
   SerialDevices = GetChildSerialDevices (Controller, IoProtocolGuid, &SerialDeviceCount);
   //
   // If the SerialIo instance specified by RemainingDevicePath is already created,
@@ -867,9 +870,11 @@ SerialControllerDriverStart (
   if ((SerialDeviceCount != 0) && (RemainingDevicePath != NULL)) {
     Uart = (UART_DEVICE_PATH *) SkipControllerDevicePathNode (RemainingDevicePath, &ContainsControllerNode, &ControllerNumber);
     for (Index = 0; Index < SerialDeviceCount; Index++) {
+      ASSERT ((SerialDevices != NULL) && (SerialDevices[Index] != NULL));
       if ((!SerialDevices[Index]->ContainsControllerNode && !ContainsControllerNode) ||
           (SerialDevices[Index]->ContainsControllerNode && ContainsControllerNode && SerialDevices[Index]->Instance == ControllerNumber)
           ) {
+        SerialIo = &SerialDevices[Index]->SerialIo;
         Status = EFI_INVALID_PARAMETER;
         //
         // Pass NULL ActualBaudRate to VerifyUartParameters to disallow baudrate degrade.
@@ -877,7 +882,6 @@ SerialControllerDriverStart (
         //
         if (VerifyUartParameters (SerialDevices[Index]->ClockRate, Uart->BaudRate, Uart->DataBits,
                                   (EFI_PARITY_TYPE) Uart->Parity, (EFI_STOP_BITS_TYPE) Uart->StopBits, NULL, NULL)) {
-          SerialIo = &SerialDevices[Index]->SerialIo;
           Status = SerialIo->SetAttributes (
                                SerialIo,
                                Uart->BaudRate,
@@ -960,6 +964,7 @@ SerialControllerDriverStart (
         // Restore the PCI attributes when all children is destroyed (PciDeviceInfo->ChildCount == 0).
         //
         PciDeviceInfo = AllocatePool (sizeof (PCI_DEVICE_INFO));
+        ASSERT (PciDeviceInfo != NULL);
         PciDeviceInfo->ChildCount = 0;
         PciDeviceInfo->PciIo = ParentIo.PciIo;
         Status = ParentIo.PciIo->Attributes (
@@ -977,7 +982,7 @@ SerialControllerDriverStart (
             &Supports
             );
           if (!EFI_ERROR (Status)) {
-            Supports &= EFI_PCI_IO_ATTRIBUTE_IO | EFI_PCI_IO_ATTRIBUTE_MEMORY;
+            Supports &= (UINT64)(EFI_PCI_IO_ATTRIBUTE_IO | EFI_PCI_IO_ATTRIBUTE_MEMORY);
             Status = ParentIo.PciIo->Attributes (
               ParentIo.PciIo,
               EfiPciIoAttributeOperationEnable,
@@ -990,6 +995,7 @@ SerialControllerDriverStart (
         //
         // Re-use the PciDeviceInfo stored in existing children.
         //
+        ASSERT ((SerialDevices != NULL) && (SerialDevices[0] != NULL));
         PciDeviceInfo = SerialDevices[0]->PciDeviceInfo;
         ASSERT (PciDeviceInfo != NULL);
       }

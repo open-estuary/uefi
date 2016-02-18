@@ -118,6 +118,54 @@ ApFuncEnableX2Apic (
 }
 
 /**
+  Get AP loop mode.
+
+  @param MonitorFilterSize  Returns the largest monitor-line size in bytes.
+
+  @return The AP loop mode.
+**/
+UINT8
+GetApLoopMode (
+  OUT UINT16     *MonitorFilterSize
+  )
+{
+  UINT8          ApLoopMode;
+  UINT32         RegEbx;
+  UINT32         RegEcx;
+  UINT32         RegEdx;
+
+  ASSERT (MonitorFilterSize != NULL);
+
+  ApLoopMode = PcdGet8 (PcdCpuApLoopMode);
+  ASSERT (ApLoopMode >= ApInHltLoop && ApLoopMode <= ApInRunLoop);
+  if (ApLoopMode == ApInMwaitLoop) {
+    AsmCpuid (CPUID_VERSION_INFO, NULL, NULL, &RegEcx, NULL);
+    if ((RegEcx & BIT3) == 0) {
+      //
+      // If processor does not support MONITOR/MWAIT feature
+      // by CPUID.[EAX=01H]:ECX.BIT3, force AP in Hlt-loop mode
+      //
+      ApLoopMode = ApInHltLoop;
+    }
+  }
+
+  if (ApLoopMode == ApInHltLoop) {
+    *MonitorFilterSize = 0;
+  } else if (ApLoopMode == ApInRunLoop) {
+    *MonitorFilterSize = sizeof (UINT32);
+  } else if (ApLoopMode == ApInMwaitLoop) {
+    //
+    // CPUID.[EAX=05H]:EBX.BIT0-15: Largest monitor-line size in bytes
+    // CPUID.[EAX=05H].EDX: C-states supported using MWAIT
+    //
+    AsmCpuid (CPUID_MONITOR_MWAIT, NULL, &RegEbx, NULL, &RegEdx);
+    *MonitorFilterSize = RegEbx & 0xFFFF;
+  }
+
+  return ApLoopMode;
+}
+
+/**
   Get CPU MP Data pointer from the Guided HOB.
 
   @return  Pointer to Pointer to PEI CPU MP Data
@@ -225,68 +273,124 @@ ApCFunction (
   UINTN                      ProcessorNumber;
   EFI_AP_PROCEDURE           Procedure;
   UINTN                      BistData;
+  volatile UINT32            *ApStartupSignalBuffer;
 
   PeiCpuMpData = ExchangeInfo->PeiCpuMpData;
-  if (PeiCpuMpData->InitFlag) {
-    ProcessorNumber = NumApsExecuting;
-    //
-    // Sync BSP's Control registers to APs
-    //
-    RestoreVolatileRegisters (&PeiCpuMpData->CpuData[0].VolatileRegisters, FALSE);
-    //
-    // This is first time AP wakeup, get BIST information from AP stack
-    //
-    BistData = *(UINTN *) (PeiCpuMpData->Buffer + ProcessorNumber * PeiCpuMpData->CpuApStackSize - sizeof (UINTN));
-    PeiCpuMpData->CpuData[ProcessorNumber].Health.Uint32 = (UINT32) BistData;
-    PeiCpuMpData->CpuData[ProcessorNumber].ApicId = GetInitialApicId ();
-    if (PeiCpuMpData->CpuData[ProcessorNumber].ApicId >= 0xFF) {
+  while (TRUE) {
+    if (PeiCpuMpData->InitFlag) {
+      ProcessorNumber = NumApsExecuting;
       //
-      // Set x2APIC mode if there are any logical processor reporting
-      // an APIC ID of 255 or greater.
+      // Sync BSP's Control registers to APs
       //
-      AcquireSpinLock(&PeiCpuMpData->MpLock);
-      PeiCpuMpData->X2ApicEnable = TRUE;
-      ReleaseSpinLock(&PeiCpuMpData->MpLock);
-    }
-    //
-    // Sync BSP's Mtrr table to all wakeup APs and load microcode on APs.
-    //
-    MtrrSetAllMtrrs (&PeiCpuMpData->MtrrTable);
-    MicrocodeDetect ();
-    PeiCpuMpData->CpuData[ProcessorNumber].State = CpuStateIdle;
-  } else {
-    //
-    // Execute AP function if AP is not disabled
-    //
-    GetProcessorNumber (PeiCpuMpData, &ProcessorNumber);
-    //
-    // Restore AP's volatile registers saved
-    //
-    RestoreVolatileRegisters (&PeiCpuMpData->CpuData[ProcessorNumber].VolatileRegisters, TRUE);
-
-    if ((PeiCpuMpData->CpuData[ProcessorNumber].State != CpuStateDisabled) &&
-        (PeiCpuMpData->ApFunction != 0)) {
-      PeiCpuMpData->CpuData[ProcessorNumber].State = CpuStateBusy;
-      Procedure = (EFI_AP_PROCEDURE)(UINTN)PeiCpuMpData->ApFunction;
+      RestoreVolatileRegisters (&PeiCpuMpData->CpuData[0].VolatileRegisters, FALSE);
       //
-      // Invoke AP function here
+      // This is first time AP wakeup, get BIST information from AP stack
       //
-      Procedure ((VOID *)(UINTN)PeiCpuMpData->ApFunctionArgument);
+      BistData = *(UINTN *) (PeiCpuMpData->Buffer + ProcessorNumber * PeiCpuMpData->CpuApStackSize - sizeof (UINTN));
+      PeiCpuMpData->CpuData[ProcessorNumber].Health.Uint32 = (UINT32) BistData;
+      PeiCpuMpData->CpuData[ProcessorNumber].ApicId = GetInitialApicId ();
+      if (PeiCpuMpData->CpuData[ProcessorNumber].ApicId >= 0xFF) {
+        //
+        // Set x2APIC mode if there are any logical processor reporting
+        // an APIC ID of 255 or greater.
+        //
+        AcquireSpinLock(&PeiCpuMpData->MpLock);
+        PeiCpuMpData->X2ApicEnable = TRUE;
+        ReleaseSpinLock(&PeiCpuMpData->MpLock);
+      }
+      //
+      // Sync BSP's Mtrr table to all wakeup APs and load microcode on APs.
+      //
+      MtrrSetAllMtrrs (&PeiCpuMpData->MtrrTable);
+      MicrocodeDetect ();
       PeiCpuMpData->CpuData[ProcessorNumber].State = CpuStateIdle;
+    } else {
+      //
+      // Execute AP function if AP is not disabled
+      //
+      GetProcessorNumber (PeiCpuMpData, &ProcessorNumber);
+      if (PeiCpuMpData->ApLoopMode == ApInHltLoop) {
+        //
+        // Restore AP's volatile registers saved
+        //
+        RestoreVolatileRegisters (&PeiCpuMpData->CpuData[ProcessorNumber].VolatileRegisters, TRUE);
+      }
+
+      if ((PeiCpuMpData->CpuData[ProcessorNumber].State != CpuStateDisabled) &&
+          (PeiCpuMpData->ApFunction != 0)) {
+        PeiCpuMpData->CpuData[ProcessorNumber].State = CpuStateBusy;
+        Procedure = (EFI_AP_PROCEDURE)(UINTN)PeiCpuMpData->ApFunction;
+        //
+        // Invoke AP function here
+        //
+        Procedure ((VOID *)(UINTN)PeiCpuMpData->ApFunctionArgument);
+        //
+        // Re-get the processor number due to BSP/AP maybe exchange in AP function
+        //
+        GetProcessorNumber (PeiCpuMpData, &ProcessorNumber);
+        PeiCpuMpData->CpuData[ProcessorNumber].State = CpuStateIdle;
+      }
+    }
+
+    //
+    // AP finished executing C code
+    //
+    InterlockedIncrement ((UINT32 *)&PeiCpuMpData->FinishedCount);
+
+    //
+    // Place AP is specified loop mode
+    //
+    if (PeiCpuMpData->ApLoopMode == ApInHltLoop) {
+      //
+      // Save AP volatile registers
+      //
+      SaveVolatileRegisters (&PeiCpuMpData->CpuData[ProcessorNumber].VolatileRegisters);
+      //
+      // Place AP in Hlt-loop
+      //
+      while (TRUE) {
+        DisableInterrupts ();
+        CpuSleep ();
+        CpuPause ();
+      }
+    }
+    ApStartupSignalBuffer = PeiCpuMpData->CpuData[ProcessorNumber].StartupApSignal;
+    //
+    // Clear AP start-up signal
+    //
+    *ApStartupSignalBuffer = 0;
+    while (TRUE) {
+      DisableInterrupts ();
+      if (PeiCpuMpData->ApLoopMode == ApInMwaitLoop) {
+        //
+        // Place AP in Mwait-loop
+        //
+        AsmMonitor ((UINTN)ApStartupSignalBuffer, 0, 0);
+        if (*ApStartupSignalBuffer != WAKEUP_AP_SIGNAL) {
+          //
+          // If AP start-up signal is not set, place AP into
+          // the maximum C-state
+          //
+          AsmMwait (PeiCpuMpData->ApTargetCState << 4, 0);
+        }
+      } else if (PeiCpuMpData->ApLoopMode == ApInRunLoop) {
+        //
+        // Place AP in Run-loop
+        //
+        CpuPause ();
+      } else {
+        ASSERT (FALSE);
+      }
+
+      //
+      // If AP start-up signal is written, AP is waken up
+      // otherwise place AP in loop again
+      //
+      if (*ApStartupSignalBuffer == WAKEUP_AP_SIGNAL) {
+        break;
+      }
     }
   }
-
-  //
-  // AP finished executing C code
-  //
-  InterlockedIncrement ((UINT32 *)&PeiCpuMpData->FinishedCount);
-
-  //
-  // Save AP volatile registers
-  //
-  SaveVolatileRegisters (&PeiCpuMpData->CpuData[ProcessorNumber].VolatileRegisters);
-
-  AsmCliHltLoop ();
 }
 
 /**
@@ -295,7 +399,7 @@ ApCFunction (
   @param PeiCpuMpData       Pointer to PEI CPU MP Data
   @param Broadcast          TRUE:  Send broadcast IPI to all APs
                             FALSE: Send IPI to AP by ApicId
-  @param ApicId             Apic ID for the processor to be waked
+  @param ProcessorNumber    The handle number of specified processor
   @param Procedure          The function to be invoked by AP
   @param ProcedureArgument  The argument to be passed into AP function
 **/
@@ -303,12 +407,13 @@ VOID
 WakeUpAP (
   IN PEI_CPU_MP_DATA           *PeiCpuMpData,
   IN BOOLEAN                   Broadcast,
-  IN UINT32                    ApicId,
+  IN UINTN                     ProcessorNumber,
   IN EFI_AP_PROCEDURE          Procedure,              OPTIONAL
   IN VOID                      *ProcedureArgument      OPTIONAL
   )
 {
   volatile MP_CPU_EXCHANGE_INFO    *ExchangeInfo;
+  UINTN                            Index;
 
   PeiCpuMpData->ApFunction         = (UINTN) Procedure;
   PeiCpuMpData->ApFunctionArgument = (UINTN) ProcedureArgument;
@@ -332,12 +437,40 @@ WakeUpAP (
   CopyMem ((VOID *)&ExchangeInfo->GdtrProfile, &mGdt, sizeof(mGdt));
   AsmReadIdtr ((IA32_DESCRIPTOR *) &ExchangeInfo->IdtrProfile);
 
-  if (Broadcast) {
-    SendInitSipiSipiAllExcludingSelf ((UINT32) ExchangeInfo->BufferStart);
-  } else {
-    SendInitSipiSipi (ApicId, (UINT32) ExchangeInfo->BufferStart);
+  if (PeiCpuMpData->ApLoopMode == ApInMwaitLoop) {
+    //
+    // Get AP target C-state each time when waking up AP,
+    // for it maybe updated by platform again
+    //
+    PeiCpuMpData->ApTargetCState = PcdGet8 (PcdCpuApTargetCstate);
   }
 
+  //
+  // Wakeup APs per AP loop state
+  //
+  if (PeiCpuMpData->ApLoopMode == ApInHltLoop || PeiCpuMpData->InitFlag) {
+    if (Broadcast) {
+      SendInitSipiSipiAllExcludingSelf ((UINT32) ExchangeInfo->BufferStart);
+    } else {
+      SendInitSipiSipi (
+        PeiCpuMpData->CpuData[ProcessorNumber].ApicId,
+        (UINT32) ExchangeInfo->BufferStart
+        );
+    }
+  } else if ((PeiCpuMpData->ApLoopMode == ApInMwaitLoop) ||
+             (PeiCpuMpData->ApLoopMode == ApInRunLoop)) {
+    if (Broadcast) {
+      for (Index = 0; Index < PeiCpuMpData->CpuCount; Index++) {
+        if (Index != PeiCpuMpData->BspNumber) {
+          *(PeiCpuMpData->CpuData[Index].StartupApSignal) = WAKEUP_AP_SIGNAL;
+        }
+      }
+    } else {
+      *(PeiCpuMpData->CpuData[ProcessorNumber].StartupApSignal) = WAKEUP_AP_SIGNAL;
+    }
+  } else {
+    ASSERT (FALSE);
+  }
   return ;
 }
 
@@ -496,7 +629,7 @@ CountProcessorNumber (
     if (PeiCpuMpData->X2ApicEnable) {
       DEBUG ((EFI_D_INFO, "Force x2APIC mode!\n"));
       //
-      // Send 2nd broadcast IPI to all APs to enable x2APIC mode
+      // Wakeup all APs to enable x2APIC mode
       //
       WakeUpAP (PeiCpuMpData, TRUE, 0, ApFuncEnableX2Apic, NULL);
       //
@@ -541,6 +674,10 @@ PrepareAPStartupVector (
   UINTN                         WakeupBuffer;
   UINTN                         WakeupBufferSize;
   MP_ASSEMBLY_ADDRESS_MAP       AddressMap;
+  UINT8                         ApLoopMode;
+  UINT16                        MonitorFilterSize;
+  UINT8                         *MonitorBuffer;
+  UINTN                         Index;
 
   AsmGetAddressMap (&AddressMap);
   WakeupBufferSize = AddressMap.RendezvousFunnelSize + sizeof (MP_CPU_EXCHANGE_INFO);
@@ -549,11 +686,14 @@ PrepareAPStartupVector (
   DEBUG ((EFI_D_INFO, "CpuMpPei: WakeupBuffer = 0x%x\n", WakeupBuffer));
 
   //
-  // Allocate Pages for APs stack, CPU MP Data and backup buffer for wakeup buffer
+  // Allocate Pages for APs stack, CPU MP Data, backup buffer for wakeup buffer,
+  // and monitor buffer if required.
   //
   MaxCpuCount = PcdGet32(PcdCpuMaxLogicalProcessorNumber);
   BufferSize  = PcdGet32 (PcdCpuApStackSize) * MaxCpuCount + sizeof (PEI_CPU_MP_DATA)
                   + WakeupBufferSize + sizeof (PEI_CPU_DATA) * MaxCpuCount;
+  ApLoopMode = GetApLoopMode (&MonitorFilterSize);
+  BufferSize += MonitorFilterSize * MaxCpuCount;
   Status = PeiServicesAllocatePages (
              EfiBootServicesData,
              EFI_SIZE_TO_PAGES (BufferSize),
@@ -579,7 +719,21 @@ PrepareAPStartupVector (
   InitializeSpinLock(&PeiCpuMpData->MpLock);
   SaveVolatileRegisters (&PeiCpuMpData->CpuData[0].VolatileRegisters);
   CopyMem (&PeiCpuMpData->AddressMap, &AddressMap, sizeof (MP_ASSEMBLY_ADDRESS_MAP));
-
+  //
+  // Initialize AP loop mode
+  //
+  PeiCpuMpData->ApLoopMode = ApLoopMode;
+  DEBUG ((EFI_D_INFO, "AP Loop Mode is %d\n", PeiCpuMpData->ApLoopMode));
+  MonitorBuffer = (UINT8 *)(PeiCpuMpData->CpuData + MaxCpuCount);
+  if (PeiCpuMpData->ApLoopMode != ApInHltLoop) {
+    //
+    // Set up APs wakeup signal buffer
+    //
+    for (Index = 0; Index < MaxCpuCount; Index++) {
+      PeiCpuMpData->CpuData[Index].StartupApSignal = 
+        (UINT32 *)(MonitorBuffer + MonitorFilterSize * Index);
+    }
+  }
   //
   // Backup original data and copy AP reset code in it
   //

@@ -70,7 +70,9 @@ static void
 swap_node(Node* a, Node* b)
 {
   Node c;
-  c = *a; *a = *b; *b = c;
+  CopyMem (&c, a, sizeof (Node));
+  CopyMem (a, b, sizeof (Node));
+  CopyMem (b, &c, sizeof (Node));
 
   if (NTYPE(a) == NT_STR) {
     StrNode* sn = NSTR(a);
@@ -1209,6 +1211,9 @@ compile_length_enclose_node(EncloseNode* node, regex_t* reg)
 {
   int len;
   int tlen;
+  QtfrNode* qn;
+
+  qn = NULL;
 
   if (node->type == ENCLOSE_OPTION)
     return compile_length_option_node(node, reg);
@@ -1248,7 +1253,10 @@ compile_length_enclose_node(EncloseNode* node, regex_t* reg)
 
   case ENCLOSE_STOP_BACKTRACK:
     if (IS_ENCLOSE_STOP_BT_SIMPLE_REPEAT(node)) {
-      QtfrNode* qn = NQTFR(node->target);
+      if (node->target == NULL) {
+        CHECK_NULL_RETURN_MEMERR(node->target);
+      }
+      qn = NQTFR(node->target);
       tlen = compile_length_tree(qn->target, reg);
       if (tlen < 0) return tlen;
 
@@ -3263,6 +3271,7 @@ expand_case_fold_string_alt(int item_num, OnigCaseFoldCodeItem items[],
   int r, i, j, len, varlen;
   Node *anode, *var_anode, *snode, *xnode, *an;
   UChar buf[ONIGENC_CODE_TO_MBC_MAXLEN];
+  xnode = NULL_NODE;
 
   *rnode = var_anode = NULL_NODE;
 
@@ -3317,7 +3326,7 @@ expand_case_fold_string_alt(int item_num, OnigCaseFoldCodeItem items[],
     }
 
     if (items[i].byte_len != slen) {
-      Node *rem;
+      Node *rem = NULL_NODE;
       UChar *q = p + items[i].byte_len;
 
       if (q < end) {
@@ -3346,6 +3355,12 @@ expand_case_fold_string_alt(int item_num, OnigCaseFoldCodeItem items[],
         NCAR(an) = snode;
       }
 
+      if (var_anode == NULL) {
+        onig_node_free(an);
+        onig_node_free(xnode);
+        onig_node_free(rem);
+        goto mem_err2;
+      }
       NCDR(var_anode) = an;
       var_anode = an;
     }
@@ -4103,7 +4118,7 @@ alt_merge_mml(MinMaxLen* to, MinMaxLen* from)
 static void
 copy_opt_env(OptEnv* to, OptEnv* from)
 {
-  *to = *from;
+  CopyMem (to, from, sizeof (OptEnv));
 }
 
 static void
@@ -4116,7 +4131,7 @@ clear_opt_anc_info(OptAncInfo* anc)
 static void
 copy_opt_anc_info(OptAncInfo* to, OptAncInfo* from)
 {
-  *to = *from;
+  CopyMem (to, from, sizeof (OptAncInfo));
 }
 
 static void
@@ -4200,7 +4215,7 @@ clear_opt_exact_info(OptExactInfo* ex)
 static void
 copy_opt_exact_info(OptExactInfo* to, OptExactInfo* from)
 {
-  *to = *from;
+  CopyMem (to, from, sizeof (OptExactInfo));
 }
 
 static void
@@ -4348,7 +4363,7 @@ clear_opt_map_info(OptMapInfo* map)
 static void
 copy_opt_map_info(OptMapInfo* to, OptMapInfo* from)
 {
-  *to = *from;
+  CopyMem (to, from, sizeof (OptMapInfo));
 }
 
 static void
@@ -4463,7 +4478,7 @@ clear_node_opt_info(NodeOptInfo* opt)
 static void
 copy_node_opt_info(NodeOptInfo* to, NodeOptInfo* from)
 {
-  *to = *from;
+  CopyMem (to, from, sizeof (NodeOptInfo));
 }
 
 static void
@@ -5304,7 +5319,7 @@ onig_compile(regex_t* reg, const UChar* pattern, const UChar* pattern_end,
 #endif
 
   r = onig_parse_make_tree(&root, pattern, pattern_end, reg, &scan_env);
-  if (r != 0) goto err;
+  if (r != 0 || root == NULL) goto err;
 
 #ifdef USE_NAMED_GROUP
   /* mixed use named group and no-named group */
