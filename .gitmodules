@@ -7,3 +7,9 @@
 [submodule "uefi-tools"]
 	path = uefi-tools
 	url = https://git.linaro.org/uefi/uefi-tools.git
+[submodule "arm-trusted-firmware"]
+	path = arm-trusted-firmware
+	url = https://github.com/96boards/arm-trusted-firmware.git
+[submodule "l-loader"]
+	path = l-loader
+	url = https://github.com/96boards/l-loader.git
