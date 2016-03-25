@@ -228,9 +228,12 @@ PxeBcParseCachedDhcpPacket (
     // If the bootfile is not present and bootfilename is present in dhcp packet, just parse it.
     // And do not count dhcp option header, or else will destroy the serverhostname.
     //
-    Options[PXEBC_DHCP4_TAG_INDEX_BOOTFILE] = (EFI_DHCP4_PACKET_OPTION *) (&Offer->Dhcp4.Header.BootFileName[0] -
+    // Make sure "BootFileName" is not overloaded
+    if (Options[PXEBC_DHCP4_TAG_INDEX_OVERLOAD] == NULL ||
+        (Options[PXEBC_DHCP4_TAG_INDEX_OVERLOAD]->Data[0] & PXEBC_DHCP4_OVERLOAD_FILE) == 0) {
+      Options[PXEBC_DHCP4_TAG_INDEX_BOOTFILE] = (EFI_DHCP4_PACKET_OPTION *) (&Offer->Dhcp4.Header.BootFileName[0] -
                                             OFFSET_OF (EFI_DHCP4_PACKET_OPTION, Data[0]));
-
+    }
   }
 
   //
