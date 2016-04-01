@@ -68,7 +68,7 @@ typedef struct {
   UINTN   Rows;
 } TERMINAL_CONSOLE_MODE_DATA;
 
-#define KEYBOARD_TIMER_INTERVAL         200000  // 0.02s
+#define KEYBOARD_TIMER_INTERVAL         20000  // 0.002s
 
 #define TERMINAL_DEV_SIGNATURE  SIGNATURE_32 ('t', 'm', 'n', 'l')
 
