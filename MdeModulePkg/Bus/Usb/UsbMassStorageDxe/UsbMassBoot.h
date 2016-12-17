@@ -66,7 +66,7 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 //
 // Other parameters, Max carried size is 512B * 128 = 64KB
 //
-#define USB_BOOT_IO_BLOCKS              128
+#define USB_BOOT_IO_BLOCKS             64
 
 //
 // Retry mass command times, set by experience
