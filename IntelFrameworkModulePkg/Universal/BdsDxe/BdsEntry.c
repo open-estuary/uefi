@@ -36,7 +36,6 @@ EFI_BDS_ARCH_PROTOCOL  gBds = {
   BdsEntry
 };
 
-UINT16                          *mBootNext = NULL;
 
 ///
 /// The read-only variables defined in UEFI Spec.
@@ -123,6 +122,9 @@ BdsBootDeviceSelect (
   BOOLEAN           BootNextExist;
   LIST_ENTRY        *LinkBootNext;
   EFI_EVENT         ConnectConInEvent;
+  UINTN             BootNextSize;
+  UINT16            *BootNext = NULL;
+  UINT16            Index;
 
   //
   // Got the latest boot option
@@ -153,8 +155,17 @@ BdsBootDeviceSelect (
       ConnectConInEvent = NULL;
     }
   }
+  
+  //
+  // Check if we have the boot next option
+  //
+  BootNext = BdsLibGetVariableAndSize (
+                L"BootNext",
+                &gEfiGlobalVariableGuid,
+                &BootNextSize
+                );
 
-  if (mBootNext != NULL) {
+  if (BootNext != NULL) {
     //
     // Indicate we have the boot next variable, so this time
     // boot will always have this boot option
@@ -179,17 +190,19 @@ BdsBootDeviceSelect (
     //
     // Add the boot next boot option
     //
-    UnicodeSPrint (Buffer, sizeof (Buffer), L"Boot%04x", *mBootNext);
-    BootOption = BdsLibVariableToOption (&BootLists, Buffer);
+    for (Index = 0; Index < (BootNextSize/sizeof(UINT16)); Index++) {
+      UnicodeSPrint (Buffer, sizeof (Buffer), L"Boot%04x", BootNext[Index]);
+      BootOption = BdsLibVariableToOption (&BootLists, Buffer);
 
-    //
-    // If fail to get boot option from variable, just return and do nothing.
-    //
-    if (BootOption == NULL) {
-      return;
+      //
+      // If fail to get boot option from variable, just return and do nothing.
+      //
+      if (BootOption == NULL) {
+        return;
+      }
+
+      BootOption->BootCurrent = BootNext[Index];
     }
-
-    BootOption->BootCurrent = *mBootNext;
   }
   //
   // Parse the boot order to get boot option
@@ -528,7 +541,6 @@ BdsEntry (
 {
   LIST_ENTRY                      DriverOptionList;
   LIST_ENTRY                      BootOptionList;
-  UINTN                           BootNextSize;
   CHAR16                          *FirmwareVendor;
   EFI_STATUS                      Status;
   UINT16                          BootTimeOut;
@@ -638,14 +650,6 @@ BdsEntry (
   if (!IsListEmpty (&DriverOptionList)) {
     BdsLibLoadDrivers (&DriverOptionList);
   }
-  //
-  // Check if we have the boot next option
-  //
-  mBootNext = BdsLibGetVariableAndSize (
-                L"BootNext",
-                &gEfiGlobalVariableGuid,
-                &BootNextSize
-                );
 
   //
   // Setup some platform policy here
