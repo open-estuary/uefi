@@ -587,4 +587,5 @@ ArmUnsetCpuActlrBit (
   IN  UINTN    Bits
   );
 
+
 #endif // __ARM_LIB__
