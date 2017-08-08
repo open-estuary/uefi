@@ -1,9 +1,9 @@
 [submodule "OpenPlatformPkg"]
 	path = OpenPlatformPkg
-	url = https://git.linaro.org/people/heyi.guo/OpenPlatformPkg.git
+	url = https://github.com/hisilicon/OpenPlatformPkg.git
 [submodule "LinaroPkg"]
 	path = LinaroPkg
-	url = https://git.linaro.org/people/heyi.guo/LinaroPkg.git
+	url = https://github.com/hisilicon/LinaroPkg.git
 [submodule "uefi-tools"]
 	path = uefi-tools
 	url = https://git.linaro.org/uefi/uefi-tools.git
